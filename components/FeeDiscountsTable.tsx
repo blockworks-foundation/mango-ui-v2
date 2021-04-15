@@ -5,12 +5,14 @@ import useMangoStore from '../stores/useMangoStore'
 import Button from './Button'
 import DepositSrmModal from './DepositSrmModal'
 import WithdrawSrmModal from './WithdrawSrmModal'
+import WalletIcon from './WalletIcon'
 
 const FeeDiscountsTable = () => {
   const [showDeposit, setShowDeposit] = useState(false)
   const [showWithdraw, setShowWithdraw] = useState(false)
   const { totalSrm, rates } = useSrmAccount()
   const connected = useMangoStore((s) => s.wallet.connected)
+  const wallet = useMangoStore((s) => s.wallet.current)
   const contributedSrm = useMangoStore((s) => s.wallet.contributedSrm)
 
   const handleCloseDeposit = useCallback(() => {
@@ -62,7 +64,12 @@ const FeeDiscountsTable = () => {
             </div>
           </div>
         ) : (
-          <Button disabled>Connect Wallet</Button>
+          <Button onClick={wallet.connect}>
+            <div className="flex flex-row items-center justify-center">
+              <WalletIcon className="w-5 h-5 mr-2 fill-current" />
+              Connect Wallet
+            </div>
+          </Button>
         )}
       </div>
       {showDeposit && (
