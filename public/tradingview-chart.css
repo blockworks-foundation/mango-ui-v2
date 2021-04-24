@@ -63,6 +63,7 @@ html .group-wWM3zP_M {
   border-radius: 50%;
   margin-left: 8px;
   transform: scale(0.9);
+  width: 38px;
 }
 
 .group-wWM3zP_M:first-child {
@@ -385,6 +386,7 @@ html.theme-dark .group-wWM3zP_M {
   border-radius: 50%;
   margin-left: 8px;
   transform: scale(0.9);
+  width: 38px;
 }
 
 /* Spacer between header buttons */
