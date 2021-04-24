@@ -5,7 +5,7 @@ import useMangoStore from '../stores/useMangoStore'
 import Button from './Button'
 import DepositSrmModal from './DepositSrmModal'
 import WithdrawSrmModal from './WithdrawSrmModal'
-import WalletIcon from './WalletIcon'
+import { WalletIcon } from './icons'
 import { SRM_DECIMALS } from '@project-serum/serum/lib/token-instructions'
 
 const FeeDiscountsTable = () => {
