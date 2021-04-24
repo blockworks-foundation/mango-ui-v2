@@ -73,31 +73,16 @@ const FeeDiscountsTable = () => {
           </div>
         </div>
       </div>
-      <div className="mt-6">
-        {connected ? (
-          <div className="bg-th-bkg-2 p-6 rounded">
-            <div className="text-th-fgd-4 text-center text-lg">
-              Your contributed SRM: {contributedSrm}
-            </div>
-            <div className="flex space-x-4 mt-4">
-              <Button onClick={() => setShowDeposit(true)}>Deposit</Button>
-              <Button
-                onClick={() => setShowWithdraw(true)}
-                disabled={!(contributedSrm > 0)}
-              >
-                Withdraw
-              </Button>
-            </div>
-          </div>
-        ) : (
+      {!connected && (
+        <div className="mt-6">
           <Button onClick={wallet.connect}>
             <div className="flex flex-row items-center justify-center">
               <WalletIcon className="w-5 h-5 mr-2 fill-current" />
               Connect Wallet
             </div>
           </Button>
-        )}
-      </div>
+        </div>
+      )}
       {showDeposit && (
         <DepositSrmModal isOpen={showDeposit} onClose={handleCloseDeposit} />
       )}
