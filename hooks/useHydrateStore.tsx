@@ -12,14 +12,21 @@ const _SLOW_REFRESH_INTERVAL = 5 * 1000
 
 const marketAddressSelector = (s) => s.selectedMarket.address
 const mangoGroupMarketsSelector = (s) => s.selectedMangoGroup.markets
+const websocketConnectionSelector = (s) => s.connection.websocket
 
 const useHydrateStore = () => {
   const setMangoStore = useMangoStore((s) => s.set)
   const setSerumStore = useSerumStore((s) => s.set)
   const selectedMarketAddress = useMangoStore(marketAddressSelector)
   const marketsForSelectedMangoGroup = useMangoStore(mangoGroupMarketsSelector)
+  const websocketConnection = useMangoStore(websocketConnectionSelector)
+  const actions = useMangoStore((s) => s.actions)
   const { connection, dexProgramId } = useConnection()
   const { marketList } = useMarketList()
+
+  useEffect(() => {
+    actions.fetchMangoGroup()
+  }, [actions])
 
   // load selected market
   useEffect(() => {
@@ -30,12 +37,10 @@ const useHydrateStore = () => {
       new PublicKey(dexProgramId)
     )
       .then(async (market) => {
-        // @ts-ignore
-        const bidAccount = market._decoded.bids
-        const bidInfo = await connection.getAccountInfo(bidAccount)
-        // @ts-ignore
-        const askAccount = market._decoded.asks
-        const askInfo = await connection.getAccountInfo(askAccount)
+        const bidAccount = market['_decoded'].bids
+        const bidInfo = await websocketConnection.getAccountInfo(bidAccount)
+        const askAccount = market['_decoded'].asks
+        const askInfo = await websocketConnection.getAccountInfo(askAccount)
         setMangoStore((state) => {
           state.market.current = market
           state.accountInfos[askAccount.toString()] = askInfo
@@ -76,14 +81,14 @@ const useHydrateStore = () => {
     })
   }, [marketList])
 
-  // hydrate orderbook for all markets in mango group
+  // hydrate orderbook with all markets in mango group
   useEffect(() => {
     const subscriptionIds = Object.entries(marketsForSelectedMangoGroup).map(
       ([, market]) => {
         let previousBidInfo: AccountInfo<Buffer> | null = null
         let previousAskInfo: AccountInfo<Buffer> | null = null
         return [
-          connection.onAccountChange(
+          websocketConnection.onAccountChange(
             // @ts-ignore
             market._decoded.bids,
             (info) => {
@@ -101,7 +106,7 @@ const useHydrateStore = () => {
               }
             }
           ),
-          connection.onAccountChange(
+          websocketConnection.onAccountChange(
             // @ts-ignore
             market._decoded.asks,
             (info) => {
@@ -126,28 +131,29 @@ const useHydrateStore = () => {
 
     return () => {
       for (const id of subscriptionIds.flat()) {
-        connection.removeAccountChangeListener(id)
+        websocketConnection.removeAccountChangeListener(id)
       }
     }
   }, [marketsForSelectedMangoGroup])
 
+  // fetch filled trades for selected market
   useInterval(() => {
     async function fetchFills() {
       const market = useMangoStore.getState().market.current
       if (!market || !connection) {
         return null
       }
-      const loadedFills = await market.loadFills(connection, 10000)
+      try {
+        const loadedFills = await market.loadFills(connection, 10000)
+        setSerumStore((state) => {
+          state.fills = loadedFills
+        })
+      } catch (err) {
+        console.log('Error fetching fills:', err)
+      }
+    }
 
-      setSerumStore((state) => {
-        state.fills = loadedFills
-      })
-    }
-    try {
-      fetchFills()
-    } catch (err) {
-      console.error('Error fetching fills:', err)
-    }
+    fetchFills()
   }, _SLOW_REFRESH_INTERVAL)
 }
 

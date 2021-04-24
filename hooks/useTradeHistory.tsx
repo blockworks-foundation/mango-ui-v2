@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import useMangoStore from '../stores/useMangoStore'
 import useSerumStore from '../stores/useSerumStore'
 import useMarket from './useMarket'
-import useInterval from './useInterval'
 
 const byTimestamp = (a, b) => {
   return (
@@ -19,7 +18,7 @@ const formatTradeHistory = (newTradeHistory) => {
         marketName: trade.marketName
           ? trade.marketName
           : `${trade.baseCurrency}/${trade.quoteCurrency}`,
-        key: `${trade.orderId}${trade.side}${trade.uuid}`,
+        key: `${trade.orderId}-${trade.uuid}`,
         liquidity: trade.maker || trade?.eventFlags?.maker ? 'Maker' : 'Taker',
       }
     })
@@ -27,7 +26,17 @@ const formatTradeHistory = (newTradeHistory) => {
 }
 
 const useFills = () => {
-  const fills = useSerumStore((s) => s.fills)
+  const fillsRef = useRef(useSerumStore.getState().fills)
+  const fills = fillsRef.current
+  useEffect(
+    () =>
+      useSerumStore.subscribe(
+        (fills) => (fillsRef.current = fills as []),
+        (state) => state.fills
+      ),
+    []
+  )
+
   const { market, marketName } = useMarket()
   const marginAccount = useMangoStore((s) => s.selectedMarginAccount.current)
   const selectedMangoGroup = useMangoStore((s) => s.selectedMangoGroup.current)
@@ -44,33 +53,21 @@ const useFills = () => {
 
 export const useTradeHistory = () => {
   const eventQueueFills = useFills()
-  const [allTrades, setAllTrades] = useState<any[]>([])
   const tradeHistory = useMangoStore((s) => s.tradeHistory)
-  const marginAccount = useMangoStore((s) => s.selectedMarginAccount.current)
-  const actions = useMangoStore((s) => s.actions)
 
-  useInterval(() => {
-    if (marginAccount) {
-      actions.fetchTradeHistory()
+  const allTrades = []
+  if (eventQueueFills && eventQueueFills.length > 0) {
+    const newFills = eventQueueFills.filter(
+      (fill) =>
+        !tradeHistory.flat().find((t) => t.orderId === fill.orderId.toString())
+    )
+    const newTradeHistory = [...newFills, ...tradeHistory]
+    if (newFills.length > 0 && newTradeHistory.length !== allTrades.length) {
+      return formatTradeHistory(newTradeHistory)
     }
-  }, 12000)
+  }
 
-  useEffect(() => {
-    if (eventQueueFills && eventQueueFills.length > 0) {
-      const newFills = eventQueueFills.filter(
-        (fill) =>
-          !tradeHistory.find((t) => t.orderId === fill.orderId.toString())
-      )
-      const newTradeHistory = [...newFills, ...tradeHistory]
-      if (newFills.length > 0 && newTradeHistory.length !== allTrades.length) {
-        const formattedTradeHistory = formatTradeHistory(newTradeHistory)
-
-        setAllTrades(formattedTradeHistory)
-      }
-    }
-  }, [tradeHistory, eventQueueFills])
-
-  return { tradeHistory: allTrades }
+  return formatTradeHistory(tradeHistory)
 }
 
 export default useTradeHistory

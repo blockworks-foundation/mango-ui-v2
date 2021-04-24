@@ -2,12 +2,11 @@ import TopBar from '../components/TopBar'
 import Notifications from '../components/Notification'
 import TradePageGrid from '../components/TradePageGrid'
 import MarketSelect from '../components/MarketSelect'
-import useHydrateStore from '../hooks/useHydrateStore'
-import useWallet from '../hooks/useWallet'
+import AlphaModal from '../components/AlphaModal'
+import useLocalStorageState from '../hooks/useLocalStorageState'
 
 const Index = () => {
-  useHydrateStore()
-  useWallet()
+  const [alphaAccepted] = useLocalStorageState('mangoAlphaAccepted', false)
 
   return (
     <div className={`bg-th-bkg-1 text-th-fgd-1 transition-all `}>
@@ -17,6 +16,9 @@ const Index = () => {
         <TradePageGrid />
       </div>
       <Notifications />
+      {!alphaAccepted && (
+        <AlphaModal isOpen={!alphaAccepted} onClose={() => {}} />
+      )}
     </div>
   )
 }

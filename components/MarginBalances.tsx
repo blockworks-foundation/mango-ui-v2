@@ -1,4 +1,3 @@
-import { Popover } from 'antd'
 import { useCallback, useState } from 'react'
 import {
   ExternalLinkIcon,
@@ -8,12 +7,13 @@ import FloatingElement from './FloatingElement'
 import { ElementTitle } from './styles'
 import useMangoStore from '../stores/useMangoStore'
 import useMarketList from '../hooks/useMarketList'
-import { tokenPrecision } from '../utils/index'
+import { floorToDecimal, tokenPrecision } from '../utils/index'
 import DepositModal from './DepositModal'
 import WithdrawModal from './WithdrawModal'
 import Button from './Button'
+import Tooltip from './Tooltip'
 
-export default function MarginStats() {
+export default function MarginBalances() {
   const selectedMangoGroup = useMangoStore((s) => s.selectedMangoGroup.current)
   const selectedMarginAccount = useMangoStore(
     (s) => s.selectedMarginAccount.current
@@ -37,22 +37,20 @@ export default function MarginStats() {
       <FloatingElement>
         <ElementTitle>
           Margin Account
-          <Popover
+          <Tooltip
             content={
               <AddressTooltip
                 owner={selectedMarginAccount?.owner.toString()}
                 marginAccount={selectedMarginAccount?.publicKey.toString()}
               />
             }
-            placement="topLeft"
-            trigger="hover"
           >
             <div>
               <InformationCircleIcon
-                className={`h-5 w-5 ml-2 text-mango-yellow cursor-help`}
+                className={`h-5 w-5 ml-2 text-th-primary cursor-help`}
               />
             </div>
-          </Popover>
+          </Tooltip>
         </ElementTitle>
         {selectedMangoGroup ? (
           <table className={`min-w-full`}>
@@ -74,22 +72,26 @@ export default function MarginStats() {
             </thead>
             <tbody>
               {Object.entries(symbols).map(([name], i) => (
-                <tr key={name} className={`text-th-fgd-1 tracking-wide`}>
+                <tr key={name} className={`text-th-fgd-1`}>
                   <td className={`flex items-center py-2`}>
                     <img
                       alt=""
                       width="20"
                       height="20"
                       src={`/assets/icons/${name.toLowerCase()}.svg`}
-                      className={`mr-4`}
+                      className={`mr-2.5`}
                     />
                     <span>{name}</span>
                   </td>
                   <td className={`text-center`}>
                     {selectedMarginAccount
-                      ? selectedMarginAccount
-                          .getUiDeposit(selectedMangoGroup, i)
-                          .toFixed(tokenPrecision[name])
+                      ? floorToDecimal(
+                          selectedMarginAccount.getUiDeposit(
+                            selectedMangoGroup,
+                            i
+                          ),
+                          tokenPrecision[name]
+                        ).toFixed(tokenPrecision[name])
                       : (0).toFixed(tokenPrecision[name])}
                   </td>
                   <td className={`text-center`}>
@@ -130,7 +132,7 @@ export default function MarginStats() {
             <span>Withdraw</span>
           </Button>
         </div>
-        <div className={`text-center mt-4 text-th-fgd-4 tracking-wider`}>
+        <div className={`text-center mt-4 text-th-fgd-4 text-sm`}>
           Settle funds in the Balances tab
         </div>
       </FloatingElement>
@@ -158,37 +160,39 @@ const AddressTooltip = ({
     <>
       {owner && marginAccount ? (
         <>
-          <div className={`flex`}>
+          <div className={`flex flex-nowrap text-th-fgd-3`}>
             Margin Account:
             <a
+              className="text-th-fgd-1 default-transition hover:text-th-primary"
               href={'https://explorer.solana.com/address/' + marginAccount}
               target="_blank"
               rel="noopener noreferrer"
             >
-              <div className={`ml-4 flex`}>
-                <ExternalLinkIcon
-                  className={`h-5 w-5 mr-1 text-mango-yellow`}
-                />
-                <span className={`text-mango-yellow hover:opacity-50`}>
-                  {marginAccount}
+              <div className={`ml-2 flex items-center`}>
+                <span className={`underline`}>
+                  {marginAccount.toString().substr(0, 5) +
+                    '...' +
+                    marginAccount.toString().substr(-5)}
                 </span>
+                <ExternalLinkIcon className={`h-4 w-4 ml-1`} />
               </div>
             </a>
           </div>
-          <div className={`flex mt-2`}>
+          <div className={`flex flex-nowrap text-th-fgd-3 pt-2`}>
             Account Owner:
             <a
+              className="text-th-fgd-1 default-transition hover:text-th-primary"
               href={'https://explorer.solana.com/address/' + owner}
               target="_blank"
               rel="noopener noreferrer"
             >
-              <div className={`ml-4 flex`}>
-                <ExternalLinkIcon
-                  className={`h-5 w-5 mr-1 text-mango-yellow`}
-                />
-                <span className={`text-mango-yellow hover:opacity-50`}>
-                  {owner}
+              <div className={`ml-2 flex items-center`}>
+                <span className={`underline`}>
+                  {owner.toString().substr(0, 5) +
+                    '...' +
+                    owner.toString().substr(-5)}
                 </span>
+                <ExternalLinkIcon className={`h-4 w-4 ml-1`} />
               </div>
             </a>
           </div>

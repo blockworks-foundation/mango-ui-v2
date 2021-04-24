@@ -5,31 +5,33 @@ const TVChartContainer = dynamic(
   () => import('../components/TradingView/index'),
   { ssr: false }
 )
+import { useEffect, useState } from 'react'
 import FloatingElement from '../components/FloatingElement'
 import Orderbook from '../components/Orderbook'
-import MarginStats from './MarginStats'
+import MarginInfo from './MarginInfo'
 import MarginBalances from './MarginBalances'
 import TradeForm from './TradeForm'
 import UserInfo from './UserInfo'
 import RecentMarketTrades from './RecentMarketTrades'
 import useMangoStore from '../stores/useMangoStore'
+import useLocalStorageState from '../hooks/useLocalStorageState'
 
 const ResponsiveGridLayout = WidthProvider(Responsive)
 
-const layouts = {
+export const defaultLayouts = {
   xl: [
-    { i: 'tvChart', x: 0, y: 0, w: 3, h: 30 },
-    { i: 'orderbook', x: 3, y: 0, w: 1, h: 17 },
-    { i: 'tradeForm', x: 4, y: 0, w: 1, h: 17 },
-    { i: 'marginStats', x: 4, y: 2, w: 1, h: 12 },
-    { i: 'marketTrades', x: 3, y: 1, w: 1, h: 13 },
-    { i: 'userInfo', x: 0, y: 2, w: 4, h: 17 },
-    { i: 'balanceInfo', x: 4, y: 1, w: 1, h: 13 },
+    { i: 'tvChart', x: 0, y: 0, w: 4, h: 30 },
+    { i: 'orderbook', x: 4, y: 0, w: 2, h: 17 },
+    { i: 'tradeForm', x: 6, y: 0, w: 2, h: 17 },
+    { i: 'marketTrades', x: 4, y: 1, w: 2, h: 13 },
+    { i: 'balanceInfo', x: 6, y: 1, w: 2, h: 13 },
+    { i: 'userInfo', x: 0, y: 2, w: 6, h: 17 },
+    { i: 'marginInfo', x: 6, y: 2, w: 2, h: 12 },
   ],
   lg: [
     { i: 'tvChart', x: 0, y: 0, w: 2, h: 24 },
     { i: 'balanceInfo', x: 2, y: 0, w: 1, h: 13 },
-    { i: 'marginStats', x: 2, y: 1, w: 1, h: 11 },
+    { i: 'marginInfo', x: 2, y: 1, w: 1, h: 11 },
     { i: 'orderbook', x: 0, y: 2, w: 1, h: 17 },
     { i: 'tradeForm', x: 1, y: 2, w: 1, h: 17 },
     { i: 'marketTrades', x: 2, y: 2, w: 1, h: 17 },
@@ -39,16 +41,31 @@ const layouts = {
 
 const TradePageGrid = () => {
   const { uiLocked } = useMangoStore((s) => s.settings)
+  const [savedLayouts, setSavedLayouts] = useLocalStorageState(
+    'savedLayouts',
+    defaultLayouts
+  )
+
+  const onLayoutChange = (layouts) => {
+    if (layouts) {
+      setSavedLayouts(layouts)
+    }
+  }
+
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+  if (!mounted) return null
 
   return (
     <ResponsiveGridLayout
       className="layout"
-      layouts={layouts}
-      breakpoints={{ xl: 1600, lg: 1200, md: 996, sm: 768, xs: 0 }}
-      cols={{ xl: 5, lg: 3, md: 3, sm: 2, xs: 1 }}
+      layouts={savedLayouts || defaultLayouts}
+      breakpoints={{ xl: 1600, lg: 1200, md: 1110, sm: 768, xs: 0 }}
+      cols={{ xl: 8, lg: 3, md: 3, sm: 2, xs: 1 }}
       rowHeight={15}
       isDraggable={!uiLocked}
       isResizable={!uiLocked}
+      onLayoutChange={(layout, layouts) => onLayoutChange(layouts)}
     >
       <div key="tvChart">
         <FloatingElement>
@@ -63,8 +80,8 @@ const TradePageGrid = () => {
       <div key="tradeForm">
         <TradeForm />
       </div>
-      <div key="marginStats">
-        <MarginStats />
+      <div key="marginInfo">
+        <MarginInfo />
       </div>
       <div key="userInfo">
         <UserInfo />

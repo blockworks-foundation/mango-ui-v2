@@ -14,7 +14,7 @@ const Line = styled.div<any>`
   text-align: ${(props) => (props.invert ? 'left' : 'right')};
   float: ${(props) => (props.invert ? 'left' : 'right')};
   height: 100%;
-  filter: opacity(80%);
+  filter: opacity(70%);
   ${(props) => props['data-width'] && `width: ${props['data-width']};`}
 `
 
@@ -96,12 +96,16 @@ export default function Orderbook({ depth = 7 }) {
   }, [orderbook])
 
   const handlePriceClick = (price) => {
+    console.log('price click')
+
     setMangoStore((state) => {
       state.tradeForm.price = price
     })
   }
 
   const handleSizeClick = (size) => {
+    console.log('size click')
+
     setMangoStore((state) => {
       state.tradeForm.baseSize = size
     })
@@ -169,11 +173,7 @@ const OrderbookRow = React.memo<any>(
         : price
 
     return (
-      <div
-        className={`flex mb-0.5 justify-between`}
-        ref={element}
-        onClick={onSizeClick}
-      >
+      <div className={`flex text-sm leading-7 justify-between`} ref={element}>
         {invert ? (
           <>
             <div className={`text-left`}>
@@ -185,11 +185,16 @@ const OrderbookRow = React.memo<any>(
               />
               <div onClick={onPriceClick}>{formattedPrice}</div>
             </div>
-            <div className={`text-right`}>{formattedSize}</div>
+            <div className={`text-right`} onClick={onSizeClick}>
+              {formattedSize}
+            </div>
           </>
         ) : (
           <>
-            <div className={`text-left flex-1 text-th-fgd-1`}>
+            <div
+              className={`text-left flex-1 text-th-fgd-1`}
+              onClick={onSizeClick}
+            >
               {formattedSize}
             </div>
             <div className={`text-right relative flex-1`}>
@@ -237,10 +242,10 @@ const MarkPriceComponent = React.memo<{ markPrice: number }>(
         }`}
       >
         {markPrice > previousMarkPrice && (
-          <ArrowUpIcon className={`h-5 w-5 mr-1 text-th-green`} />
+          <ArrowUpIcon className={`h-4 w-4 mr-1 text-th-green`} />
         )}
         {markPrice < previousMarkPrice && (
-          <ArrowDownIcon className={`h-5 w-5 mr-1 text-th-red`} />
+          <ArrowDownIcon className={`h-4 w-4 mr-1 text-th-red`} />
         )}
         {formattedMarkPrice || '----'}
       </div>

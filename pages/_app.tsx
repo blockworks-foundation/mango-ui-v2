@@ -3,15 +3,20 @@ import { ThemeProvider } from 'next-themes'
 import '../node_modules/react-grid-layout/css/styles.css'
 import '../node_modules/react-resizable/css/styles.css'
 import '../styles/index.css'
+import useWallet from '../hooks/useWallet'
+import useHydrateStore from '../hooks/useHydrateStore'
 
 function App({ Component, pageProps }) {
+  useHydrateStore()
+  useWallet()
+
   return (
     <>
       <Head>
         <title>Mango Markets</title>
         <link rel="preconnect" href="https://fonts.gstatic.com" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap"
           rel="stylesheet"
         />
         <link rel="icon" href="/favicon.ico" />

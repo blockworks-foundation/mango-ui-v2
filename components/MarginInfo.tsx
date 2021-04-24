@@ -1,11 +1,10 @@
-import { Popover } from 'antd'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { nativeToUi } from '@blockworks-foundation/mango-client/lib/utils'
 import { groupBy } from '../utils'
 import useTradeHistory from '../hooks/useTradeHistory'
-import useConnection from '../hooks/useConnection'
+import useMangoStore from '../stores/useMangoStore'
 import FloatingElement from './FloatingElement'
-import useMarginAccount from '../hooks/useMarginAccount'
+import Tooltip from './Tooltip'
 
 const calculatePNL = (tradeHistory, prices, mangoGroup) => {
   if (!tradeHistory.length) return '0.00'
@@ -52,9 +51,12 @@ const calculatePNL = (tradeHistory, prices, mangoGroup) => {
   return total.toFixed(2)
 }
 
-export default function MarginStats() {
-  const { connection } = useConnection()
-  const { marginAccount, mangoGroup } = useMarginAccount()
+export default function MarginInfo() {
+  const connection = useMangoStore((s) => s.connection.current)
+  const selectedMarginAccount = useMangoStore(
+    (s) => s.selectedMarginAccount.current
+  )
+  const selectedMangoGroup = useMangoStore((s) => s.selectedMangoGroup.current)
   const [mAccountInfo, setMAccountInfo] = useState<
     | {
         label: string
@@ -65,24 +67,29 @@ export default function MarginStats() {
       }[]
     | null
   >(null)
-  const { tradeHistory } = useTradeHistory()
+  const tradeHistory = useTradeHistory()
+  const tradeHistoryLength = useMemo(() => tradeHistory.length, [tradeHistory])
 
   useEffect(() => {
-    if (mangoGroup) {
-      mangoGroup.getPrices(connection).then((prices) => {
-        const collateralRatio = marginAccount
-          ? marginAccount.getCollateralRatio(mangoGroup, prices)
+    if (selectedMangoGroup) {
+      selectedMangoGroup.getPrices(connection).then((prices) => {
+        const collateralRatio = selectedMarginAccount
+          ? selectedMarginAccount.getCollateralRatio(selectedMangoGroup, prices)
           : 200
 
-        const accountEquity = marginAccount
-          ? marginAccount.computeValue(mangoGroup, prices)
+        const accountEquity = selectedMarginAccount
+          ? selectedMarginAccount.computeValue(selectedMangoGroup, prices)
           : 0
         let leverage
-        if (marginAccount) {
+        if (selectedMarginAccount) {
           leverage = accountEquity
             ? (
                 1 /
-                (marginAccount.getCollateralRatio(mangoGroup, prices) - 1)
+                (selectedMarginAccount.getCollateralRatio(
+                  selectedMangoGroup,
+                  prices
+                ) -
+                  1)
               ).toFixed(2)
             : '∞'
         } else {
@@ -106,7 +113,7 @@ export default function MarginStats() {
           },
           {
             label: 'Total PNL',
-            value: calculatePNL(tradeHistory, prices, mangoGroup),
+            value: calculatePNL(tradeHistory, prices, selectedMangoGroup),
             unit: '',
             currency: '$',
             desc:
@@ -123,7 +130,7 @@ export default function MarginStats() {
           },
           {
             label: 'Maint. Collateral Ratio',
-            value: (mangoGroup.maintCollRatio * 100).toFixed(0),
+            value: (selectedMangoGroup.maintCollRatio * 100).toFixed(0),
             unit: '%',
             currency: '',
             desc:
@@ -131,7 +138,7 @@ export default function MarginStats() {
           },
           {
             label: 'Initial Collateral Ratio',
-            value: (mangoGroup.initCollRatio * 100).toFixed(0),
+            value: (selectedMangoGroup.initCollRatio * 100).toFixed(0),
             currency: '',
             unit: '%',
             desc: 'The collateral ratio required to open a new margin position',
@@ -139,23 +146,21 @@ export default function MarginStats() {
         ])
       })
     }
-    // eslint-disable-next-line
-  }, [marginAccount, mangoGroup])
+  }, [selectedMarginAccount, selectedMangoGroup, tradeHistoryLength])
+
   return (
     <FloatingElement>
       <>
         {mAccountInfo
           ? mAccountInfo.map((entry, i) => (
               <div className={`flex justify-between pt-2 pb-2`} key={i}>
-                <Popover
-                  content={entry.desc}
-                  placement="topLeft"
-                  trigger="hover"
-                >
-                  <div className={`cursor-help text-th-fgd-4`}>
+                <Tooltip content={entry.desc}>
+                  <div
+                    className={`cursor-help font-normal text-th-fgd-4 border-b border-th-fgd-4 border-dashed border-opacity-20 leading-4 default-transition hover:border-th-bkg-2 hover:text-th-fgd-3`}
+                  >
                     {entry.label}
                   </div>
-                </Popover>
+                </Tooltip>
                 <div className={`text-th-fgd-1`}>
                   {entry.currency + entry.value}
                   {entry.unit}

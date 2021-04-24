@@ -13,23 +13,27 @@ import { AccountInfo, Connection, PublicKey } from '@solana/web3.js'
 import { EndpointInfo, WalletAdapter } from '../@types/types'
 import { getOwnedTokenAccounts } from '../utils/tokens'
 import { isDefined } from '../utils/index'
+import { notify } from '../utils/notifications'
 
 export const ENDPOINTS: EndpointInfo[] = [
   {
     name: 'mainnet-beta',
-    endpoint: 'https://api.mainnet-beta.solana.com/',
+    url: 'https://solana-api.projectserum.com/',
+    websocket: 'https://api.mainnet-beta.solana.com/',
     custom: false,
   },
   {
     name: 'devnet',
-    endpoint: 'https://devnet.solana.com',
+    url: 'https://devnet.solana.com',
+    websocket: 'https://devnet.solana.com',
     custom: false,
   },
 ]
 
 const CLUSTER = 'mainnet-beta'
-const ENDPOINT_URL = ENDPOINTS.find((e) => e.name === CLUSTER).endpoint
-const DEFAULT_CONNECTION = new Connection(ENDPOINT_URL, 'recent')
+const ENDPOINT = ENDPOINTS.find((e) => e.name === CLUSTER)
+const DEFAULT_CONNECTION = new Connection(ENDPOINT.url, 'recent')
+const WEBSOCKET_CONNECTION = new Connection(ENDPOINT.websocket, 'recent')
 const DEFAULT_MANGO_GROUP_NAME = 'BTC_ETH_USDT'
 
 export const INITIAL_STATE = {
@@ -61,6 +65,7 @@ interface MangoStore extends State {
   connection: {
     cluster: string
     current: Connection
+    websocket: Connection
     endpoint: string
     srmMint: string
   }
@@ -117,7 +122,8 @@ const useMangoStore = create<MangoStore>((set, get) => ({
   connection: {
     cluster: CLUSTER,
     current: DEFAULT_CONNECTION,
-    endpoint: ENDPOINT_URL,
+    websocket: WEBSOCKET_CONNECTION,
+    endpoint: ENDPOINT.url,
     srmMint: IDS[CLUSTER].symbols['SRM'],
   },
   selectedMangoGroup: {
@@ -166,7 +172,6 @@ const useMangoStore = create<MangoStore>((set, get) => ({
       const wallet = get().wallet.current
       const connected = get().wallet.connected
       const set = get().set
-      console.log('fetching wallet balances')
 
       if (wallet?.publicKey && connected) {
         const ownerAddress = wallet.publicKey
@@ -225,7 +230,7 @@ const useMangoStore = create<MangoStore>((set, get) => ({
 
       if (!wallet?.publicKey || !wallet.publicKey) return
 
-      mangoClient
+      return mangoClient
         .getMarginAccountsForOwner(
           connection,
           new PublicKey(programId),
@@ -259,7 +264,7 @@ const useMangoStore = create<MangoStore>((set, get) => ({
       const mangoGroupPk = new PublicKey(mangoGroupIds.mango_group_pk)
       const srmVaultPk = new PublicKey(mangoGroupIds.srm_vault_pk)
 
-      mangoClient
+      return mangoClient
         .getMangoGroup(connection, mangoGroupPk, srmVaultPk)
         .then(async (mangoGroup) => {
           const srmAccountInfo = await connection.getAccountInfo(
@@ -273,11 +278,17 @@ const useMangoStore = create<MangoStore>((set, get) => ({
           })
         })
         .catch((err) => {
-          console.error('Could not get mango group: ', err)
+          notify({
+            message: 'Could not get mango group: ',
+            description: `${err}`,
+            type: 'error',
+          })
+          console.log('Could not get mango group: ', err)
         })
     },
-    async fetchTradeHistory() {
-      const selectedMarginAccount = get().selectedMarginAccount.current
+    async fetchTradeHistory(marginAccount = null) {
+      const selectedMarginAccount =
+        marginAccount || get().selectedMarginAccount.current
       const set = get().set
 
       if (!selectedMarginAccount) return

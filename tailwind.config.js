@@ -2,6 +2,7 @@
 // const defaultTheme = require('tailwindcss/defaultTheme')
 
 module.exports = {
+  mode: 'jit',
   purge: ['./pages/**/*.{js,ts,jsx,tsx}', './components/**/*.{js,ts,jsx,tsx}'],
   future: {
     removeDeprecatedGapUtilities: true,
@@ -9,12 +10,13 @@ module.exports = {
   },
   darkMode: false,
   theme: {
+    fontFamily: {
+      display: ['Lato, sans-serif'],
+      body: ['Lato, sans-serif'],
+    },
     extend: {
       cursor: {
         help: 'help',
-      },
-      fontFamily: {
-        sans: ['Nunito'],
       },
       colors: {
         'mango-orange': {
@@ -48,8 +50,8 @@ module.exports = {
         },
         'light-theme': {
           orange: '#FF9C24',
-          red: '#CC2929',
-          green: '#5EBF4D',
+          red: { DEFAULT: '#CC2929', dark: '#AA2222' },
+          green: { DEFAULT: '#5EBF4D', dark: '#4BA53B' },
           'bkg-1': '#f7f7f7',
           'bkg-2': '#FFFFFF',
           'bkg-3': '#EDEDED',
@@ -60,8 +62,8 @@ module.exports = {
         },
         'dark-theme': {
           orange: '#F2C94C',
-          red: '#CC2929',
-          green: '#5EBF4D',
+          red: { DEFAULT: '#CC2929', dark: '#AA2222' },
+          green: { DEFAULT: '#5EBF4D', dark: '#4BA53B' },
           'bkg-1': '#1C1C1C',
           'bkg-2': '#2B2B2B',
           'bkg-3': '#424242',
@@ -72,8 +74,8 @@ module.exports = {
         },
         'mango-theme': {
           yellow: '#F2C94C',
-          red: '#E54033',
-          green: '#AFD803',
+          red: { DEFAULT: '#E54033', dark: '#C7251A' },
+          green: { DEFAULT: '#AFD803', dark: '#91B503' },
           'bkg-1': '#141026',
           'bkg-2': '#1D1832',
           'bkg-3': '#322E47',
@@ -91,7 +93,9 @@ module.exports = {
         'th-fgd-4': 'var(--fgd-4)',
         'th-primary': 'var(--primary)',
         'th-red': 'var(--red)',
+        'th-red-dark': 'var(--red-dark)',
         'th-green': 'var(--green)',
+        'th-green-dark': 'var(--green-dark)',
       },
     },
   },

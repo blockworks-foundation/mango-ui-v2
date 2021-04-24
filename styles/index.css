@@ -2,10 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Theme */
+
 :root {
   --primary: theme('colors.light-theme.orange');
-  --red: theme('colors.light-theme.red');
-  --green: theme('colors.light-theme.green');
+  --red: theme('colors.light-theme.red.DEFAULT');
+  --red-dark: theme('colors.light-theme.red.dark');
+  --green: theme('colors.light-theme.green.DEFAULT');
+  --green-dark: theme('colors.light-theme.green.dark');
   --bkg-1: theme('colors.light-theme["bkg-1"]');
   --bkg-2: theme('colors.light-theme["bkg-2"]');
   --bkg-3: theme('colors.light-theme["bkg-3"]');
@@ -17,8 +21,10 @@
 
 [data-theme='Dark'] {
   --primary: theme('colors.dark-theme.orange');
-  --red: theme('colors.dark-theme.red');
-  --green: theme('colors.dark-theme.green');
+  --red: theme('colors.dark-theme.red.DEFAULT');
+  --red-dark: theme('colors.dark-theme.red.dark');
+  --green: theme('colors.dark-theme.green.DEFAULT');
+  --green-dark: theme('colors.dark-theme.green.dark');
   --bkg-1: theme('colors.dark-theme["bkg-1"]');
   --bkg-2: theme('colors.dark-theme["bkg-2"]');
   --bkg-3: theme('colors.dark-theme["bkg-3"]');
@@ -30,8 +36,10 @@
 
 [data-theme='Mango'] {
   --primary: theme('colors.mango-theme.yellow');
-  --red: theme('colors.mango-theme.red');
-  --green: theme('colors.mango-theme.green');
+  --red: theme('colors.mango-theme.red.DEFAULT');
+  --red-dark: theme('colors.mango-theme.red.dark');
+  --green: theme('colors.mango-theme.green.DEFAULT');
+  --green-dark: theme('colors.mango-theme.green.dark');
   --bkg-1: theme('colors.mango-theme["bkg-1"]');
   --bkg-2: theme('colors.mango-theme["bkg-2"]');
   --bkg-3: theme('colors.mango-theme["bkg-3"]');
@@ -41,13 +49,22 @@
   --fgd-4: theme('colors.mango-theme["fgd-4"]');
 }
 
-button {
-  transition: all 0.25s ease;
+/* Base */
+
+body {
+  @apply text-sm font-body tracking-wide;
 }
 
-button:focus {
-  outline: none;
+button {
+  transition: all 0.3s ease;
+  @apply font-semibold rounded-md;
 }
+
+.default-transition {
+  @apply transition-all duration-300;
+}
+
+/* Chart */
 
 .TVChartContainer {
   height: 100%;
@@ -58,8 +75,12 @@ button:focus {
   display: contents;
 }
 
+/* Grid */
+
 .react-grid-item.react-grid-placeholder {
-  background: #332f46;
+  background: var(--bkg-3);
+  opacity: 90%;
+  border-radius: 8px;
   transition-duration: 100ms;
   z-index: 2;
   -webkit-user-select: none;
@@ -69,80 +90,127 @@ button:focus {
   user-select: none;
 }
 
+.react-resizable-handle {
+  background-image: none;
+  z-index: 100;
+}
+
+.react-grid-item > .react-resizable-handle {
+  width: 24px;
+  height: 24px;
+}
+
+.react-grid-item > .react-resizable-handle::after {
+  content: '';
+  position: absolute;
+  right: 8px;
+  bottom: 0;
+  width: 8px;
+  height: 8px;
+  border-right: 3px solid var(--primary);
+  border-bottom: 3px solid var(--primary);
+  border-radius: 1px;
+}
+
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
-  /* display: none; <- Crashes Chrome on hover */
   -webkit-appearance: none;
-  margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+  margin: 0;
 }
 
 input[type='number'] {
-  -moz-appearance: textfield; /* Firefox */
+  -moz-appearance: textfield;
 }
 
-/* TODO: remove. styling for old ant components below */
+/* Scrollbars */
 
-.ant-input-group-addon {
-  background-color: transparent !important;
+.thin-scroll {
+  overflow: auto !important;
+  overflow-x: hidden !important;
 }
 
-.ant-switch {
-  background-color: #5b5868 !important;
+.thin-scroll::-webkit-scrollbar {
+  width: 4px;
+  height: 8px;
+  background-color: var(--bkg-2);
 }
 
-.ant-switch-checked {
-  background-color: #f2c94c !important;
+.thin-scroll::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background-color: var(--bkg-3);
 }
 
-.ant-switch-handle::before {
-  background-color: #ffffff !important;
+.thin-scroll::-webkit-scrollbar-track {
+  background-color: inherit;
 }
 
-.ant-input-affix-wrapper-disabled {
-  background-color: #262337 !important;
-  color: #ffffff !important;
+.thin-scroll::-webkit-scrollbar-corner {
+  background-color: var(--bkg-3);
 }
 
-.ant-select-arrow {
-  color: #817f8a !important;
+/* Responsive table */
+
+/* inspired by: https://css-tricks.com/responsive-data-tables/ */
+.responsiveTable {
+  width: 100%;
 }
 
-.ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
-  color: #f2c94c !important;
-  font-weight: 600 !important;
-  background-color: #141026 !important;
+.responsiveTable td .tdBefore {
+  display: none;
 }
 
-.ant-select-item-option-active:not(.ant-select-item-option-disabled) {
-  background-color: #584f81 !important;
-}
+@media screen and (max-width: 767px) {
+  .responsiveTable table,
+  .responsiveTable thead,
+  .responsiveTable tbody,
+  .responsiveTable th,
+  .responsiveTable td,
+  .responsiveTable tr {
+    display: block;
+  }
 
-.ant-input-group::after {
-  border-style: none !important;
-}
+  .responsiveTable thead tr {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+    border-bottom: 2px solid #333;
+  }
 
-.ant-input-group::before {
-  border-style: none !important;
-}
+  .responsiveTable tbody tr {
+    @apply px-4;
+  }
 
-.ant-input-group-wrapper {
-  border-style: none !important;
-}
+  .responsiveTable td.pivoted {
+    /* Behave like a "row" */
+    @apply pb-1;
+    position: relative;
+    padding-left: calc(50% + 10px) !important;
+    text-align: left !important;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+  }
 
-.ant-input-group:first-child .ant-input-affix-wrapper:not(:first-child) {
-  border-top-right-radius: 0 !important;
-  border-bottom-right-radius: 0 !important;
-}
+  .responsiveTable td.pivoted:last-child {
+    /* Behave like a "row" */
+    @apply pb-4;
+  }
 
-.ant-input-group.ant-input-group-compact > *:last-child,
-.ant-input-group.ant-input-group-compact
-  > .ant-select:last-child
-  > .ant-select-selector,
-.ant-input-group.ant-input-group-compact
-  > .ant-cascader-picker:last-child
-  .ant-input,
-.ant-input-group.ant-input-group-compact
-  > .ant-cascader-picker-focused:last-child
-  .ant-input {
-  border-color: #524a79 !important;
+  .responsiveTable td.pivoted:last-child {
+    /* Behave like a "row" */
+    @apply border-b-0;
+  }
+
+  .responsiveTable td .tdBefore {
+    /* Now like a table header */
+    @apply text-th-fgd-3 font-normal;
+    position: absolute;
+    display: block;
+
+    /* Top/left values mimic padding */
+    left: 1rem;
+    width: calc(50% - 20px);
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    text-align: left !important;
+  }
 }

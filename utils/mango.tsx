@@ -27,8 +27,10 @@ import {
   NUM_TOKENS,
 } from '@blockworks-foundation/mango-client/lib/layout'
 import {
+  makeBorrowInstruction,
   makeSettleBorrowInstruction,
   makeSettleFundsInstruction,
+  makeWithdrawInstruction,
 } from '@blockworks-foundation/mango-client/lib/instruction'
 import { sendTransaction } from './send'
 import { TOKEN_PROGRAM_ID } from './tokens'
@@ -42,6 +44,7 @@ import {
 import { Order } from '@project-serum/serum/lib/market'
 import { SRM_DECIMALS } from '@project-serum/serum/lib/token-instructions'
 import { MangoSrmAccount } from '@blockworks-foundation/mango-client/lib/client'
+import { capitalize } from './index'
 
 export const DEFAULT_MANGO_GROUP = 'BTC_ETH_USDT'
 
@@ -85,7 +88,6 @@ export async function initMarginAccount(
 
   const functionName = 'InitMarginAccount'
   const sendingMessage = `Sending ${functionName} instruction...`
-  const sentMessage = `${functionName} instruction sent`
   const successMessage = `${functionName} instruction success`
 
   await sendTransaction({
@@ -94,7 +96,6 @@ export async function initMarginAccount(
     signers,
     connection,
     sendingMessage,
-    sentMessage,
     successMessage,
   })
 
@@ -139,11 +140,27 @@ export async function deposit(
 
   const transaction = new Transaction()
   transaction.add(instruction)
+
+  // settle borrow
+  const settleKeys = [
+    { isSigner: false, isWritable: true, pubkey: mangoGroup.publicKey },
+    { isSigner: false, isWritable: true, pubkey: marginAccount.publicKey },
+    { isSigner: true, isWritable: false, pubkey: wallet.publicKey },
+    { isSigner: false, isWritable: false, pubkey: SYSVAR_CLOCK_PUBKEY },
+  ]
+  const setttleBorrowsData = encodeMangoInstruction({
+    SettleBorrow: { tokenIndex: new BN(tokenIndex), quantity: nativeQuantity },
+  })
+  const settleBorrowsInstruction = new TransactionInstruction({
+    keys: settleKeys,
+    data: setttleBorrowsData,
+    programId,
+  })
+  transaction.add(settleBorrowsInstruction)
   const signers = []
 
   const functionName = 'Deposit'
   const sendingMessage = `Sending ${functionName} instruction...`
-  const sentMessage = `${functionName} instruction sent`
   const successMessage = `${functionName} instruction success`
   return await sendTransaction({
     transaction,
@@ -151,7 +168,6 @@ export async function deposit(
     signers,
     connection,
     sendingMessage,
-    sentMessage,
     successMessage,
   })
 }
@@ -229,7 +245,6 @@ export async function initMarginAccountAndDeposit(
   const signers = [accInstr.account]
   const functionName = 'InitMarginAccount'
   const sendingMessage = `Sending ${functionName} instruction...`
-  const sentMessage = `${functionName} instruction sent`
   const successMessage = `${functionName} instruction success`
 
   const trxHash = await sendTransaction({
@@ -238,7 +253,6 @@ export async function initMarginAccountAndDeposit(
     signers,
     connection,
     sendingMessage,
-    sentMessage,
     successMessage,
   })
   return [accInstr.account, trxHash]
@@ -294,7 +308,6 @@ export async function withdraw(
   const signers = []
   const functionName = 'Withdraw'
   const sendingMessage = `Sending ${functionName} instruction...`
-  const sentMessage = `${functionName} instruction sent`
   const successMessage = `${functionName} instruction success`
   return await sendTransaction({
     transaction,
@@ -302,7 +315,6 @@ export async function withdraw(
     signers,
     connection,
     sendingMessage,
-    sentMessage,
     successMessage,
   })
 }
@@ -350,7 +362,6 @@ export async function borrow(
   const signers = []
   const functionName = 'Borrow'
   const sendingMessage = `Sending ${functionName} instruction...`
-  const sentMessage = `${functionName} instruction sent`
   const successMessage = `${functionName} instruction success`
   return await sendTransaction({
     transaction,
@@ -358,7 +369,85 @@ export async function borrow(
     signers,
     connection,
     sendingMessage,
-    sentMessage,
+    successMessage,
+  })
+}
+
+export async function borrowAndWithdraw(
+  connection: Connection,
+  programId: PublicKey,
+  mangoGroup: MangoGroup,
+  marginAccount: MarginAccount,
+  wallet: Wallet,
+  token: PublicKey,
+  tokenAcc: PublicKey,
+
+  withdrawQuantity: number
+): Promise<TransactionSignature> {
+  const transaction = new Transaction()
+  const tokenIndex = mangoGroup.getTokenIndex(token)
+  const tokenBalance = marginAccount.getUiDeposit(mangoGroup, tokenIndex)
+  const borrowQuantity = withdrawQuantity - tokenBalance
+
+  const nativeBorrowQuantity = uiToNative(
+    borrowQuantity,
+    mangoGroup.mintDecimals[tokenIndex]
+  )
+
+  const borrowInstruction = makeBorrowInstruction(
+    programId,
+    mangoGroup.publicKey,
+    marginAccount.publicKey,
+    wallet.publicKey,
+    tokenIndex,
+    marginAccount.openOrders,
+    mangoGroup.oracles,
+    nativeBorrowQuantity
+  )
+  transaction.add(borrowInstruction)
+
+  // uiToNative() uses Math.round causing
+  // errors so we use Math.floor here instead
+  const nativeWithdrawQuantity = new BN(
+    Math.floor(
+      withdrawQuantity * Math.pow(10, mangoGroup.mintDecimals[tokenIndex])
+    ) * 0.98
+  )
+
+  const withdrawInstruction = makeWithdrawInstruction(
+    programId,
+    mangoGroup.publicKey,
+    marginAccount.publicKey,
+    wallet.publicKey,
+    mangoGroup.signerKey,
+    tokenAcc,
+    mangoGroup.vaults[tokenIndex],
+    marginAccount.openOrders,
+    mangoGroup.oracles,
+    nativeWithdrawQuantity
+  )
+  transaction.add(withdrawInstruction)
+
+  const settleBorrowInstruction = makeSettleBorrowInstruction(
+    programId,
+    mangoGroup.publicKey,
+    marginAccount.publicKey,
+    wallet.publicKey,
+    tokenIndex,
+    nativeWithdrawQuantity
+  )
+  transaction.add(settleBorrowInstruction)
+
+  const signers = []
+  const functionName = 'Borrow And Withdraw'
+  const sendingMessage = `Sending ${functionName} instruction...`
+  const successMessage = `${functionName} instruction success`
+  return await sendTransaction({
+    transaction,
+    wallet,
+    signers,
+    connection,
+    sendingMessage,
     successMessage,
   })
 }
@@ -440,7 +529,6 @@ export async function settleAllBorrows(
   })
   const functionName = 'SettleBorrows'
   const sendingMessage = `Sending ${functionName} instruction...`
-  const sentMessage = `${functionName} instruction sent`
   const successMessage = `${functionName} instruction success`
 
   return await sendTransaction({
@@ -449,7 +537,6 @@ export async function settleAllBorrows(
     wallet,
     signers,
     sendingMessage,
-    sentMessage,
     successMessage,
   })
 }
@@ -934,7 +1021,7 @@ export async function placeAndSettle(
     connection,
     wallet,
     signers,
-    'PlaceAndSettle'
+    'place order and settle'
   )
 }
 
@@ -1063,7 +1150,6 @@ export async function settleFunds(
   const signers = []
   const functionName = 'SettleFunds'
   const sendingMessage = `Sending ${functionName} instruction...`
-  const sentMessage = `${functionName} instruction sent`
   const successMessage = `${functionName} instruction success`
   return await sendTransaction({
     transaction,
@@ -1071,7 +1157,6 @@ export async function settleFunds(
     signers,
     connection,
     sendingMessage,
-    sentMessage,
     successMessage,
   })
 }
@@ -1261,8 +1346,12 @@ export async function settleAll(
     ]
     const data = encodeMangoInstruction({ SettleFunds: {} })
 
-    const instruction = new TransactionInstruction({ keys, data, programId })
-    transaction.add(instruction)
+    const settleFundsInstruction = new TransactionInstruction({
+      keys,
+      data,
+      programId,
+    })
+    transaction.add(settleFundsInstruction)
   }
 
   const deposits = marginAccount.getDeposits(mangoGroup)
@@ -1288,8 +1377,12 @@ export async function settleAll(
       },
     })
 
-    const instruction = new TransactionInstruction({ keys, data, programId })
-    transaction.add(instruction)
+    const settleBorrowsInstruction = new TransactionInstruction({
+      keys,
+      data,
+      programId,
+    })
+    transaction.add(settleBorrowsInstruction)
   }
 
   if (transaction.instructions.length === 0) {
@@ -1307,15 +1400,13 @@ async function packageAndSend(
   functionName: string
 ): Promise<TransactionSignature> {
   const sendingMessage = `Sending ${functionName} instruction...`
-  const sentMessage = `${functionName} instruction sent`
-  const successMessage = `${functionName} instruction success`
+  const successMessage = `${capitalize(functionName)} instruction success`
   return await sendTransaction({
     transaction,
     wallet,
     signers,
     connection,
     sendingMessage,
-    sentMessage,
     successMessage,
   })
 }
