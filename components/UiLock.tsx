@@ -30,14 +30,14 @@ const UiLock = ({ className = '' }) => {
           <ResetLayout />
         </Transition>
       ) : null}
-      <div className={`${className} flex relative`}>
+      <div className={`${className} flex relative mr-4`}>
         <Tooltip
           content={uiLocked ? 'Unlock Layout' : 'Lock Layout'}
           className="text-xs py-1"
         >
           <button
             onClick={handleClick}
-            className="flex items-center justify-center rounded-full bg-th-bkg-3 w-8 h-8 mr-4 hover:text-th-primary focus:outline-none"
+            className="flex items-center justify-center rounded-full bg-th-bkg-3 w-8 h-8 hover:text-th-primary focus:outline-none"
           >
             {uiLocked ? (
               <LockClosedIcon className="w-5 h-5" />
