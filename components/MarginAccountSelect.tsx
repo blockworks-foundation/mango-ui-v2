@@ -39,10 +39,12 @@ const MarginAccountSelect = ({
       disabled={disabled}
       value={
         <div className="text-left">
-          BTC/ETH/USDT
-          <div className="text-xs text-th-fgd-4">
-            {abbreviateAddress(selectedMarginAccount?.publicKey)}
-          </div>
+          {/* {Object.keys(symbols).map((symbol, index) =>
+            index !== 0 ? `/${symbol}` : symbol
+          )} */}
+          {/* <div className="text-xs text-th-fgd-4"> */}
+          {abbreviateAddress(selectedMarginAccount?.publicKey)}
+          {/* </div> */}
         </div>
       }
       onChange={handleSelectMarginAccount}
@@ -52,10 +54,7 @@ const MarginAccountSelect = ({
       {marginAccounts.length ? (
         marginAccounts.map((ma, index) => (
           <Select.Option key={index} value={ma.publicKey.toString()}>
-            BTC/ETH/USDT
-            <div className="text-xs text-th-fgd-4">
-              {abbreviateAddress(ma.publicKey)}
-            </div>
+            {abbreviateAddress(ma.publicKey)}
           </Select.Option>
         ))
       ) : (

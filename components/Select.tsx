@@ -55,7 +55,7 @@ const Option = ({ value, children, className = '' }) => {
     <Listbox.Option value={value}>
       {({ selected }) => (
         <div
-          className={`p-2 hover:bg-th-bkg-3 hover:cursor-pointer tracking-wider ${
+          className={`p-2 default-transition hover:bg-th-bkg-3 hover:cursor-pointer tracking-wider ${
             selected && `text-th-primary`
           } ${className}`}
         >

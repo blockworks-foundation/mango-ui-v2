@@ -8,7 +8,6 @@ import {
 import PhoneInput from 'react-phone-input-2'
 import 'react-phone-input-2/lib/plain.css'
 import Button from './Button'
-import { LinkButton } from './Button'
 import Input from './Input'
 import { ElementTitle } from './styles'
 import useMangoStore from '../stores/useMangoStore'
@@ -199,14 +198,14 @@ export default function AlertsModal({ isOpen, onClose }) {
                     ))}
                   </Select>
                 )}
-                <LinkButton
-                  className="mt-2 font-normal text-xs"
+                <Button
+                  className="px-0 py-0 mt-2 border-0 font-normal text-th-fgd-3 text-xs hover:bg-transparent hover:opacity-60"
                   onClick={() => setUseCustomRatio(!useCustomRatio)}
                 >
                   {useCustomRatio
                     ? 'Choose a suggested collateral ratio threshold'
                     : 'Enter a custom collateral ratio threshold'}
-                </LinkButton>
+                </Button>
               </div>
               <div className="pb-4">
                 <div className={`text-th-fgd-1 pb-2`}>Alert me via:</div>
