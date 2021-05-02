@@ -28,3 +28,22 @@ const Button: FunctionComponent<ButtonProps> = ({
 }
 
 export default Button
+
+export const LinkButton: FunctionComponent<ButtonProps> = ({
+  children,
+  onClick,
+  disabled = false,
+  className,
+  ...props
+}) => {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`${className} border-0 text-th-fgd-3 hover:opacity-60 focus:outline-none`}
+      {...props}
+    >
+      {children}
+    </button>
+  )
+}
