@@ -3,7 +3,7 @@ import { useState } from 'react'
 import useMangoStore from '../stores/useMangoStore'
 import Select from './Select'
 import { abbreviateAddress } from '../utils'
-import useMarketList from '../hooks/useMarketList'
+// import useMarketList from '../hooks/useMarketList'
 
 type MarginAccountSelectProps = {
   className?: string
@@ -22,7 +22,7 @@ const MarginAccountSelect = ({
   const [selectedMarginAccount, setSelectedMarginAccount] = useState(
     value || marginAccounts[0]
   )
-  const { symbols } = useMarketList()
+  // const { symbols } = useMarketList()
 
   const handleSelectMarginAccount = (value) => {
     const marginAccount = marginAccounts.find(
@@ -39,9 +39,7 @@ const MarginAccountSelect = ({
       disabled={disabled}
       value={
         <div className="text-left">
-          {Object.keys(symbols).map((symbol, index) =>
-            index !== 0 ? `/${symbol}` : symbol
-          )}
+          BTC/ETH/USDT
           <div className="text-xs text-th-fgd-4">
             {abbreviateAddress(selectedMarginAccount?.publicKey)}
           </div>
