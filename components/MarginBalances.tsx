@@ -65,7 +65,6 @@ export default function MarginBalances() {
         <div>
           {marginAccounts.length > 1 ? (
             <MarginAccountSelect
-              value={marginAccounts[0]}
               onChange={handleMarginAccountChange}
               className="mb-2"
             />
