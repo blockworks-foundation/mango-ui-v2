@@ -17,6 +17,7 @@ import { WalletIcon } from './icons'
 import useMangoStore from '../stores/useMangoStore'
 import ConnectWalletButton from './ConnectWalletButton'
 import { copyToClipboard } from '../utils'
+import AlertsList from './AlertsList'
 
 const Code = styled.code`
   border: 1px solid hsla(0, 0%, 39.2%, 0.2);
@@ -76,10 +77,11 @@ const TopBar = () => {
           </div>
           <div className="flex">
             <div className="flex items-center">
-              {asPath === '/' ? <UiLock /> : null}
-              <div className="flex items-center justify-center rounded-full bg-th-bkg-3 w-8 h-8 mr-2">
+              <div className="pr-3">{asPath === '/' ? <UiLock /> : null}</div>
+              <div className="pr-3">
                 <ThemeSwitch />
               </div>
+              {connected ? <AlertsList /> : null}
               <div className="hidden sm:ml-4 sm:block">
                 {connected && wallet?.publicKey ? (
                   <Menu>

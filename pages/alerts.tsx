@@ -234,7 +234,7 @@ export default function Alerts() {
           >
             {connected ? (
               <div className="flex justify-center">
-                {submitting ? <Loading /> : 'Save Alert'}
+                {submitting ? <Loading className="-ml-1 mr-3" /> : 'Save Alert'}
               </div>
             ) : (
               'Connect Wallet To Save'
