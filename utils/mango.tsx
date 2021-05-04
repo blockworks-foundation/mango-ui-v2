@@ -412,7 +412,7 @@ export async function borrowAndWithdraw(
   const nativeWithdrawQuantity = new BN(
     Math.floor(
       withdrawQuantity * Math.pow(10, mangoGroup.mintDecimals[tokenIndex])
-    )
+    ) - 1
   )
 
   const withdrawInstruction = makeWithdrawInstruction(
@@ -429,15 +429,15 @@ export async function borrowAndWithdraw(
   )
   transaction.add(withdrawInstruction)
 
-  // const settleBorrowInstruction = makeSettleBorrowInstruction(
-  //   programId,
-  //   mangoGroup.publicKey,
-  //   marginAccount.publicKey,
-  //   wallet.publicKey,
-  //   tokenIndex,
-  //   nativeWithdrawQuantity
-  // )
-  // transaction.add(settleBorrowInstruction)
+  const settleBorrowInstruction = makeSettleBorrowInstruction(
+    programId,
+    mangoGroup.publicKey,
+    marginAccount.publicKey,
+    wallet.publicKey,
+    tokenIndex,
+    nativeWithdrawQuantity
+  )
+  transaction.add(settleBorrowInstruction)
 
   const signers = []
   const functionName = 'Borrow And Withdraw'
