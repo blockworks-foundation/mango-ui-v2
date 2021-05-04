@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useMemo, useState } from 'react'
 import useMangoStore from '../stores/useMangoStore'
 import { notify } from '../utils/notifications'
 
@@ -8,7 +8,7 @@ export default function useAlerts() {
   const [alerts, setAlerts] = useState([])
   const [loadAlerts, setLoadAlerts] = useState(true)
 
-  useEffect(() => {
+  useMemo(() => {
     const getAlerts = async () => {
       if (marginAccounts.length > 0) {
         if (marginAccounts.length === 1) {

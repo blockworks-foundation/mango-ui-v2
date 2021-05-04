@@ -153,7 +153,7 @@ export default function AlertsModal({ isOpen, onClose }) {
           <Modal.Header>
             <div className={`text-th-fgd-3 flex-shrink invisible w-5`}>X</div>
             <ElementTitle noMarignBottom>
-              Set Liquidation Alert{' '}
+              Create Liquidation Alert{' '}
               <Tooltip
                 content="Your account can be liquidated if your collateral ratio is below 110%.
             Set an alert above 110% and we'll let you know if it falls

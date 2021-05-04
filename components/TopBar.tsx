@@ -77,11 +77,15 @@ const TopBar = () => {
           </div>
           <div className="flex">
             <div className="flex items-center">
-              <div className="pr-3">{asPath === '/' ? <UiLock /> : null}</div>
-              <div className="pr-3">
+              <div className="pl-3">{asPath === '/' ? <UiLock /> : null}</div>
+              <div className="pl-3">
                 <ThemeSwitch />
               </div>
-              {connected ? <AlertsList /> : null}
+              {connected ? (
+                <div className="pl-3">
+                  <AlertsList />
+                </div>
+              ) : null}
               <div className="hidden sm:ml-4 sm:block">
                 {connected && wallet?.publicKey ? (
                   <Menu>

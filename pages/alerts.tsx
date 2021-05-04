@@ -1,287 +1,220 @@
-import React, { useState } from 'react'
-import { RadioGroup } from '@headlessui/react'
-import PhoneInput from 'react-phone-input-2'
-import 'react-phone-input-2/lib/plain.css'
-import Button from '../components/Button'
-import FloatingElement from '../components/FloatingElement'
-import Input from '../components/Input'
-import { ElementTitle } from '../components/styles'
-import TopBar from '../components/TopBar'
+import { useMemo, useState } from 'react'
 import useMangoStore from '../stores/useMangoStore'
-import { notify } from '../utils/notifications'
-import Modal from '../components/Modal'
+import dayjs from 'dayjs'
+import styled from '@emotion/styled'
+import {
+  BadgeCheckIcon,
+  BellIcon,
+  DeviceMobileIcon,
+  LinkIcon,
+  MailIcon,
+} from '@heroicons/react/outline'
+import { TelegramIcon } from '../components/icons'
+import useAlerts from '../hooks/useAlerts'
+import { abbreviateAddress } from '../utils'
+import TopBar from '../components/TopBar'
+import Button from '../components/Button'
 import Loading from '../components/Loading'
-import MarginAccountSelect from '../components/MarginAccountSelect'
+import AlertsModal from '../components/AlertsModal'
+
+var relativeTime = require('dayjs/plugin/relativeTime')
+dayjs.extend(relativeTime)
+
+const StyledDiv = styled.div`
+  font-size: 0.75rem;
+`
+
+const TABS = ['Active', 'Triggered']
 
 export default function Alerts() {
   const connected = useMangoStore((s) => s.wallet.connected)
-  const marginAccounts = useMangoStore((s) => s.marginAccounts)
-  const selectedMangoGroup = useMangoStore((s) => s.selectedMangoGroup.current)
+  const [triggeredAlerts, setTriggeredAlerts] = useState([])
+  const [activeAlerts, setActiveAlerts] = useState([])
+  const { alerts, loadAlerts } = useAlerts()
+  const [activeTab, setActiveTab] = useState(TABS[0])
+  const [openAlertModal, setOpenAlertModal] = useState(false)
 
-  const [selectedMarginAccount, setSelectedMarginAccount] = useState<any>(null)
-  const [collateralRatioThresh, setCollateralRatioThresh] = useState(113)
-  const [alertProvider, setAlertProvider] = useState('sms')
-  const [phoneNumber, setPhoneNumber] = useState<any>({ phone: null })
-  const [email, setEmail] = useState<string>('')
-  const [tgCode, setTgCode] = useState<string>('')
-  const [submitting, setSubmitting] = useState(false)
-
-  const resetForm = () => {
-    setAlertProvider('sms')
-    setPhoneNumber({ phone: null })
-    setEmail('')
-    setTgCode('')
-    setCollateralRatioThresh(113)
+  const handleTabChange = (tabName) => {
+    setActiveTab(tabName)
   }
 
-  async function onSubmit() {
-    if (!connected) {
-      notify({
-        message: 'Please connect wallet',
-        type: 'error',
-      })
-      return
-    } else if (!selectedMarginAccount) {
-      notify({
-        message: 'Please select a margin account',
-        type: 'error',
-      })
-      return
-    } else if (alertProvider === 'sms' && !phoneNumber.phone) {
-      notify({
-        message: 'Please provide phone number',
-        type: 'error',
-      })
-      return
-    } else if (alertProvider === 'mail' && !email) {
-      notify({
-        message: 'Please provide e-mail',
-        type: 'error',
-      })
-      return
-    }
-    setSubmitting(true)
-    const fetchUrl = `https://mango-margin-call.herokuapp.com/alerts`
-    const body = {
-      mangoGroupPk: selectedMangoGroup.publicKey.toString(),
-      marginAccountPk: selectedMarginAccount.publicKey.toString(),
-      collateralRatioThresh,
-      alertProvider,
-      phoneNumber,
-      email,
-    }
-    const headers = { 'Content-Type': 'application/json' }
-    fetch(fetchUrl, {
-      method: 'POST',
-      headers: headers,
-      body: JSON.stringify(body),
-    })
-      .then((response: any) => {
-        if (!response.ok) {
-          throw response
-        }
-        return response.json()
-      })
-      .then((json: any) => {
-        if (alertProvider === 'tg') {
-          setTgCode(json.code)
-        } else {
-          notify({
-            message: 'You have succesfully saved your alert',
-            type: 'success',
-          })
-          resetForm()
-        }
-      })
-      .catch((err) => {
-        if (typeof err.text === 'function') {
-          err.text().then((errorMessage: string) => {
-            notify({
-              message: errorMessage,
-              type: 'error',
-            })
-          })
-        } else {
-          notify({
-            message: 'Something went wrong',
-            type: 'error',
-          })
-        }
-      })
-      .finally(() => {
-        setSubmitting(false)
-      })
-  }
+  useMemo(() => {
+    const triggered = alerts
+      .filter((alert) => !alert.open)
+      .sort((a, b) => b.timestamp - a.timestamp)
+    setTriggeredAlerts(triggered)
+  }, [alerts])
+
+  useMemo(() => {
+    const active = alerts
+      .filter((alert) => alert.open)
+      .sort((a, b) => b.timestamp - a.timestamp)
+    setActiveAlerts(active)
+  }, [alerts])
 
   return (
     <div className={`bg-th-bkg-1 text-th-fgd-1 transition-all `}>
       <TopBar />
-      <div className="min-h-screen w-full md:max-w-xl mx-auto px-4 sm:px-6 sm:py-1 md:px-8 md:py-1 lg:px-12 mt-4">
-        <FloatingElement className="p-7 !overflow-visible">
-          <ElementTitle>Select Margin Account</ElementTitle>
-          {marginAccounts.length ? (
-            <MarginAccountSelect onChange={setSelectedMarginAccount} />
-          ) : (
-            <div className=" text-base font-thin">
-              Connect your wallet and deposit funds to create a margin account.
-            </div>
-          )}
-          <ElementTitle className="pt-3">Liquidation Alert</ElementTitle>
-          <div className="mb-4 text-base font-thin">
-            You will receive an alert when your maintenance collateral ratio is
-            at or below the specified ratio below
+      <div className="min-h-screen grid grid-cols-12 gap-4 pb-10">
+        <div className="col-start-3 col-span-8">
+          <div className="flex items-center justify-between pt-8 pb-6 md:pt-10">
+            <h1 className={`text-th-fgd-1 text-2xl font-semibold`}>Alerts</h1>
+            <Button
+              disabled={!connected}
+              onClick={() => setOpenAlertModal(true)}
+            >
+              Create
+            </Button>
           </div>
-          <Input.Group>
-            <Input
-              type="number"
-              value={collateralRatioThresh}
-              onChange={(e) => setCollateralRatioThresh(e.target.value)}
-              prefix={'Ratio'}
-              suffix="%"
-            />
-          </Input.Group>
-
-          <RadioGroup
-            value={alertProvider}
-            onChange={(val) => setAlertProvider(val)}
-            className="flex mt-4 border border-th-fgd-4"
-          >
-            <RadioGroup.Option
-              value="sms"
-              className="flex-1 outline-none focus:outline-none"
-            >
-              {({ checked }) => (
-                <button
-                  className={`${
-                    checked ? 'bg-th-primary' : ''
-                  } text-th-fgd-1  text-center py-1.5 w-full rounded-none border-r border-th-fgd-4`}
-                >
-                  SMS
-                </button>
-              )}
-            </RadioGroup.Option>
-            <RadioGroup.Option
-              value="mail"
-              className="outline-none focus:outline-none flex-1"
-            >
-              {({ checked }) => (
-                <button
-                  className={`${
-                    checked ? 'bg-th-primary' : ''
-                  } text-th-fgd-1  text-center py-1.5 w-full rounded-none border-r border-th-fgd-4`}
-                >
-                  E-MAIL
-                </button>
-              )}
-            </RadioGroup.Option>
-            <RadioGroup.Option
-              value="tg"
-              className="outline-none focus:outline-none flex-1"
-            >
-              {({ checked }) => (
-                <button
-                  className={`${
-                    checked ? 'bg-th-primary' : ''
-                  } text-th-fgd-1  text-center py-1.5 w-full rounded-none`}
-                >
-                  TELEGRAM
-                </button>
-              )}
-            </RadioGroup.Option>
-          </RadioGroup>
-          <div className="py-4">
-            {alertProvider === 'sms' ? (
-              <PhoneInput
-                containerClass="w-full"
-                inputClass="!w-full !bg-th-bkg-1 !rounded !h-10 !text-th-fgd-1 
-                !border !border-th-fgd-4"
-                buttonClass="!bg-th-bkg-2 !border !border-th-fgd-4 !pl-1 !hover:bg-th-bkg-2"
-                dropdownClass="!bg-th-bkg-2 !border !border-th-fgd-4 !pl-1 thin-scroll"
-                country="us"
-                inputProps={{
-                  name: 'phone',
-                  required: true,
-                  autoFocus: true,
-                }}
-                onChange={(val) => setPhoneNumber({ phone: val, code: '' })}
-              />
-            ) : null}
-            {alertProvider === 'mail' ? (
-              <Input.Group>
-                <Input
-                  prefix={'Email'}
-                  value={email}
-                  type="mail"
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </Input.Group>
-            ) : null}
-            {alertProvider === 'tg' ? (
-              <>
-                <p>Instructions</p>
-                <ol className="list-decimal pl-8">
-                  <li>Connect wallet</li>
-                  <li>Click the Save alert button</li>
-                  <li>Follow instructions in the dialog</li>
-                </ol>
-              </>
-            ) : null}
-          </div>
-          <Button
-            disabled={!connected}
-            onClick={onSubmit}
-            className="w-full mb-2"
-          >
-            {connected ? (
-              <div className="flex justify-center">
-                {submitting ? <Loading className="-ml-1 mr-3" /> : 'Save Alert'}
+          <div className="p-6 rounded-lg bg-th-bkg-2">
+            {loadAlerts ? (
+              <div className="flex items-center justify-center text-th-primary h-full">
+                <Loading />
               </div>
+            ) : connected ? (
+              <>
+                <div className="border-b border-th-fgd-4 mb-6">
+                  <nav className={`-mb-px flex space-x-8`} aria-label="Tabs">
+                    {TABS.map((tabName) => (
+                      <a
+                        key={tabName}
+                        onClick={() => handleTabChange(tabName)}
+                        className={`whitespace-nowrap pb-4 px-1 border-b-2 font-semibold cursor-pointer default-transition
+                  ${
+                    activeTab === tabName
+                      ? `border-th-primary text-th-primary`
+                      : `border-transparent text-th-fgd-4 hover:text-th-primary`
+                  }
+                `}
+                      >
+                        {tabName}
+                      </a>
+                    ))}
+                  </nav>
+                </div>
+                <TabContent
+                  activeTab={activeTab}
+                  activeAlerts={activeAlerts}
+                  triggeredAlerts={triggeredAlerts}
+                />
+              </>
             ) : (
-              'Connect Wallet To Save'
+              <div className="flex flex-col items-center text-th-fgd-1 px-4 pb-2 rounded-lg">
+                <LinkIcon className="w-6 h-6 mb-1 text-th-primary" />
+                <div className="font-bold text-lg pb-1">Connect Wallet</div>
+                <p className="mb-0 text-center">
+                  Connect your wallet to view and create liquidation alerts.
+                </p>
+              </div>
             )}
-          </Button>
-        </FloatingElement>
+          </div>
+        </div>
       </div>
-      {tgCode !== '' ? (
-        <TelegramModal
-          isOpen={tgCode !== ''}
-          onClose={() => setTgCode('')}
-          tgCode={tgCode}
+      {openAlertModal ? (
+        <AlertsModal
+          isOpen={openAlertModal}
+          onClose={() => setOpenAlertModal(false)}
         />
       ) : null}
     </div>
   )
 }
 
-const TelegramModal = ({ tgCode, isOpen, onClose }) => {
-  return (
-    <Modal isOpen={isOpen} onClose={onClose}>
-      <div className="text-th-fgd-1 p-6 pt-0">
-        <div className="w-full text-center text-xl">
-          Claim Alert in Telegram
+const TabContent = ({ activeTab, activeAlerts, triggeredAlerts }) => {
+  switch (activeTab) {
+    case 'Active':
+      return activeAlerts.length === 0 ? (
+        <div className="flex flex-col items-center text-th-fgd-1 px-4 pb-2 rounded-lg">
+          <BellIcon className="w-6 h-6 mb-1 text-th-primary" />
+          <div className="font-bold text-lg pb-1">No Alerts Found</div>
+          <p className="mb-0 text-center">
+            Get notified when your account is in danger of liquidation.
+          </p>
         </div>
-        <div className="rounded border mt-4 border-th-bkg-3 p-4 bg-th-bkg-3">
-          <ol className="ml-6 list-decimal space-y-2 text-base font-thin">
-            <li>
-              Please copy this code -{' '}
-              <span className="italic font-black">{tgCode}</span>
-            </li>
-            <li>
-              Visit this telegram channel -{' '}
-              <a
-                target="_blank"
-                rel="noopener noreferrer"
-                href="https://t.me/mango_alerts_bot"
-                className="text-th-primary"
-              >
-                https://t.me/mango_alerts_bot
-              </a>
-            </li>
-            <li>Paste the code and send</li>
-            <li>This alert can be claimed within 15 minutes</li>
-          </ol>
+      ) : (
+        activeAlerts.map((alert) => (
+          <AlertItem alert={alert} key={alert.timestamp} />
+        ))
+      )
+    case 'Triggered':
+      return triggeredAlerts.length === 0 ? (
+        <div className="flex flex-col items-center text-th-fgd-1 px-4 pb-2 rounded-lg">
+          <BadgeCheckIcon className="w-6 h-6 mb-1 text-th-green" />
+          <div className="font-bold text-lg pb-1">Smooth Sailing</div>
+          <p className="mb-0 text-center">
+            None of your liquidation alerts have been triggered.
+          </p>
         </div>
-      </div>
-    </Modal>
-  )
+      ) : (
+        triggeredAlerts.map((alert) => (
+          <AlertItem alert={alert} key={alert.timestamp} />
+        ))
+      )
+    default:
+      return activeAlerts.map((alert) => (
+        <AlertItem alert={alert} key={alert.timestamp} />
+      ))
+  }
 }
+
+const formatProvider = (provider) => {
+  if (provider === 'mail') {
+    return (
+      <span className="flex items-center mr-1">
+        <MailIcon className="w-4 h-4 mr-1.5" />
+        E-mail
+      </span>
+    )
+  } else if (provider === 'sms') {
+    return (
+      <span className="flex items-center mr-1">
+        <DeviceMobileIcon className="w-4 h-4 mr-1.5" />
+        SMS
+      </span>
+    )
+  } else {
+    return (
+      <span className="flex items-center mr-1">
+        <TelegramIcon className="w-4 h-4 mr-1.5" />
+        Telegram
+      </span>
+    )
+  }
+}
+
+const AlertItem = ({ alert }) => (
+  <div className="border border-th-bkg-3 mb-2 p-3 rounded-lg">
+    <div className="flex justify-between pb-0.5">
+      <div className="flex">
+        {formatProvider(alert.alertProvider)} below{' '}
+        {alert.collateralRatioThresh}%
+      </div>
+      <div className="text-xs text-th-fgd-4">
+        {dayjs(alert.timestamp).fromNow()}
+      </div>
+    </div>
+    <div className="text-th-fgd-3 text-xs mb-1 pl-6">
+      Acc: {abbreviateAddress(alert.acc)}
+    </div>
+    {alert.open ? (
+      <StyledDiv className="flex items-center text-th-fgd-4 pl-6">
+        <span className="flex h-2 w-2 mr-1 relative">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-th-green opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-th-green"></span>
+        </span>
+        Active
+      </StyledDiv>
+    ) : (
+      <StyledDiv className="flex items-center text-th-fgd-4 pl-6">
+        <span className="flex h-2 w-2 mr-1 relative">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-th-red opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-th-red"></span>
+        </span>
+        Triggered{' '}
+        {alert.triggeredTimestamp
+          ? dayjs(alert.triggeredTimestamp).fromNow()
+          : null}
+      </StyledDiv>
+    )}
+  </div>
+)
