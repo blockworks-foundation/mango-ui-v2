@@ -18,6 +18,7 @@ const AlertsList = () => {
   const [openAlertModal, setOpenAlertModal] = useState(false)
   const [triggeredAlerts, setTriggeredAlerts] = useState([])
   const [activeAlerts, setActiveAlerts] = useState(false)
+  const [ringBell, setRingBell] = useState(false)
   const { alerts, loadAlerts } = useAlerts()
 
   const [
@@ -40,6 +41,7 @@ const AlertsList = () => {
       if (getTriggeredAlertsLength > triggeredAlertsLength) {
         setAlertsCount(alertsCount + 1)
         setTriggeredAlertsLength(getTriggeredAlertsLength)
+        setRingBell(true)
       }
     }
   }, [alerts])
@@ -70,6 +72,15 @@ const AlertsList = () => {
     setActiveAlerts(active)
   }, [alerts])
 
+  useEffect(() => {
+    if (ringBell) {
+      const bellTimer = setTimeout(() => {
+        setRingBell(false)
+      }, 1200)
+      return () => clearTimeout(bellTimer)
+    }
+  }, [ringBell])
+
   return (
     <>
       <Popover className="relative">
@@ -77,12 +88,19 @@ const AlertsList = () => {
           <>
             <Popover.Button className="focus:outline-none">
               {alertsCount > 0 ? (
-                <StyledAlertCount className="w-4 h-4 bg-th-red rounded-full absolute -top-1 -right-1 flex items-center justify-center">
-                  {alertsCount}
-                </StyledAlertCount>
+                <div className="absolute -top-1.5 -right-1.5 z-20">
+                  <span className="flex h-4 w-4 relative">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-th-red opacity-75"></span>
+                    <StyledAlertCount className="w-4 h-4 bg-th-red relative inline-flex rounded-full flex items-center justify-center">
+                      {alertsCount}
+                    </StyledAlertCount>
+                  </span>
+                </div>
               ) : null}
               <div
-                className="flex items-center justify-center rounded-full bg-th-bkg-3 w-8 h-8 default-transition hover:text-th-primary"
+                className={`flex items-center justify-center rounded-full bg-th-bkg-3 w-8 h-8 default-transition hover:text-th-primary ${
+                  ringBell ? 'animate-shake' : null
+                }`}
                 onClick={() => setAlertsCount(0)}
               >
                 <BellIcon className="w-4 h-4" />
