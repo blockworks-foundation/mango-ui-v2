@@ -41,7 +41,6 @@ export default function LeverageSlider(props) {
     const selectedPosition =
       leverage * accountEquity + depositVal - accountBorrows
 
-    console.log(selectedMarginAccount.getUiDeposit(selectedMangoGroup, 2))
     if (selectedPosition > 0) props.onSetQuoteSize(selectedPosition.toFixed(2))
   }
 
