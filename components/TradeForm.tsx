@@ -15,6 +15,7 @@ import Button from './Button'
 import TradeType from './TradeType'
 import Input from './Input'
 import Switch from './Switch'
+import LeverageSlider from './LeverageSlider'
 
 const StyledRightInput = styled(Input)`
   border-left: 1px solid transparent;
@@ -290,6 +291,13 @@ export default function TradeForm() {
             suffix={quoteCurrency}
           />
         </Input.Group>
+        <LeverageSlider
+          quoteSize={quoteSize}
+          onSetQuoteSize={onSetQuoteSize}
+          side={side}
+          baseCurrency={baseCurrency}
+          quoteCurrency={quoteCurrency}
+        />
         {tradeType !== 'Market' ? (
           <div className="flex items-center mt-4">
             <Switch checked={postOnly} onChange={postOnChange}>
