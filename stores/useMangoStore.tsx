@@ -18,8 +18,8 @@ import { notify } from '../utils/notifications'
 export const ENDPOINTS: EndpointInfo[] = [
   {
     name: 'mainnet-beta',
-    url: 'https://vip-api.mainnet-beta.solana.com/',
-    websocket: 'https://api.mainnet-beta.solana.com/',
+    url: 'https://mango.rpcpool.com/',
+    websocket: 'https://mango.rpcpool.com/',
     custom: false,
   },
   {
@@ -94,6 +94,7 @@ interface MangoStore extends State {
   marginAccounts: MarginAccount[]
   selectedMarginAccount: {
     current: MarginAccount | null
+    initialLoad: boolean
   }
   tradeForm: {
     side: 'buy' | 'sell'
@@ -154,6 +155,7 @@ const useMangoStore = create<MangoStore>((set, get) => ({
   marginAccounts: [],
   selectedMarginAccount: {
     current: null,
+    initialLoad: false,
   },
   tradeForm: {
     side: 'buy',
@@ -210,13 +212,10 @@ const useMangoStore = create<MangoStore>((set, get) => ({
           set((state) => {
             state.wallet.srmAccountsForOwner = usersMangoSrmAccounts
             const totalSrmDeposits = usersMangoSrmAccounts.reduce(
-              (prev, cur) => prev + cur.amount,
+              (prev, cur) => prev + nativeToUi(cur.amount, SRM_DECIMALS),
               0
             )
-            state.wallet.contributedSrm = nativeToUi(
-              totalSrmDeposits,
-              SRM_DECIMALS
-            )
+            state.wallet.contributedSrm = totalSrmDeposits
           })
         }
       }
@@ -224,6 +223,7 @@ const useMangoStore = create<MangoStore>((set, get) => ({
     async fetchMarginAccounts() {
       const connection = get().connection.current
       const mangoGroup = get().selectedMangoGroup.current
+      const selectedMarginAcount = get().selectedMarginAccount.current
       const wallet = get().wallet.current
       const cluster = get().connection.cluster
       const mangoClient = get().mangoClient
@@ -231,6 +231,12 @@ const useMangoStore = create<MangoStore>((set, get) => ({
       const set = get().set
 
       if (!wallet?.publicKey || !wallet.publicKey) return
+
+      if (!selectedMarginAcount) {
+        set((state) => {
+          state.selectedMarginAccount.initialLoad = true
+        })
+      }
 
       return mangoClient
         .getMarginAccountsForOwner(
@@ -255,12 +261,12 @@ const useMangoStore = create<MangoStore>((set, get) => ({
               }
             })
           }
+          set((state) => {
+            state.selectedMarginAccount.initialLoad = false
+          })
         })
         .catch((err) => {
-          console.error(
-            'Could not get margin accounts for user in effect ',
-            err
-          )
+          console.error('Could not get margin accounts for wallet', err)
         })
     },
     async fetchAllMangoGroups() {
