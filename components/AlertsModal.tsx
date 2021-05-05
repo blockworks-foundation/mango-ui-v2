@@ -27,14 +27,19 @@ export default function AlertsModal({ isOpen, onClose }) {
   const [selectedMarginAccount, setSelectedMarginAccount] = useState<any>(
     marginAccounts[0]
   )
-  const [collateralRatioThresh, setCollateralRatioThresh] = useState(113)
+  const [collateralRatioPreset, setCollateralRatioPreset] = useState('113')
+  const [customCollateralRatio, setCustomCollateralRatio] = useState('')
   const [alertProvider, setAlertProvider] = useState('sms')
   const [phoneNumber, setPhoneNumber] = useState<any>({ phone: null })
   const [email, setEmail] = useState<string>('')
   const [tgCode, setTgCode] = useState<string>('')
   const [submitting, setSubmitting] = useState(false)
   const [isCopied, setIsCopied] = useState(false)
-  const [useCustomRatio, setUseCustomRatio] = useState(false)
+
+  const collateralRatioThresh =
+    collateralRatioPreset !== 'Custom'
+      ? parseInt(collateralRatioPreset)
+      : parseInt(customCollateralRatio)
 
   useEffect(() => {
     if (isCopied) {
@@ -55,7 +60,8 @@ export default function AlertsModal({ isOpen, onClose }) {
     setPhoneNumber({ phone: null })
     setEmail('')
     setTgCode('')
-    setCollateralRatioThresh(113)
+    setCollateralRatioPreset('113')
+    setCustomCollateralRatio('')
   }
 
   async function onSubmit() {
@@ -94,6 +100,7 @@ export default function AlertsModal({ isOpen, onClose }) {
       phoneNumber,
       email,
     }
+
     const headers = { 'Content-Type': 'application/json' }
     fetch(fetchUrl, {
       method: 'POST',
@@ -137,7 +144,7 @@ export default function AlertsModal({ isOpen, onClose }) {
       })
   }
 
-  const ratioPresets = [113, 115, 120, 130, 150, 200]
+  const ratioPresets = ['Custom', '113', '115', '120', '130', '150', '200']
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -156,7 +163,7 @@ export default function AlertsModal({ isOpen, onClose }) {
               Create Liquidation Alert{' '}
               <Tooltip
                 content="Your account can be liquidated if your collateral ratio is below 110%.
-            Set an alert above 110% and we'll let you know if it falls
+            Set an alert above 110% and we'll let you know if it is equal to or falls
             below that value."
               >
                 <div>
@@ -179,34 +186,34 @@ export default function AlertsModal({ isOpen, onClose }) {
                 <div className={`text-th-fgd-1 pb-2`}>
                   Alert me when my collateral ratio is below:
                 </div>
-                {useCustomRatio ? (
+                <Select
+                  value={
+                    collateralRatioPreset !== 'Custom'
+                      ? `${collateralRatioPreset}%`
+                      : collateralRatioPreset
+                  }
+                  onChange={(v) => setCollateralRatioPreset(v)}
+                >
+                  {ratioPresets.map((option, index) => (
+                    <Select.Option key={index} value={option}>
+                      {option !== 'Custom' ? `${option}%` : option}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </div>
+              {collateralRatioPreset === 'Custom' ? (
+                <div className="pb-4">
+                  <div className={`text-th-fgd-1 pb-2`}>
+                    Custom collateral ratio
+                  </div>
                   <Input
                     type="number"
-                    value={collateralRatioThresh}
-                    onChange={(e) => setCollateralRatioThresh(e.target.value)}
+                    value={customCollateralRatio}
+                    onChange={(e) => setCustomCollateralRatio(e.target.value)}
                     suffix="%"
                   />
-                ) : (
-                  <Select
-                    value={collateralRatioThresh + '%'}
-                    onChange={(v) => setCollateralRatioThresh(v)}
-                  >
-                    {ratioPresets.map((option, index) => (
-                      <Select.Option key={index} value={option}>
-                        {option}%
-                      </Select.Option>
-                    ))}
-                  </Select>
-                )}
-                <Button
-                  className="px-0 py-0 mt-2 border-0 font-normal text-th-fgd-3 text-xs hover:bg-transparent hover:opacity-60"
-                  onClick={() => setUseCustomRatio(!useCustomRatio)}
-                >
-                  {useCustomRatio
-                    ? 'Choose a suggested collateral ratio threshold'
-                    : 'Enter a custom collateral ratio threshold'}
-                </Button>
-              </div>
+                </div>
+              ) : null}
               <div className="pb-4">
                 <div className={`text-th-fgd-1 pb-2`}>Alert me via:</div>
                 <RadioGroup

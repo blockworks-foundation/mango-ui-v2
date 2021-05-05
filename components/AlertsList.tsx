@@ -1,28 +1,14 @@
 import { Fragment, useEffect, useMemo, useState } from 'react'
-import dayjs from 'dayjs'
 import styled from '@emotion/styled'
 import Router from 'next/router'
-import {
-  BadgeCheckIcon,
-  BellIcon,
-  DeviceMobileIcon,
-  MailIcon,
-} from '@heroicons/react/outline'
-import { TelegramIcon } from './icons'
+import { BadgeCheckIcon, BellIcon } from '@heroicons/react/outline'
 import useAlerts from '../hooks/useAlerts'
 import useLocalStorageState from '../hooks/useLocalStorageState'
-import { abbreviateAddress } from '../utils'
 import { Popover, Transition } from '@headlessui/react'
 import { LinkButton } from './Button'
 import Loading from './Loading'
 import AlertsModal from './AlertsModal'
-
-var relativeTime = require('dayjs/plugin/relativeTime')
-dayjs.extend(relativeTime)
-
-const StyledStatus = styled.div`
-  font-size: 0.75rem;
-`
+import AlertItem from './AlertItem'
 
 const StyledAlertCount = styled.span`
   font-size: 0.6rem;
@@ -48,13 +34,15 @@ const AlertsList = () => {
 
   // Increment the alerts count when the triggered alerts length is greater than the length in localStorage
   useEffect(() => {
-    if (triggeredAlerts.length > 0) {
-      setTriggeredAlertsLength(triggeredAlerts.length)
-      if (triggeredAlerts.length > triggeredAlertsLength) {
+    const getTriggeredAlertsLength = alerts.filter((alert) => !alert.open)
+      .length
+    if (getTriggeredAlertsLength > 0) {
+      if (getTriggeredAlertsLength > triggeredAlertsLength) {
         setAlertsCount(alertsCount + 1)
+        setTriggeredAlertsLength(getTriggeredAlertsLength)
       }
     }
-  }, [triggeredAlerts])
+  }, [alerts])
 
   // Old alerts won't have a triggeredTimestamp to sort by as it was added after alerts had started generating
   useEffect(() => {
@@ -112,7 +100,7 @@ const AlertsList = () => {
             >
               <Popover.Panel
                 static
-                className="absolute z-10 mt-3 transform -translate-x-1/2 left-1/2 w-64"
+                className="absolute z-10 mt-3 right-0 md:transform md:-translate-x-1/2 md:left-1/2 w-64"
               >
                 <div className="bg-th-bkg-1 p-4 overflow-auto max-h-80 rounded-lg shadow-lg thin-scroll">
                   {loadAlerts ? (
@@ -148,7 +136,7 @@ const AlertsList = () => {
                               Smooth Sailing
                             </div>
                             <p className="mb-0 text-center text-xs">
-                              None of your liquidation alerts have been
+                              None of your active liquidation alerts have been
                               triggered.
                             </p>
                           </div>
@@ -165,10 +153,14 @@ const AlertsList = () => {
                             <div className="flex items-center justify-between text-th-fgd-1 font-bold">
                               Triggered Alerts
                               <LinkButton
-                                onClick={() => Router.push('/alerts')}
-                                className="text-th-primary text-xs"
+                                onClick={() =>
+                                  setClearAlertsTimestamp(
+                                    triggeredAlerts[0].triggeredTimestamp
+                                  )
+                                }
+                                className="text-th-fgd-3 text-xs"
                               >
-                                View All
+                                Clear
                               </LinkButton>
                             </div>
                             {!activeAlerts ? (
@@ -181,16 +173,12 @@ const AlertsList = () => {
                           {triggeredAlerts.map((alert) => (
                             <AlertItem alert={alert} key={alert.timestamp} />
                           ))}
-                          <div className="flex justify-between pt-2">
+                          <div className="flex justify-center pt-2">
                             <LinkButton
-                              onClick={() =>
-                                setClearAlertsTimestamp(
-                                  triggeredAlerts[0].triggeredTimestamp
-                                )
-                              }
-                              className="text-th-fgd-3 text-xs"
+                              onClick={() => Router.push('/alerts')}
+                              className="text-th-primary text-xs text-center"
                             >
-                              Clear
+                              View All
                             </LinkButton>
                           </div>
                         </>
@@ -214,49 +202,3 @@ const AlertsList = () => {
 }
 
 export default AlertsList
-
-const formatProvider = (provider) => {
-  if (provider === 'mail') {
-    return (
-      <span className="flex items-center mr-1">
-        <MailIcon className="w-4 h-4 mr-2" />
-        E-mail
-      </span>
-    )
-  } else if (provider === 'sms') {
-    return (
-      <span className="flex items-center mr-1">
-        <DeviceMobileIcon className="w-4 h-4 mr-2" />
-        SMS
-      </span>
-    )
-  } else {
-    return (
-      <span className="flex items-center mr-1">
-        <TelegramIcon className="w-4 h-4 mr-2" />
-        Telegram
-      </span>
-    )
-  }
-}
-
-const AlertItem = ({ alert }) => (
-  <div className="border border-th-bkg-3 mb-2 p-2 rounded-lg">
-    <div className="flex pb-0.5">
-      {formatProvider(alert.alertProvider)} below {alert.collateralRatioThresh}%
-    </div>
-    <div className="text-th-fgd-3 text-xs mb-1 pl-6">
-      Acc: {abbreviateAddress(alert.acc)}
-    </div>
-    <StyledStatus className="flex items-center text-th-fgd-4 pl-6">
-      <span className="flex h-2 w-2 mr-1 relative">
-        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-th-red opacity-75"></span>
-        <span className="relative inline-flex rounded-full h-2 w-2 bg-th-red"></span>
-      </span>
-      Triggered{' '}
-      {alert.triggeredTimestamp !== 957408447
-        ? dayjs(alert.triggeredTimestamp).fromNow()
-        : null}
-    </StyledStatus>
-  </div>
-)
