@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react'
+import React, { FunctionComponent, useEffect, useState } from 'react'
 import { RadioGroup } from '@headlessui/react'
 import {
-  InformationCircleIcon,
+  CheckCircleIcon,
   DuplicateIcon,
   ExclamationIcon,
+  InformationCircleIcon,
 } from '@heroicons/react/outline'
 import PhoneInput from 'react-phone-input-2'
 import 'react-phone-input-2/lib/plain.css'
@@ -11,6 +12,7 @@ import Button from './Button'
 import Input from './Input'
 import { ElementTitle } from './styles'
 import useMangoStore from '../stores/useMangoStore'
+import useAlertsStore from '../stores/useAlertsStore'
 import { notify } from '../utils/notifications'
 import { copyToClipboard } from '../utils'
 import Modal from './Modal'
@@ -18,23 +20,42 @@ import Loading from './Loading'
 import MarginAccountSelect from './MarginAccountSelect'
 import Tooltip from './Tooltip'
 import Select from './Select'
+import { PublicKey } from '@solana/web3.js'
 
-export default function AlertsModal({ isOpen, onClose }) {
+interface AlertsModalProps {
+  alert?: {
+    alertProvider: string
+    collateralRatioThresh: number
+    acc: PublicKey
+  }
+  isOpen: boolean
+  onClose: () => void
+}
+
+const AlertsModal: FunctionComponent<AlertsModalProps> = ({
+  isOpen,
+  onClose,
+  alert,
+}) => {
   const connected = useMangoStore((s) => s.wallet.connected)
   const marginAccounts = useMangoStore((s) => s.marginAccounts)
   const selectedMangoGroup = useMangoStore((s) => s.selectedMangoGroup.current)
+  const actions = useAlertsStore((s) => s.actions)
+  const submitting = useAlertsStore((s) => s.submitting)
+  const success = useAlertsStore((s) => s.success)
+  const set = useAlertsStore((s) => s.set)
+  const tgCode = useAlertsStore((s) => s.tgCode)
 
-  const [selectedMarginAccount, setSelectedMarginAccount] = useState<any>(
-    marginAccounts[0]
-  )
+  const [selectedMarginAccount, setSelectedMarginAccount] = useState<any>(null)
   const [collateralRatioPreset, setCollateralRatioPreset] = useState('113')
   const [customCollateralRatio, setCustomCollateralRatio] = useState('')
   const [alertProvider, setAlertProvider] = useState('sms')
   const [phoneNumber, setPhoneNumber] = useState<any>({ phone: null })
   const [email, setEmail] = useState<string>('')
-  const [tgCode, setTgCode] = useState<string>('')
-  const [submitting, setSubmitting] = useState(false)
+  const [showTgCode, setShowTgCode] = useState<boolean>(false)
   const [isCopied, setIsCopied] = useState(false)
+
+  const ratioPresets = ['Custom', '113', '115', '120', '130', '150', '200']
 
   const collateralRatioThresh =
     collateralRatioPreset !== 'Custom'
@@ -50,16 +71,52 @@ export default function AlertsModal({ isOpen, onClose }) {
     }
   }, [isCopied])
 
+  useEffect(() => {
+    if (tgCode) {
+      setShowTgCode(true)
+    }
+  }, [tgCode])
+
+  useEffect(() => {
+    if (alert) {
+      const isPreset = ratioPresets.find(
+        (preset) => preset === alert.collateralRatioThresh.toString()
+      )
+      if (isPreset) {
+        setCollateralRatioPreset(alert.collateralRatioThresh.toString())
+      } else {
+        setCollateralRatioPreset('Custom')
+        setCustomCollateralRatio(alert.collateralRatioThresh.toString())
+      }
+      setAlertProvider(alert.alertProvider)
+      const alertAccount = marginAccounts.find(
+        (account) => account.publicKey.toString() === alert.acc.toString()
+      )
+      setSelectedMarginAccount(alertAccount)
+    }
+  }, [alert])
+
   const handleCopyTgCode = (code) => {
     setIsCopied(true)
     copyToClipboard(code)
+  }
+
+  const handleCloseTgCodeView = () => {
+    resetForm()
+    setShowTgCode(false)
+  }
+
+  const handleCloseSuccessView = () => {
+    resetForm()
+    set((s) => {
+      s.success = ''
+    })
   }
 
   const resetForm = () => {
     setAlertProvider('sms')
     setPhoneNumber({ phone: null })
     setEmail('')
-    setTgCode('')
     setCollateralRatioPreset('113')
     setCustomCollateralRatio('')
   }
@@ -90,8 +147,6 @@ export default function AlertsModal({ isOpen, onClose }) {
       })
       return
     }
-    setSubmitting(true)
-    const fetchUrl = `https://mango-margin-call.herokuapp.com/alerts`
     const body = {
       mangoGroupPk: selectedMangoGroup.publicKey.toString(),
       marginAccountPk: selectedMarginAccount.publicKey.toString(),
@@ -100,61 +155,30 @@ export default function AlertsModal({ isOpen, onClose }) {
       phoneNumber,
       email,
     }
-
-    const headers = { 'Content-Type': 'application/json' }
-    fetch(fetchUrl, {
-      method: 'POST',
-      headers: headers,
-      body: JSON.stringify(body),
-    })
-      .then((response: any) => {
-        if (!response.ok) {
-          throw response
-        }
-        return response.json()
-      })
-      .then((json: any) => {
-        if (alertProvider === 'tg') {
-          setTgCode(json.code)
-        } else {
-          notify({
-            message: 'You have succesfully saved your alert',
-            type: 'success',
-          })
-          resetForm()
-        }
-      })
-      .catch((err) => {
-        if (typeof err.text === 'function') {
-          err.text().then((errorMessage: string) => {
-            notify({
-              message: errorMessage,
-              type: 'error',
-            })
-          })
-        } else {
-          notify({
-            message: 'Something went wrong',
-            type: 'error',
-          })
-        }
-      })
-      .finally(() => {
-        setSubmitting(false)
-      })
+    actions.createAlert(body)
   }
-
-  const ratioPresets = ['Custom', '113', '115', '120', '130', '150', '200']
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      {tgCode !== '' ? (
+      {tgCode && showTgCode ? (
         <TelegramModal
           tgCode={tgCode}
-          setTgCode={setTgCode}
           handleCopyToClipboard={handleCopyTgCode}
+          handleCloseTgCodeView={handleCloseTgCodeView}
           isCopied={isCopied}
         />
+      ) : success ? (
+        <div className="flex flex-col items-center text-th-fgd-1">
+          <CheckCircleIcon className="h-6 w-6 text-th-green mb-1" />
+          <div className="font-bold text-lg pb-1">{success}</div>
+          <p className="text-center">We'll let you know if it's triggered.</p>
+          <Button
+            onClick={() => handleCloseSuccessView()}
+            className="w-full mt-2"
+          >
+            Okay, Got It
+          </Button>
+        </div>
       ) : (
         <>
           <Modal.Header>
@@ -179,7 +203,10 @@ export default function AlertsModal({ isOpen, onClose }) {
               {marginAccounts.length > 1 ? (
                 <div className="pb-4">
                   <div className={`text-th-fgd-1 pb-2`}>Margin Account</div>
-                  <MarginAccountSelect onChange={setSelectedMarginAccount} />
+                  <MarginAccountSelect
+                    onChange={setSelectedMarginAccount}
+                    value={selectedMarginAccount}
+                  />
                 </div>
               ) : null}
               <div className="pb-4">
@@ -339,10 +366,12 @@ export default function AlertsModal({ isOpen, onClose }) {
   )
 }
 
+export default AlertsModal
+
 const TelegramModal = ({
   tgCode,
-  setTgCode,
   handleCopyToClipboard,
+  handleCloseTgCodeView,
   isCopied,
 }) => {
   return (
@@ -376,7 +405,7 @@ const TelegramModal = ({
           <li>Paste the code and send message</li>
         </ol>
       </div>
-      <Button onClick={() => setTgCode('')} className="w-full">
+      <Button onClick={() => handleCloseTgCodeView()} className="w-full">
         Okay, Got It
       </Button>
     </div>

@@ -1,11 +1,12 @@
 import { FunctionComponent } from 'react'
 import dayjs from 'dayjs'
+import relativeTime from 'dayjs/plugin/relativeTime'
 import styled from '@emotion/styled'
-import { DeviceMobileIcon, MailIcon } from '@heroicons/react/outline'
+import { ClockIcon, DeviceMobileIcon, MailIcon } from '@heroicons/react/outline'
 import { TelegramIcon } from './icons'
 import { abbreviateAddress } from '../utils'
+import { LinkButton } from './Button'
 
-var relativeTime = require('dayjs/plugin/relativeTime')
 dayjs.extend(relativeTime)
 
 const StyledDiv = styled.div`
@@ -22,12 +23,29 @@ interface AlertItemProps {
     triggeredTimestamp?: number
   }
   isLarge?: boolean
+  setOpenAlertModal?: (x) => void
+  setReactivateAlertData?: (x) => void
 }
 
 const AlertItem: FunctionComponent<AlertItemProps> = ({
   alert,
   isLarge = false,
+  setOpenAlertModal,
+  setReactivateAlertData,
 }) => {
+  const reactivateAlertData = !alert.open
+    ? {
+        acc: alert.acc,
+        alertProvider: alert.alertProvider,
+        collateralRatioThresh: alert.collateralRatioThresh,
+      }
+    : null
+
+  const handleReactivate = () => {
+    setOpenAlertModal(true)
+    setReactivateAlertData(reactivateAlertData)
+  }
+
   return (
     <div className="border border-th-bkg-3 mb-2 p-3 rounded-lg">
       <div className="flex">
@@ -53,8 +71,11 @@ const AlertItem: FunctionComponent<AlertItemProps> = ({
               : 'Telegram'}{' '}
             below {alert.collateralRatioThresh}%
             {isLarge ? (
-              <div className="text-xs text-th-fgd-4">
-                {dayjs(alert.timestamp).fromNow()}
+              <div className="flex items-center">
+                <ClockIcon className="w-3 h-3 text-th-fgd-4 mr-1" />
+                <div className="text-xs text-th-fgd-4">
+                  {dayjs(alert.timestamp).fromNow()}
+                </div>
               </div>
             ) : null}
           </div>
@@ -70,16 +91,26 @@ const AlertItem: FunctionComponent<AlertItemProps> = ({
               Active
             </StyledDiv>
           ) : (
-            <StyledDiv className="flex items-center text-th-fgd-4">
-              <span className="flex h-2 w-2 mr-1.5 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-th-red opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-th-red"></span>
-              </span>
-              Triggered{' '}
-              {alert.triggeredTimestamp
-                ? dayjs(alert.triggeredTimestamp).fromNow()
-                : null}
-            </StyledDiv>
+            <div className="flex justify-between">
+              <StyledDiv className="flex items-center text-th-fgd-4">
+                <span className="flex h-2 w-2 mr-1.5 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-th-red opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-th-red"></span>
+                </span>
+                Triggered{' '}
+                {alert.triggeredTimestamp
+                  ? dayjs(alert.triggeredTimestamp).fromNow()
+                  : null}
+              </StyledDiv>
+              {isLarge ? (
+                <LinkButton
+                  className="text-xs text-th-primary"
+                  onClick={() => handleReactivate()}
+                >
+                  Re-activate
+                </LinkButton>
+              ) : null}
+            </div>
           )}
         </div>
       </div>

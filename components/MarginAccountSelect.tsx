@@ -1,5 +1,5 @@
 import { MarginAccount } from '@blockworks-foundation/mango-client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import useMangoStore from '../stores/useMangoStore'
 import Select from './Select'
 import { abbreviateAddress } from '../utils'
@@ -21,6 +21,12 @@ const MarginAccountSelect = ({
   const [selectedMarginAccount, setSelectedMarginAccount] = useState(
     value || marginAccounts[0]
   )
+
+  useEffect(() => {
+    if (value) {
+      setSelectedMarginAccount(value)
+    }
+  }, [value])
 
   const handleSelectMarginAccount = (value) => {
     const marginAccount = marginAccounts.find(

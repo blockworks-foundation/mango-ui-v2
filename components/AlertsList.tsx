@@ -1,8 +1,8 @@
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import styled from '@emotion/styled'
 import Router from 'next/router'
-import { BadgeCheckIcon, BellIcon } from '@heroicons/react/outline'
-import useAlerts from '../hooks/useAlerts'
+import { BadgeCheckIcon, BellIcon, TrashIcon } from '@heroicons/react/outline'
+import useAlertsStore from '../stores/useAlertsStore'
 import useLocalStorageState from '../hooks/useLocalStorageState'
 import { Popover, Transition } from '@headlessui/react'
 import { LinkButton } from './Button'
@@ -19,7 +19,8 @@ const AlertsList = () => {
   const [triggeredAlerts, setTriggeredAlerts] = useState([])
   const [activeAlerts, setActiveAlerts] = useState(false)
   const [ringBell, setRingBell] = useState(false)
-  const { alerts, loadAlerts } = useAlerts()
+  const alerts = useAlertsStore((s) => s.alerts)
+  const loading = useAlertsStore((s) => s.loading)
 
   const [
     triggeredAlertsLength,
@@ -54,14 +55,12 @@ const AlertsList = () => {
         : !alert.open
     )
 
-    // Add triggeredTimestamp to alerts that don't have that key and order them at the bottom of the list
     for (let i = 0; i < triggered.length; i++) {
       if (!triggered[i].triggeredTimestamp) {
         triggered[i].triggeredTimestamp = 957408447
       }
     }
 
-    // Sort from newest to oldest
     setTriggeredAlerts(
       triggered.sort((a, b) => b.triggeredTimestamp - a.triggeredTimestamp)
     )
@@ -121,7 +120,7 @@ const AlertsList = () => {
                 className="absolute z-10 mt-3 right-0 md:transform md:-translate-x-1/2 md:left-1/2 w-64"
               >
                 <div className="bg-th-bkg-1 p-4 overflow-auto max-h-80 rounded-lg shadow-lg thin-scroll">
-                  {loadAlerts ? (
+                  {loading ? (
                     <div className="flex items-center justify-center text-th-primary h-40">
                       <Loading />
                     </div>
@@ -171,14 +170,17 @@ const AlertsList = () => {
                             <div className="flex items-center justify-between text-th-fgd-1 font-bold">
                               Triggered Alerts
                               <LinkButton
+                                className="text-xs"
                                 onClick={() =>
                                   setClearAlertsTimestamp(
                                     triggeredAlerts[0].triggeredTimestamp
                                   )
                                 }
-                                className="text-th-fgd-3 text-xs"
                               >
-                                Clear
+                                <div className="flex items-center">
+                                  <TrashIcon className="h-3 w-3 mr-1" />
+                                  Clear
+                                </div>
                               </LinkButton>
                             </div>
                             {!activeAlerts ? (

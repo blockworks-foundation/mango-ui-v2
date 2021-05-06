@@ -1,14 +1,23 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import useMangoStore from '../stores/useMangoStore'
 import dayjs from 'dayjs'
-import { BadgeCheckIcon, BellIcon, LinkIcon } from '@heroicons/react/outline'
-import useAlerts from '../hooks/useAlerts'
+import {
+  BadgeCheckIcon,
+  BellIcon,
+  InformationCircleIcon,
+  LinkIcon,
+  PlusCircleIcon,
+  TrashIcon,
+} from '@heroicons/react/outline'
+import { RadioGroup } from '@headlessui/react'
+import useAlertsStore from '../stores/useAlertsStore'
+import useLocalStorageState from '../hooks/useLocalStorageState'
 import TopBar from '../components/TopBar'
-import Button from '../components/Button'
-import Loading from '../components/Loading'
+import Button, { LinkButton } from '../components/Button'
 import AlertsModal from '../components/AlertsModal'
 import AlertItem from '../components/AlertItem'
 import PageBodyContainer from '../components/PageBodyContainer'
+import { abbreviateAddress } from '../utils'
 
 var relativeTime = require('dayjs/plugin/relativeTime')
 dayjs.extend(relativeTime)
@@ -17,22 +26,41 @@ const TABS = ['Active', 'Triggered']
 
 export default function Alerts() {
   const connected = useMangoStore((s) => s.wallet.connected)
+  const marginAccounts = useMangoStore((s) => s.marginAccounts)
   const [triggeredAlerts, setTriggeredAlerts] = useState([])
   const [activeAlerts, setActiveAlerts] = useState([])
-  const { alerts, loadAlerts } = useAlerts()
   const [activeTab, setActiveTab] = useState(TABS[0])
   const [openAlertModal, setOpenAlertModal] = useState(false)
+  const [reactivateAlertData, setReactivateAlertData] = useState(null)
+  const [acc, setAcc] = useState('all')
+  const alerts = useAlertsStore((s) => s.alerts)
+  const loading = useAlertsStore((s) => s.loading)
+  const [clearAlertsTimestamp, setClearAlertsTimestamp] = useLocalStorageState(
+    'clearAlertsTimestamp'
+  )
 
-  const handleTabChange = (tabName) => {
-    setActiveTab(tabName)
-  }
+  useEffect(() => {
+    if (!connected || loading) {
+      setAcc('all')
+    }
+  }, [connected, loading])
 
   useMemo(() => {
-    const triggered = alerts
-      .filter((alert) => !alert.open)
-      .sort((a, b) => b.timestamp - a.timestamp)
-    setTriggeredAlerts(triggered)
-  }, [alerts])
+    if (clearAlertsTimestamp) {
+      const triggered = alerts
+        .filter(
+          (alert) =>
+            !alert.open && alert.triggeredTimestamp > clearAlertsTimestamp
+        )
+        .sort((a, b) => b.triggeredTimestamp - a.triggeredTimestamp)
+      setTriggeredAlerts(triggered)
+    } else {
+      const triggered = alerts
+        .filter((alert) => !alert.open)
+        .sort((a, b) => b.triggeredTimestamp - a.triggeredTimestamp)
+      setTriggeredAlerts(triggered)
+    }
+  }, [alerts, clearAlertsTimestamp])
 
   useMemo(() => {
     const active = alerts
@@ -41,24 +69,115 @@ export default function Alerts() {
     setActiveAlerts(active)
   }, [alerts])
 
+  const handleTabChange = (tabName) => {
+    setActiveTab(tabName)
+  }
+
+  const handleAccountRadioGroupChange = (val) => {
+    setAcc(val)
+    if (val !== 'all') {
+      const showActive = alerts
+        .filter((alert) => alert.acc.toString() === val && alert.open)
+        .sort((a, b) => b.timestamp - a.timestamp)
+      const showTriggered = alerts
+        .filter((alert) => alert.acc.toString() === val && !alert.open)
+        .sort((a, b) => b.triggeredTimestamp - a.triggeredTimestamp)
+      setActiveAlerts(showActive)
+      setTriggeredAlerts(showTriggered)
+    } else {
+      setActiveAlerts(
+        alerts
+          .filter((alert) => alert.open)
+          .sort((a, b) => b.timestamp - a.timestamp)
+      )
+      setTriggeredAlerts(
+        alerts
+          .filter((alert) => !alert.open)
+          .sort((a, b) => b.triggeredTimestamp - a.triggeredTimestamp)
+      )
+    }
+  }
+
   return (
     <div className={`bg-th-bkg-1 text-th-fgd-1 transition-all`}>
       <TopBar />
       <PageBodyContainer>
-        <div className="flex items-center justify-between pt-8 pb-6 md:pt-10">
+        <div className="flex flex-col sm:flex-row items-center justify-between pt-8 pb-3 sm:pb-6 md:pt-10">
           <h1 className={`text-th-fgd-1 text-2xl font-semibold`}>Alerts</h1>
-          <Button disabled={!connected} onClick={() => setOpenAlertModal(true)}>
-            Create
-          </Button>
+          <div className="flex flex-col-reverse justify-between w-full pt-4 sm:pt-0 sm:justify-end sm:flex-row">
+            {marginAccounts.length > 1 ? (
+              <RadioGroup
+                value={acc.toString()}
+                onChange={(val) => handleAccountRadioGroupChange(val)}
+                className="flex border border-th-fgd-4 rounded-md w-full mt-3 sm:mt-0 sm:w-80 h-full text-xs h-8"
+              >
+                <RadioGroup.Option
+                  value="all"
+                  className="flex-1 focus:outline-none"
+                >
+                  {({ checked }) => (
+                    <button
+                      className={`${
+                        checked ? 'bg-th-bkg-3 rounded-l-md' : ''
+                      } font-normal text-th-fgd-1 text-center py-1.5 h-full w-full rounded-none hover:bg-th-bkg-3 focus:outline-none`}
+                    >
+                      All
+                    </button>
+                  )}
+                </RadioGroup.Option>
+                {marginAccounts
+                  .slice()
+                  .sort(
+                    (a, b) =>
+                      (a.publicKey.toBase58() > b.publicKey.toBase58() && 1) ||
+                      -1
+                  )
+                  .map((acc, i) => (
+                    <RadioGroup.Option
+                      value={acc.publicKey.toString()}
+                      className="focus:outline-none flex-1"
+                      key={i}
+                    >
+                      {({ checked }) => (
+                        <button
+                          className={`${
+                            checked ? 'bg-th-bkg-3' : ''
+                          } font-normal text-th-fgd-1  text-center py-1.5 h-full w-full rounded-none ${
+                            i === marginAccounts.length - 1
+                              ? 'rounded-r-md'
+                              : null
+                          } border-l border-th-fgd-4 hover:bg-th-bkg-3 focus:outline-none`}
+                        >
+                          {abbreviateAddress(acc.publicKey)}
+                        </button>
+                      )}
+                    </RadioGroup.Option>
+                  ))}
+              </RadioGroup>
+            ) : null}
+            <Button
+              className="text-xs flex items-center justify-center sm:ml-2 pt-0 pb-0 h-8 pl-3 pr-3"
+              disabled={!connected}
+              onClick={() => setOpenAlertModal(true)}
+            >
+              <div className="flex items-center">
+                <PlusCircleIcon className="h-5 w-5 mr-1.5" />
+                New
+              </div>
+            </Button>
+          </div>
         </div>
         <div className="p-6 rounded-lg bg-th-bkg-2">
-          {loadAlerts ? (
-            <div className="flex items-center justify-center text-th-primary h-full">
-              <Loading />
-            </div>
+          {loading ? (
+            <>
+              <div className="h-12 w-full animate-pulse rounded-lg bg-th-bkg-3 mb-2" />
+              <div className="h-24 w-full animate-pulse rounded-lg bg-th-bkg-3 mb-2" />
+              <div className="h-24 w-full animate-pulse rounded-lg bg-th-bkg-3 mb-2" />
+              <div className="h-24 w-full animate-pulse rounded-lg bg-th-bkg-3" />
+            </>
           ) : connected ? (
             <>
-              <div className="border-b border-th-fgd-4 mb-6">
+              <div className="border-b border-th-fgd-4 mb-4">
                 <nav className={`-mb-px flex space-x-6`} aria-label="Tabs">
                   {TABS.map((tabName) => (
                     <a
@@ -80,6 +199,9 @@ export default function Alerts() {
               <TabContent
                 activeTab={activeTab}
                 activeAlerts={activeAlerts}
+                setClearAlertsTimestamp={setClearAlertsTimestamp}
+                setReactivateAlertData={setReactivateAlertData}
+                setOpenAlertModal={setOpenAlertModal}
                 triggeredAlerts={triggeredAlerts}
               />
             </>
@@ -96,6 +218,7 @@ export default function Alerts() {
       </PageBodyContainer>
       {openAlertModal ? (
         <AlertsModal
+          alert={reactivateAlertData}
           isOpen={openAlertModal}
           onClose={() => setOpenAlertModal(false)}
         />
@@ -104,7 +227,14 @@ export default function Alerts() {
   )
 }
 
-const TabContent = ({ activeTab, activeAlerts, triggeredAlerts }) => {
+const TabContent = ({
+  activeTab,
+  activeAlerts,
+  setClearAlertsTimestamp,
+  setOpenAlertModal,
+  setReactivateAlertData,
+  triggeredAlerts,
+}) => {
   switch (activeTab) {
     case 'Active':
       return activeAlerts.length === 0 ? (
@@ -116,23 +246,63 @@ const TabContent = ({ activeTab, activeAlerts, triggeredAlerts }) => {
           </p>
         </div>
       ) : (
-        activeAlerts.map((alert) => (
-          <AlertItem alert={alert} key={alert.timestamp} isLarge />
-        ))
+        <>
+          <div className="flex items-center pb-3">
+            <InformationCircleIcon className="flex-shrink-0 h-4 w-4 mr-1.5 text-th-fgd-4" />
+            <p className="mb-0 text-th-fgd-4">
+              Active alerts will only trigger once.
+            </p>
+          </div>
+          {activeAlerts.map((alert) => (
+            <AlertItem alert={alert} key={alert.timestamp} isLarge />
+          ))}
+        </>
       )
     case 'Triggered':
-      return triggeredAlerts.length === 0 ? (
-        <div className="flex flex-col items-center text-th-fgd-1 px-4 pb-2 rounded-lg">
-          <BadgeCheckIcon className="w-6 h-6 mb-1 text-th-green" />
-          <div className="font-bold text-lg pb-1">Smooth Sailing</div>
-          <p className="mb-0 text-center">
-            None of your active liquidation alerts have been triggered.
-          </p>
+      return (
+        <div>
+          {triggeredAlerts.length === 0 ? (
+            <div className="flex flex-col items-center text-th-fgd-1 px-4 pb-2 rounded-lg">
+              <BadgeCheckIcon className="w-6 h-6 mb-1 text-th-green" />
+              <div className="font-bold text-lg pb-1">Smooth Sailing</div>
+              <p className="mb-0 text-center">
+                None of your active liquidation alerts have been triggered.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="flex justify-between pb-3">
+                <div className="flex items-center pr-2">
+                  <InformationCircleIcon className="flex-shrink-0 h-4 w-4 mr-1.5 text-th-fgd-4" />
+                  <p className="mb-0 text-th-fgd-4">
+                    Re-activate alerts you want to receive again.
+                  </p>
+                </div>
+                <LinkButton
+                  onClick={() =>
+                    setClearAlertsTimestamp(
+                      triggeredAlerts[0].triggeredTimestamp
+                    )
+                  }
+                >
+                  <div className="flex items-center">
+                    <TrashIcon className="h-4 w-4 mr-1.5" />
+                    Clear
+                  </div>
+                </LinkButton>
+              </div>
+              {triggeredAlerts.map((alert) => (
+                <AlertItem
+                  alert={alert}
+                  key={alert.timestamp}
+                  setReactivateAlertData={setReactivateAlertData}
+                  setOpenAlertModal={setOpenAlertModal}
+                  isLarge
+                />
+              ))}
+            </>
+          )}
         </div>
-      ) : (
-        triggeredAlerts.map((alert) => (
-          <AlertItem alert={alert} key={alert.timestamp} isLarge />
-        ))
       )
     default:
       return activeAlerts.map((alert) => (
