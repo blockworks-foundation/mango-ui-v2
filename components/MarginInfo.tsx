@@ -183,6 +183,7 @@ export default function MarginInfo() {
           <AlertsModal
             isOpen={openAlertModal}
             onClose={() => setOpenAlertModal(false)}
+            marginAccount={selectedMarginAccount}
           />
         ) : null}
       </>

@@ -1,4 +1,5 @@
 import React, { FunctionComponent, useEffect, useState } from 'react'
+import { PublicKey } from '@solana/web3.js'
 import { RadioGroup } from '@headlessui/react'
 import {
   CheckCircleIcon,
@@ -20,9 +21,11 @@ import Loading from './Loading'
 import MarginAccountSelect from './MarginAccountSelect'
 import Tooltip from './Tooltip'
 import Select from './Select'
-import { PublicKey } from '@solana/web3.js'
 
 interface AlertsModalProps {
+  marginAccount?: {
+    publicKey: PublicKey
+  }
   alert?: {
     alertProvider: string
     collateralRatioThresh: number
@@ -36,6 +39,7 @@ const AlertsModal: FunctionComponent<AlertsModalProps> = ({
   isOpen,
   onClose,
   alert,
+  marginAccount,
 }) => {
   const connected = useMangoStore((s) => s.wallet.connected)
   const marginAccounts = useMangoStore((s) => s.marginAccounts)
@@ -46,7 +50,13 @@ const AlertsModal: FunctionComponent<AlertsModalProps> = ({
   const set = useAlertsStore((s) => s.set)
   const tgCode = useAlertsStore((s) => s.tgCode)
 
-  const [selectedMarginAccount, setSelectedMarginAccount] = useState<any>(null)
+  // select by default:
+  // 1. margin account passed in directly (from the margin account info on the trade page)
+  // 2. previous alert's margin account (when re-activating from the alerts page)
+  // 3, the first margin account
+  const [selectedMarginAccount, setSelectedMarginAccount] = useState<any>(
+    marginAccount || alert?.acc || marginAccounts[0]
+  )
   const [collateralRatioPreset, setCollateralRatioPreset] = useState('113')
   const [customCollateralRatio, setCustomCollateralRatio] = useState('')
   const [alertProvider, setAlertProvider] = useState('sms')
@@ -171,7 +181,9 @@ const AlertsModal: FunctionComponent<AlertsModalProps> = ({
         <div className="flex flex-col items-center text-th-fgd-1">
           <CheckCircleIcon className="h-6 w-6 text-th-green mb-1" />
           <div className="font-bold text-lg pb-1">{success}</div>
-          <p className="text-center">We'll let you know if it's triggered.</p>
+          <p className="text-center">
+            {"We'll let you know if it's triggered."}
+          </p>
           <Button
             onClick={() => handleCloseSuccessView()}
             className="w-full mt-2"

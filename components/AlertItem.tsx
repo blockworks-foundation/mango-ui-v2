@@ -2,28 +2,17 @@ import { FunctionComponent } from 'react'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import styled from '@emotion/styled'
-import { PublicKey } from '@solana/web3.js'
 import { ClockIcon, DeviceMobileIcon, MailIcon } from '@heroicons/react/outline'
 import { TelegramIcon } from './icons'
 import { abbreviateAddress } from '../utils'
 import { LinkButton } from './Button'
+import { Alert } from '../stores/useAlertsStore'
 
 dayjs.extend(relativeTime)
 
 const StyledDiv = styled.div`
   font-size: 0.75rem;
 `
-
-type AlertProvider = 'mail' | 'sms' | 'tg'
-
-interface Alert {
-  acc: PublicKey
-  alertProvider: AlertProvider
-  collateralRatioThresh: number
-  open: boolean
-  timestamp: number
-  triggeredTimestamp: number | undefined
-}
 
 interface AlertItemProps {
   alert: Alert
