@@ -154,6 +154,7 @@ const useAlertsStore = create<AlertsStore>((set, get) => ({
       )
 
       // Add margin account address to alerts
+      // Assign triggeredTimestamp for old alerts in the DB that don't have this property yet
       responses.forEach((accounts, index) =>
         accounts.alerts.forEach((alert) => {
           alert.acc = marginAccounts[index]
@@ -165,12 +166,14 @@ const useAlertsStore = create<AlertsStore>((set, get) => ({
 
       const flattenAccountAlerts = responses.map((acc) => acc.alerts).flat()
 
+      // sort active by latest creation time first
       const activeAlerts = flattenAccountAlerts
         .filter((alert) => alert.open)
         .sort((a, b) => {
           return b.timestamp - a.timestamp
         })
 
+      // sort triggered by latest trigger time first
       const triggeredAlerts = flattenAccountAlerts
         .filter((alert) => !alert.open)
         .sort((a, b) => {
