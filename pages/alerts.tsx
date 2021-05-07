@@ -19,7 +19,7 @@ import AlertItem from '../components/AlertItem'
 import PageBodyContainer from '../components/PageBodyContainer'
 import { abbreviateAddress } from '../utils'
 
-var relativeTime = require('dayjs/plugin/relativeTime')
+const relativeTime = require('dayjs/plugin/relativeTime')
 dayjs.extend(relativeTime)
 
 const TABS = ['Active', 'Triggered']

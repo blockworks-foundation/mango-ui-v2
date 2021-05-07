@@ -3,9 +3,9 @@ import produce from 'immer'
 import { PublicKey } from '@solana/web3.js'
 import { notify } from '../utils/notifications'
 
-type AlertProvider = 'mail' | 'sms' | 'tg'
+export type AlertProvider = 'mail' | 'sms' | 'tg'
 
-interface Alert {
+export interface Alert {
   acc: PublicKey
   alertProvider: AlertProvider
   collateralRatioThresh: number
@@ -24,7 +24,6 @@ interface AlertRequest {
 }
 
 interface AlertsStore extends State {
-  alerts: Array<Alert>
   activeAlerts: Array<Alert>
   triggeredAlerts: Array<Alert>
   loading: boolean
@@ -78,10 +77,10 @@ const useAlertsStore = create<AlertsStore>((set, get) => ({
           return response.json()
         })
         .then((json: any) => {
-          const alerts = get().alerts
+          const alerts = get().activeAlerts
 
           set((state) => {
-            state.alerts = [alert as Alert].concat(alerts)
+            state.activeAlerts = [alert as Alert].concat(alerts)
             state.success = json.code ? '' : 'Alert saved successfully'
             state.tgCode = json.code
           })
@@ -160,20 +159,17 @@ const useAlertsStore = create<AlertsStore>((set, get) => ({
         accounts.alerts.forEach((alert) => (alert.acc = marginAccounts[index]))
       )
 
-      const flattenAccountAlerts = [].concat.apply(
-        [],
+      const flattenAccountAlerts = [].concat(
         responses.map((acc) => acc.alerts.map((alerts) => alerts))
       )
 
       const triggeredAlerts = flattenAccountAlerts
         .filter((alert) => !alert.open)
         .sort((a, b) => {
-          var aTriggeredTimestamp = a.hasOwnProperty('triggeredTimestamp')
-          var bTriggeredTimestamp = b.hasOwnProperty('triggeredTimestamp')
-          if (aTriggeredTimestamp && bTriggeredTimestamp) {
+          if (a.triggeredTimestamp && b.triggeredTimestamp) {
             return b.triggeredTimestamp - a.triggeredTimestamp
           }
-          return aTriggeredTimestamp ? -1 : bTriggeredTimestamp ? 1 : 0
+          return a.triggeredTimestamp ? -1 : b.triggeredTimestamp ? 1 : 0
         })
 
       const activeAlerts = flattenAccountAlerts.filter((alert) => alert.open)
