@@ -1,7 +1,6 @@
 import create, { State } from 'zustand'
 import produce from 'immer'
 import { PublicKey } from '@solana/web3.js'
-
 import { notify } from '../utils/notifications'
 
 type AlertProvider = 'mail' | 'sms' | 'tg'
@@ -26,6 +25,8 @@ interface AlertRequest {
 
 interface AlertsStore extends State {
   alerts: Array<Alert>
+  activeAlerts: Array<Alert>
+  triggeredAlerts: Array<Alert>
   loading: boolean
   error: string
   submitting: boolean
@@ -37,6 +38,8 @@ interface AlertsStore extends State {
 
 const useAlertsStore = create<AlertsStore>((set, get) => ({
   alerts: [],
+  activeAlerts: [],
+  triggeredAlerts: [],
   loading: false,
   error: '',
   submitting: false,
@@ -157,11 +160,27 @@ const useAlertsStore = create<AlertsStore>((set, get) => ({
         accounts.alerts.forEach((alert) => (alert.acc = marginAccounts[index]))
       )
 
+      const flattenAccountAlerts = [].concat.apply(
+        [],
+        responses.map((acc) => acc.alerts.map((alerts) => alerts))
+      )
+
+      const triggeredAlerts = flattenAccountAlerts
+        .filter((alert) => !alert.open)
+        .sort((a, b) => {
+          var aTriggeredTimestamp = a.hasOwnProperty('triggeredTimestamp')
+          var bTriggeredTimestamp = b.hasOwnProperty('triggeredTimestamp')
+          if (aTriggeredTimestamp && bTriggeredTimestamp) {
+            return b.triggeredTimestamp - a.triggeredTimestamp
+          }
+          return aTriggeredTimestamp ? -1 : bTriggeredTimestamp ? 1 : 0
+        })
+
+      const activeAlerts = flattenAccountAlerts.filter((alert) => alert.open)
+
       set((state) => {
-        state.alerts = [].concat.apply(
-          [],
-          responses.map((acc) => acc.alerts.map((alerts) => alerts))
-        )
+        state.activeAlerts = activeAlerts
+        state.triggeredAlerts = triggeredAlerts
         state.loading = false
       })
     },

@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import styled from '@emotion/styled'
 import Router from 'next/router'
 import { BadgeCheckIcon, BellIcon, TrashIcon } from '@heroicons/react/outline'
@@ -16,16 +16,16 @@ const StyledAlertCount = styled.span`
 
 const AlertsList = () => {
   const [openAlertModal, setOpenAlertModal] = useState(false)
-  const [triggeredAlerts, setTriggeredAlerts] = useState([])
-  const [activeAlerts, setActiveAlerts] = useState(false)
+  const [clearedAlerts, setClearedAlerts] = useState([])
   const [ringBell, setRingBell] = useState(false)
-  const alerts = useAlertsStore((s) => s.alerts)
+  const activeAlerts = useAlertsStore((s) => s.activeAlerts)
+  const triggeredAlerts = useAlertsStore((s) => s.triggeredAlerts)
   const loading = useAlertsStore((s) => s.loading)
 
   const [
     triggeredAlertsLength,
     setTriggeredAlertsLength,
-  ] = useLocalStorageState('triggeredAlertsLength', 0)
+  ] = useLocalStorageState('triggeredAlertsLength', null)
 
   const [alertsCount, setAlertsCount] = useLocalStorageState('alertsCount', 0)
 
@@ -34,42 +34,32 @@ const AlertsList = () => {
     null
   )
 
-  // Increment the alerts count when the triggered alerts length is greater than the length in localStorage
   useEffect(() => {
-    const getTriggeredAlertsLength = alerts.filter((alert) => !alert.open)
-      .length
-    if (getTriggeredAlertsLength > 0) {
-      if (getTriggeredAlertsLength > triggeredAlertsLength) {
+    if (triggeredAlerts.length > 0) {
+      if (!triggeredAlertsLength) {
+        setTriggeredAlertsLength(triggeredAlerts.length)
+      }
+      if (
+        triggeredAlertsLength &&
+        triggeredAlerts.length > triggeredAlertsLength
+      ) {
         setAlertsCount(alertsCount + 1)
-        setTriggeredAlertsLength(getTriggeredAlertsLength)
+        setTriggeredAlertsLength(triggeredAlerts.length)
         setRingBell(true)
       }
     }
-  }, [alerts])
+  }, [triggeredAlerts])
 
-  // Old alerts won't have a triggeredTimestamp to sort by as it was added after alerts had started generating
   useEffect(() => {
-    const triggered = alerts.filter((alert) =>
-      clearAlertsTimestamp
-        ? !alert.open && alert.triggeredTimestamp > clearAlertsTimestamp
-        : !alert.open
-    )
-
-    for (let i = 0; i < triggered.length; i++) {
-      if (!triggered[i].triggeredTimestamp) {
-        triggered[i].triggeredTimestamp = 957408447
-      }
+    if (clearAlertsTimestamp && !loading) {
+      const filterByTimestamp = triggeredAlerts.filter(
+        (alert) =>
+          alert.triggeredTimestamp > clearAlertsTimestamp &&
+          Object.keys(alert).includes('triggeredTimestamp')
+      )
+      setClearedAlerts(filterByTimestamp)
     }
-
-    setTriggeredAlerts(
-      triggered.sort((a, b) => b.triggeredTimestamp - a.triggeredTimestamp)
-    )
-  }, [alerts, clearAlertsTimestamp])
-
-  useMemo(() => {
-    const active = !!alerts.find((alert) => alert.open)
-    setActiveAlerts(active)
-  }, [alerts])
+  }, [clearAlertsTimestamp, loading])
 
   useEffect(() => {
     if (ringBell) {
@@ -126,7 +116,8 @@ const AlertsList = () => {
                     </div>
                   ) : (
                     <>
-                      {alerts.length === 0 ? (
+                      {triggeredAlerts.length === 0 &&
+                      activeAlerts.length === 0 ? (
                         <>
                           <div className="flex flex-col items-center text-th-fgd-1 px-4 pb-2 rounded-lg">
                             <BellIcon className="w-6 h-6 mb-1 text-th-primary" />
@@ -145,7 +136,8 @@ const AlertsList = () => {
                             Create Liquidation Alert
                           </LinkButton>
                         </>
-                      ) : triggeredAlerts.length === 0 ? (
+                      ) : triggeredAlerts.length === 0 ||
+                        (clearAlertsTimestamp && clearedAlerts.length === 0) ? (
                         <>
                           <div className="flex flex-col items-center text-th-fgd-1 px-4 pb-2 rounded-lg">
                             <BadgeCheckIcon className="w-6 h-6 mb-1 text-th-green" />
@@ -183,16 +175,26 @@ const AlertsList = () => {
                                 </div>
                               </LinkButton>
                             </div>
-                            {!activeAlerts ? (
+                            {activeAlerts.length === 0 ? (
                               <div className="text-xs text-th-fgd-4 pt-1">
-                                None of your alerts are active.
+                                You have no active alerts.
                               </div>
                             ) : null}
                           </div>
 
-                          {triggeredAlerts.map((alert) => (
-                            <AlertItem alert={alert} key={alert.timestamp} />
-                          ))}
+                          {clearAlertsTimestamp
+                            ? clearedAlerts.map((alert) => (
+                                <AlertItem
+                                  alert={alert}
+                                  key={alert.timestamp}
+                                />
+                              ))
+                            : triggeredAlerts.map((alert) => (
+                                <AlertItem
+                                  alert={alert}
+                                  key={alert.timestamp}
+                                />
+                              ))}
                           <div className="flex justify-center pt-2">
                             <LinkButton
                               onClick={() => Router.push('/alerts')}

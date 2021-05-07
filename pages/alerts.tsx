@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import useMangoStore from '../stores/useMangoStore'
 import dayjs from 'dayjs'
 import {
@@ -27,14 +27,16 @@ const TABS = ['Active', 'Triggered']
 export default function Alerts() {
   const connected = useMangoStore((s) => s.wallet.connected)
   const marginAccounts = useMangoStore((s) => s.marginAccounts)
-  const [triggeredAlerts, setTriggeredAlerts] = useState([])
-  const [activeAlerts, setActiveAlerts] = useState([])
   const [activeTab, setActiveTab] = useState(TABS[0])
   const [openAlertModal, setOpenAlertModal] = useState(false)
   const [reactivateAlertData, setReactivateAlertData] = useState(null)
   const [acc, setAcc] = useState('all')
-  const alerts = useAlertsStore((s) => s.alerts)
+  const [filteredActiveAlerts, setFilteredActiveAlerts] = useState([])
+  const [filteredTriggeredAlerts, setFilteredTriggeredAlerts] = useState([])
+  const activeAlerts = useAlertsStore((s) => s.activeAlerts)
+  const triggeredAlerts = useAlertsStore((s) => s.triggeredAlerts)
   const loading = useAlertsStore((s) => s.loading)
+  const [clearedAlerts, setClearedAlerts] = useState([])
   const [clearAlertsTimestamp, setClearAlertsTimestamp] = useLocalStorageState(
     'clearAlertsTimestamp'
   )
@@ -45,29 +47,16 @@ export default function Alerts() {
     }
   }, [connected, loading])
 
-  useMemo(() => {
-    if (clearAlertsTimestamp) {
-      const triggered = alerts
-        .filter(
-          (alert) =>
-            !alert.open && alert.triggeredTimestamp > clearAlertsTimestamp
-        )
-        .sort((a, b) => b.triggeredTimestamp - a.triggeredTimestamp)
-      setTriggeredAlerts(triggered)
-    } else {
-      const triggered = alerts
-        .filter((alert) => !alert.open)
-        .sort((a, b) => b.triggeredTimestamp - a.triggeredTimestamp)
-      setTriggeredAlerts(triggered)
+  useEffect(() => {
+    if (clearAlertsTimestamp && !loading) {
+      const filterByTimestamp = triggeredAlerts.filter(
+        (alert) =>
+          alert.triggeredTimestamp > clearAlertsTimestamp &&
+          Object.keys(alert).includes('triggeredTimestamp')
+      )
+      setClearedAlerts(filterByTimestamp)
     }
-  }, [alerts, clearAlertsTimestamp])
-
-  useMemo(() => {
-    const active = alerts
-      .filter((alert) => alert.open)
-      .sort((a, b) => b.timestamp - a.timestamp)
-    setActiveAlerts(active)
-  }, [alerts])
+  }, [clearAlertsTimestamp, loading])
 
   const handleTabChange = (tabName) => {
     setActiveTab(tabName)
@@ -76,25 +65,14 @@ export default function Alerts() {
   const handleAccountRadioGroupChange = (val) => {
     setAcc(val)
     if (val !== 'all') {
-      const showActive = alerts
-        .filter((alert) => alert.acc.toString() === val && alert.open)
-        .sort((a, b) => b.timestamp - a.timestamp)
-      const showTriggered = alerts
-        .filter((alert) => alert.acc.toString() === val && !alert.open)
-        .sort((a, b) => b.triggeredTimestamp - a.triggeredTimestamp)
-      setActiveAlerts(showActive)
-      setTriggeredAlerts(showTriggered)
-    } else {
-      setActiveAlerts(
-        alerts
-          .filter((alert) => alert.open)
-          .sort((a, b) => b.timestamp - a.timestamp)
+      const showActive = activeAlerts.filter(
+        (alert) => alert.acc.toString() === val
       )
-      setTriggeredAlerts(
-        alerts
-          .filter((alert) => !alert.open)
-          .sort((a, b) => b.triggeredTimestamp - a.triggeredTimestamp)
-      )
+      const showTriggered = clearAlertsTimestamp
+        ? clearedAlerts.filter((alert) => alert.acc.toString() === val)
+        : triggeredAlerts.filter((alert) => alert.acc.toString() === val)
+      setFilteredActiveAlerts(showActive)
+      setFilteredTriggeredAlerts(showTriggered)
     }
   }
 
@@ -197,8 +175,13 @@ export default function Alerts() {
                 </nav>
               </div>
               <TabContent
+                acc={acc}
                 activeTab={activeTab}
                 activeAlerts={activeAlerts}
+                clearAlertsTimestamp={clearAlertsTimestamp}
+                clearedAlerts={clearedAlerts}
+                filteredActiveAlerts={filteredActiveAlerts}
+                filteredTriggeredAlerts={filteredTriggeredAlerts}
                 setClearAlertsTimestamp={setClearAlertsTimestamp}
                 setReactivateAlertData={setReactivateAlertData}
                 setOpenAlertModal={setOpenAlertModal}
@@ -228,8 +211,13 @@ export default function Alerts() {
 }
 
 const TabContent = ({
+  acc,
   activeTab,
   activeAlerts,
+  clearedAlerts,
+  clearAlertsTimestamp,
+  filteredActiveAlerts,
+  filteredTriggeredAlerts,
   setClearAlertsTimestamp,
   setOpenAlertModal,
   setReactivateAlertData,
@@ -253,15 +241,21 @@ const TabContent = ({
               Active alerts will only trigger once.
             </p>
           </div>
-          {activeAlerts.map((alert) => (
-            <AlertItem alert={alert} key={alert.timestamp} isLarge />
-          ))}
+          {acc === 'all'
+            ? activeAlerts.map((alert) => (
+                <AlertItem alert={alert} key={alert.timestamp} isLarge />
+              ))
+            : filteredActiveAlerts.map((alert) => (
+                <AlertItem alert={alert} key={alert.timestamp} isLarge />
+              ))}
         </>
       )
     case 'Triggered':
       return (
         <div>
-          {triggeredAlerts.length === 0 ? (
+          {triggeredAlerts.length === 0 ||
+          (clearAlertsTimestamp && clearedAlerts.length === 0) ||
+          (acc !== 'all' && filteredTriggeredAlerts.length === 0) ? (
             <div className="flex flex-col items-center text-th-fgd-1 px-4 pb-2 rounded-lg">
               <BadgeCheckIcon className="w-6 h-6 mb-1 text-th-green" />
               <div className="font-bold text-lg pb-1">Smooth Sailing</div>
@@ -291,15 +285,35 @@ const TabContent = ({
                   </div>
                 </LinkButton>
               </div>
-              {triggeredAlerts.map((alert) => (
-                <AlertItem
-                  alert={alert}
-                  key={alert.timestamp}
-                  setReactivateAlertData={setReactivateAlertData}
-                  setOpenAlertModal={setOpenAlertModal}
-                  isLarge
-                />
-              ))}
+              {acc === 'all'
+                ? clearAlertsTimestamp
+                  ? clearedAlerts.map((alert) => (
+                      <AlertItem
+                        alert={alert}
+                        key={alert.timestamp}
+                        setReactivateAlertData={setReactivateAlertData}
+                        setOpenAlertModal={setOpenAlertModal}
+                        isLarge
+                      />
+                    ))
+                  : triggeredAlerts.map((alert) => (
+                      <AlertItem
+                        alert={alert}
+                        key={alert.timestamp}
+                        setReactivateAlertData={setReactivateAlertData}
+                        setOpenAlertModal={setOpenAlertModal}
+                        isLarge
+                      />
+                    ))
+                : filteredTriggeredAlerts.map((alert) => (
+                    <AlertItem
+                      alert={alert}
+                      key={alert.timestamp}
+                      setReactivateAlertData={setReactivateAlertData}
+                      setOpenAlertModal={setOpenAlertModal}
+                      isLarge
+                    />
+                  ))}
             </>
           )}
         </div>
