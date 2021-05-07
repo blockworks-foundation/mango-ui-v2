@@ -50,8 +50,12 @@ const AlertsModal: FunctionComponent<AlertsModalProps> = ({
   const set = useAlertsStore((s) => s.set)
   const tgCode = useAlertsStore((s) => s.tgCode)
 
+  // select by default:
+  // 1. margin account passed in directly (from the margin account info on the trade page)
+  // 2. previous alert's margin account (when re-activating from the alerts page)
+  // 3, the first margin account
   const [selectedMarginAccount, setSelectedMarginAccount] = useState<any>(
-    marginAccount || marginAccounts[0]
+    marginAccount || alert?.acc || marginAccounts[0]
   )
   const [collateralRatioPreset, setCollateralRatioPreset] = useState('113')
   const [customCollateralRatio, setCustomCollateralRatio] = useState('')
