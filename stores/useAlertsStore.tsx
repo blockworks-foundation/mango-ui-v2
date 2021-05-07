@@ -165,7 +165,11 @@ const useAlertsStore = create<AlertsStore>((set, get) => ({
 
       const flattenAccountAlerts = responses.map((acc) => acc.alerts).flat()
 
-      const activeAlerts = flattenAccountAlerts.filter((alert) => alert.open)
+      const activeAlerts = flattenAccountAlerts
+        .filter((alert) => alert.open)
+        .sort((a, b) => {
+          return b.timestamp - a.timestamp
+        })
 
       const triggeredAlerts = flattenAccountAlerts
         .filter((alert) => !alert.open)
