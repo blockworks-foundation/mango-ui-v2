@@ -36,7 +36,6 @@ interface AlertsStore extends State {
 }
 
 const useAlertsStore = create<AlertsStore>((set, get) => ({
-  alerts: [],
   activeAlerts: [],
   triggeredAlerts: [],
   loading: false,
@@ -156,23 +155,23 @@ const useAlertsStore = create<AlertsStore>((set, get) => ({
 
       // Add margin account address to alerts
       responses.forEach((accounts, index) =>
-        accounts.alerts.forEach((alert) => (alert.acc = marginAccounts[index]))
+        accounts.alerts.forEach((alert) => {
+          alert.acc = marginAccounts[index]
+          if (!alert.open) {
+            alert.triggeredTimestamp ||= alert.timestamp
+          }
+        })
       )
 
-      const flattenAccountAlerts = [].concat(
-        responses.map((acc) => acc.alerts.map((alerts) => alerts))
-      )
+      const flattenAccountAlerts = responses.map((acc) => acc.alerts).flat()
+
+      const activeAlerts = flattenAccountAlerts.filter((alert) => alert.open)
 
       const triggeredAlerts = flattenAccountAlerts
         .filter((alert) => !alert.open)
         .sort((a, b) => {
-          if (a.triggeredTimestamp && b.triggeredTimestamp) {
-            return b.triggeredTimestamp - a.triggeredTimestamp
-          }
-          return a.triggeredTimestamp ? -1 : b.triggeredTimestamp ? 1 : 0
+          return b.triggeredTimestamp - a.triggeredTimestamp
         })
-
-      const activeAlerts = flattenAccountAlerts.filter((alert) => alert.open)
 
       set((state) => {
         state.activeAlerts = activeAlerts
