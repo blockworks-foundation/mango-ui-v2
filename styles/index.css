@@ -52,7 +52,7 @@
 /* Base */
 
 body {
-  @apply text-sm font-body tracking-wide;
+  @apply text-sm font-body tracking-wider;
 }
 
 p {

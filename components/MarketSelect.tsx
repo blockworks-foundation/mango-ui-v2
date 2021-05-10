@@ -24,9 +24,10 @@ const MarketSelect = () => {
     <div className="bg-th-bkg-3">
       <div className="flex justify-between items-center">
         <div className="flex items-center py-2 px-4 md:px-10">
+          <span className="pr-4 text-th-fgd-4 text-xs">MARKETS</span>
           {Object.entries(spotMarkets).map(([name, address]) => (
             <div
-              className={`flex px-2 py-1 mr-2 rounded-md cursor-pointer default-transition bg-th-bkg-2
+              className={`flex font-semibold px-2 py-1 mr-2 rounded-md cursor-pointer default-transition bg-th-bkg-2
               ${
                 selectedMarketName === name
                   ? `text-th-primary`
@@ -36,9 +37,13 @@ const MarketSelect = () => {
               onClick={() => handleChange(name)}
               key={address as string}
             >
-              <div className="pr-1">{name.split('/')[0]}</div>
-              <span className="text-th-fgd-4">/</span>
-              <div className="pl-1">{name.split('/')[1]}</div>
+              <div
+              // className="pr-1"
+              >
+                {name.split('/')[0]}
+              </div>
+              {/* <span className="text-th-fgd-4">/</span>
+              <div className="pl-1">{name.split('/')[1]}</div> */}
             </div>
           ))}
         </div>

@@ -1,33 +1,100 @@
 import React from 'react'
+import numeral from 'numeral'
+import styled from '@emotion/styled'
+import useMarketList from '../hooks/useMarketList'
 import useMangoStore from '../stores/useMangoStore'
 import useMarkPrice from '../hooks/useMarkPrice'
-import usePrevious from '../hooks/usePrevious'
 import { isEqual } from '../utils/'
-import { ArrowUpIcon, ArrowDownIcon } from '@heroicons/react/solid'
 import UiLock from './UiLock'
+import ManualRefresh from './ManualRefresh'
+import DropMenu from './DropMenu'
 
 const MarketHeader = () => {
-  const selectedMarketName = useMangoStore((s) => s.selectedMarket.name)
+  const { spotMarkets } = useMarketList()
   const markPrice = useMarkPrice()
+  const selectedMarketName = useMangoStore((s) => s.selectedMarket.name)
+  const marginAccount = useMangoStore((s) => s.selectedMarginAccount.current)
+  const connected = useMangoStore((s) => s.wallet.connected)
+  const selectedMangoGroupMarkets = useMangoStore(
+    (s) => s.selectedMangoGroup.markets
+  )
+  const setMangoStore = useMangoStore((s) => s.set)
 
-  return (
-    <div className={`flex items-center justify-between pt-4 px-4 sm:px-10`}>
-      <div className="flex items-center">
+  const markets = Object.entries(spotMarkets).map(([name]) => {
+    return {
+      name: name,
+      icon: (
         <img
           alt=""
-          width="32"
-          height="32"
-          src={`/assets/icons/${selectedMarketName
-            .split('/')[0]
-            .toLowerCase()}.svg`}
-          className={`mr-3`}
+          width="20"
+          height="20"
+          src={`/assets/icons/${name.split('/')[0].toLowerCase()}.svg`}
         />
-        <div className={`font-semibold text-lg pr-4`}>{selectedMarketName}</div>
-        <div className={`text-lg pr-4`}>{markPrice}</div>
-        <ChangePercentage change={markPrice} />
+      ),
+    }
+  })
+
+  const handleChange = (mktName) => {
+    const newMarket = Object.entries(selectedMangoGroupMarkets).find(
+      (m) => m[0] == spotMarkets[mktName]
+    )[1]
+    setMangoStore((state) => {
+      state.selectedMarket.current = newMarket
+      state.selectedMarket.name = mktName
+      state.selectedMarket.address = spotMarkets[mktName]
+    })
+  }
+
+  return (
+    <div className={`flex items-center justify-between pt-4 px-6 md:px-9`}>
+      <div className="flex items-center">
+        <div className="pr-6">
+          <DropMenu
+            button={
+              <div className="flex items-center py-1.5 rounded-md">
+                <img
+                  alt=""
+                  width="20"
+                  height="20"
+                  src={`/assets/icons/${selectedMarketName
+                    .split('/')[0]
+                    .toLowerCase()}.svg`}
+                  className={`mr-2`}
+                />
+
+                <div className="font-semibold pr-1">
+                  {selectedMarketName.split('/')[0]}
+                </div>
+                <span className="text-th-fgd-4">/</span>
+                <div className="font-semibold pl-1 pr-2">
+                  {selectedMarketName.split('/')[1]}
+                </div>
+              </div>
+            }
+            buttonClassName="border border-th-bkg-3 default-transition px-2 tracking-wider hover:border-th-fgd-4"
+            value={selectedMarketName}
+            onChange={(selectedMarketName) => handleChange(selectedMarketName)}
+            options={markets}
+            showChevrons
+          />
+        </div>
+        <div>
+          <div className="text-th-fgd-4 text-2xs">Mark price</div>
+          <div className="font-semibold mt-0.5">
+            {numeral(markPrice).format('0,0.00')}
+          </div>
+        </div>
+        <ChangePercentage change={11} />
+        <div>
+          <div className="text-th-fgd-4 text-2xs">24hr Vol</div>
+          <div className={`font-semibold mt-0.5`}>
+            {numeral(2000000).format('0,0')}
+          </div>
+        </div>
       </div>
-      <div className="flex items-center justify-center rounded-full bg-th-bkg-3 w-8 h-8">
+      <div className="flex">
         <UiLock />
+        {connected && marginAccount ? <ManualRefresh className="pl-2" /> : null}
       </div>
     </div>
   )
@@ -37,26 +104,24 @@ export default MarketHeader
 
 const ChangePercentage = React.memo<{ change: number }>(
   ({ change }) => {
-    const previousChange: number = usePrevious(change)
+    // const previousChange: number = usePrevious(change)
 
     return (
-      <div
-        className={`flex justify-center items-center font-semibold mt-1 ${
-          change > previousChange
-            ? `text-th-green`
-            : change < previousChange
-            ? `text-th-red`
-            : `text-th-fgd-1`
-        }`}
-      >
-        {change > previousChange && (
-          <ArrowUpIcon className={`h-4 w-4 mr-1 text-th-green`} />
-        )}
-        {change < previousChange && (
-          <ArrowDownIcon className={`h-4 w-4 mr-1 text-th-red`} />
-        )}
-        {change === previousChange && <div className={`h-4 w-4 mr-1`} />}
-        {`${change}%` || '--'}
+      <div className="px-4">
+        <div className="text-th-fgd-4 text-2xs">24hr Change</div>
+        <div
+          className={`font-semibold mt-0.5 ${
+            change > 0
+              ? `text-th-green`
+              : change < 0
+              ? `text-th-red`
+              : `text-th-fgd-1`
+          }`}
+        >
+          {change > 0 && <span className={`text-th-green`}>+</span>}
+          {change < 0 && <span className={`text-th-red`}>-</span>}
+          {`${change}%` || '--'}
+        </div>
       </div>
     )
   },
