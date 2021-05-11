@@ -62,11 +62,11 @@ const MarketHeader = () => {
                   className={`mr-2`}
                 />
 
-                <div className="font-semibold pr-1">
+                <div className="font-semibold pr-1 text-lg">
                   {selectedMarketName.split('/')[0]}
                 </div>
-                <span className="text-th-fgd-4">/</span>
-                <div className="font-semibold pl-1 pr-2">
+                <span className="text-th-fgd-4 text-lg">/</span>
+                <div className="font-semibold pl-1 pr-2 text-lg">
                   {selectedMarketName.split('/')[1]}
                 </div>
               </div>
@@ -79,14 +79,14 @@ const MarketHeader = () => {
           />
         </div>
         <div>
-          <div className="text-th-fgd-4 text-2xs">Mark price</div>
+          <div className="text-th-fgd-4 text-xs">Mark price</div>
           <div className="font-semibold mt-0.5">
             {numeral(markPrice).format('0,0.00')}
           </div>
         </div>
         <ChangePercentage change={11} />
         <div>
-          <div className="text-th-fgd-4 text-2xs">24hr Vol</div>
+          <div className="text-th-fgd-4 text-xs">24hr Vol</div>
           <div className={`font-semibold mt-0.5`}>
             {numeral(2000000).format('0,0')}
           </div>
@@ -107,8 +107,8 @@ const ChangePercentage = React.memo<{ change: number }>(
     // const previousChange: number = usePrevious(change)
 
     return (
-      <div className="px-4">
-        <div className="text-th-fgd-4 text-2xs">24hr Change</div>
+      <div className="px-6">
+        <div className="text-th-fgd-4 text-xs">24hr Change</div>
         <div
           className={`font-semibold mt-0.5 ${
             change > 0

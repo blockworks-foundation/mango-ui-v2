@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import styled from '@emotion/styled'
 import useMangoStore from '../stores/useMangoStore'
 import { Menu } from '@headlessui/react'
-import { DuplicateIcon, LogoutIcon } from '@heroicons/react/outline'
+import { DuplicateIcon, LinkIcon, LogoutIcon } from '@heroicons/react/outline'
 import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid'
 import { WALLET_PROVIDERS, DEFAULT_PROVIDER } from '../hooks/useWallet'
 import useLocalStorageState from '../hooks/useLocalStorageState'
@@ -18,7 +18,7 @@ const Code = styled.code`
   border: 1px solid hsla(0, 0%, 39.2%, 0.2);
   border-radius: 3px;
   background: hsla(0, 0%, 58.8%, 0.1);
-  font-size: 12px;
+  font-size: 0.65rem;
 `
 
 const WALLET_OPTIONS = [
@@ -62,40 +62,36 @@ const ConnectWalletButton = () => {
   }
 
   return (
-    <div className="h-12 w-48">
+    <div className="h-12">
       {connected && wallet?.publicKey ? (
         <Menu>
           {({ open }) => (
             <div className="relative h-full w-full">
-              <Menu.Button className="h-full w-full px-3 bg-th-bkg-3 rounded-none focus:outline-none text-th-primary hover:text-th-fgd-1">
+              <Menu.Button className="h-full w-full pl-3 pr-4 bg-th-bkg-3 rounded-none focus:outline-none text-th-primary hover:text-th-fgd-1">
                 <div className="flex flex-row items-center justify-between">
                   <div className="flex items-center">
-                    <WalletIcon className="w-4 h-4 mr-2 fill-current text-th-green" />
+                    <LinkIcon className="w-4 h-4 mr-2 text-th-green" />
                     <Code className="p-1 text-th-fgd-3 font-light">
-                      {isCopied
-                        ? 'Copied!'
-                        : wallet.publicKey.toString().substr(0, 5) +
-                          '...' +
-                          wallet.publicKey.toString().substr(-5)}
+                      {isCopied ? 'Copied!' : 'Connected'}
                     </Code>
                   </div>
-                  <div className="pl-3">
+                  {/* <div className="pl-2">
                     {open ? (
-                      <ChevronUpIcon className="h-5 w-5" />
+                      <ChevronUpIcon className="h-4 w-4" />
                     ) : (
-                      <ChevronDownIcon className="h-5 w-5" />
+                      <ChevronDownIcon className="h-4 w-4" />
                     )}
-                  </div>
+                  </div> */}
                 </div>
               </Menu.Button>
-              <Menu.Items className="z-20 p-1 absolute right-0 top-13 bg-th-bkg-1 divide-y divide-th-bkg-3 shadow-lg outline-none rounded-md w-48">
+              <Menu.Items className="z-20 p-1 absolute right-0 top-13 md:transform md:-translate-x-1/2 md:left-1/2 bg-th-bkg-1 divide-y divide-th-bkg-3 shadow-lg outline-none rounded-md w-36">
                 {WALLET_OPTIONS.map(({ name, icon }) => (
                   <Menu.Item key={name}>
                     <button
                       className="flex flex-row font-normal items-center rounded-none w-full p-2 hover:bg-th-bkg-2 hover:cursor-pointer focus:outline-none"
                       onClick={() => handleWalletMenu(name)}
                     >
-                      <div className="w-5 h-5 mr-2">{icon}</div>
+                      <div className="w-4 h-4 mr-2">{icon}</div>
                       {name}
                     </button>
                   </Menu.Item>

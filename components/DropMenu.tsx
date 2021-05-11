@@ -54,9 +54,9 @@ const DropMenu: FunctionComponent<DropMenuProps> = ({
                   {button}
                   {showChevrons ? (
                     open ? (
-                      <ChevronUpIcon className="h-5 w-5" />
+                      <ChevronUpIcon className="h-4 w-4" />
                     ) : (
-                      <ChevronDownIcon className="h-5 w-5" />
+                      <ChevronDownIcon className="h-4 w-4" />
                     )
                   ) : null}
                 </div>

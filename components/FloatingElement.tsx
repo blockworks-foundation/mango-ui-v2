@@ -34,7 +34,7 @@ const FloatingElement: FunctionComponent<FloatingElementProps> = ({
 }) => {
   const { uiLocked } = useMangoStore((s) => s.settings)
   return (
-    <div className="m-1 p-1 bg-th-bkg-2 rounded-lg h-full">
+    <div className="m-1 p-1 bg-th-bkg-2 border border-th-bkg-3 rounded-lg h-full">
       <div
         className={`thin-scroll p-2.5 overflow-auto overflow-x-hidden relative h-full ${className}`}
       >

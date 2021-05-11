@@ -12,6 +12,7 @@ import MarginAccounts from './MarginAccounts'
 const TopBar = () => {
   const connected = useMangoStore((s) => s.wallet.connected)
   const wallet = useMangoStore((s) => s.wallet.current)
+  const marginAccounts = useMangoStore((s) => s.marginAccounts)
   const selectedMarginAccount = useMangoStore(
     (s) => s.selectedMarginAccount.current
   )
@@ -20,7 +21,7 @@ const TopBar = () => {
 
   return (
     <>
-      <nav className={`bg-th-bkg-2`}>
+      <nav className={`bg-th-bkg-2 border-b border-th-bkg-3`}>
         <div className={`px-6 md:px-9`}>
           <div className={`flex justify-between h-12`}>
             <div className={`flex`}>
@@ -38,17 +39,27 @@ const TopBar = () => {
                 <MenuItem href="https://docs.mango.markets/">Learn</MenuItem>
               </div>
             </div>
-            <div className="flex">
-              <div className="flex items-center">
+            <div className="flex items-center">
+              <div className={`${!connected && 'pr-4'} pl-2`}>
+                <ThemeSwitch />
+              </div>
+              {connected ? (
+                <div className="pl-2 pr-4">
+                  <AlertsList />
+                </div>
+              ) : null}
+              <div className="flex">
                 {selectedMarginAccount ? (
                   <div
-                    className="cursor-pointer flex items-center"
+                    className="border-l border-r border-th-bkg-3 cursor-pointer flex items-center px-4"
                     onClick={() => setShowAccounts(!showAccounts)}
                   >
-                    <div className="pr-1 text-right">
-                      <div className="font-semibold">Account</div>
-                      <div className="text-2xs text-th-fgd-4">
-                        {abbreviateAddress(selectedMarginAccount.publicKey)}
+                    <div className="pr-2 text-right">
+                      <div className="font-semibold pb-0.5">Mango Wallet</div>
+                      <div className="text-2xs text-th-primary">
+                        {marginAccounts.length > 0
+                          ? abbreviateAddress(selectedMarginAccount.publicKey)
+                          : 'Make a Deposit'}
                       </div>
                     </div>
                     {showAccounts ? (
@@ -58,15 +69,7 @@ const TopBar = () => {
                     )}
                   </div>
                 ) : null}
-                <div className="pl-2">
-                  <ThemeSwitch />
-                </div>
-                {connected ? (
-                  <div className="pl-2">
-                    <AlertsList />
-                  </div>
-                ) : null}
-                <div className="hidden md:ml-4 md:block">
+                <div className="hidden md:block">
                   <ConnectWalletButton />
                 </div>
               </div>

@@ -65,7 +65,7 @@ a {
 
 button {
   transition: all 0.3s ease;
-  @apply font-semibold rounded-md;
+  @apply font-semibold rounded-md tracking-wider;
 }
 
 .default-transition {

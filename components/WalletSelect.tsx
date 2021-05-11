@@ -33,9 +33,9 @@ export default function WalletSelect({ isPrimary = false }) {
             } cursor-pointer`}
           >
             {open ? (
-              <ChevronUpIcon className="h-5 w-5" />
+              <ChevronUpIcon className="h-4 w-4" />
             ) : (
-              <ChevronDownIcon className="h-5 w-5" />
+              <ChevronDownIcon className="h-4 w-4" />
             )}
           </Menu.Button>
           <Menu.Items className="absolute bg-th-bkg-1 divide-y divide-th-bkg-3 p-1 rounded-md right-0 top-13 shadow-lg outline-none w-48 z-20">

@@ -1,12 +1,13 @@
 import { useCallback, useState } from 'react'
+import numeral from 'numeral'
+import { ExternalLinkIcon } from '@heroicons/react/outline'
 import {
-  ExternalLinkIcon,
-  InformationCircleIcon,
-  CheckIcon,
-} from '@heroicons/react/outline'
+  ArrowDownIcon,
+  ArrowUpIcon,
+  CheckCircleIcon,
+} from '@heroicons/react/solid'
 import { RadioGroup } from '@headlessui/react'
-import FloatingElement from './FloatingElement'
-import { ElementTitle } from './styles'
+import { Table, Thead, Tbody, Tr, Th, Td } from 'react-super-responsive-table'
 import useMangoStore from '../stores/useMangoStore'
 import useMarketList from '../hooks/useMarketList'
 import {
@@ -18,7 +19,6 @@ import DepositModal from './DepositModal'
 import WithdrawModal from './WithdrawModal'
 import Button from './Button'
 import Tooltip from './Tooltip'
-import MarginAccountSelect from './MarginAccountSelect'
 import { MarginAccount } from '@blockworks-foundation/mango-client'
 
 export default function MarginBalances() {
@@ -36,7 +36,6 @@ export default function MarginBalances() {
 
   const [showDepositModal, setShowDepositModal] = useState(false)
   const [showWithdrawModal, setShowWithdrawModal] = useState(false)
-  const [selected, setSelected] = useState(marginAccounts[0])
 
   const handleCloseDeposit = useCallback(() => {
     setShowDepositModal(false)
@@ -46,155 +45,204 @@ export default function MarginBalances() {
     setShowWithdrawModal(false)
   }, [])
 
-  // const handleMarginAccountChange = (marginAccount: MarginAccount) => {
-  //   setMangoStore((state) => {
-  //     state.selectedMarginAccount.current = marginAccount
-  //   })
-  // }
-
-  console.log(marginAccounts)
+  const handleMarginAccountChange = (marginAccount: MarginAccount) => {
+    setMangoStore((state) => {
+      state.selectedMarginAccount.current = marginAccount
+    })
+  }
 
   return (
-    <div className="flex px-6 md:px-9">
+    <div className="bg-th-bkg-2 flex md:px-9 py-6">
       {marginAccounts.length > 1 ? (
-        <div className="flex-shrink-0">
-          <div className="w-full ">
-            <RadioGroup value={selected} onChange={setSelected}>
-              <RadioGroup.Label className="sr-only">
-                Margin account
-              </RadioGroup.Label>
-              <div className="">
-                {marginAccounts.map((account) => (
-                  <RadioGroup.Option
-                    key={account.publicKey.toString()}
-                    value={account}
-                    className={({ active, checked }) =>
-                      `${checked ? 'bg-th-bkg-3' : 'bg-transparent'}
-                      relative rounded-md px-4 py-2 cursor-pointer flex focus:outline-none`
-                    }
-                  >
-                    {({ active, checked }) => (
-                      <>
-                        <div className="flex items-center justify-between w-full">
-                          <div className="flex items-center">
-                            <div className="text-sm">
-                              <RadioGroup.Label
-                                as="span"
-                                className="font-semibold text-th-fgd-1"
-                              >
-                                {abbreviateAddress(account.publicKey)}
-                              </RadioGroup.Label>
-                            </div>
-                          </div>
-                          {checked && (
-                            <div className="flex-shrink-0 text-white">
-                              <CheckIcon className="w-6 h-6" />
-                            </div>
-                          )}
+        <RadioGroup
+          value={selectedMarginAccount}
+          onChange={(acc) => handleMarginAccountChange(acc)}
+        >
+          <RadioGroup.Label className="sr-only">
+            Margin account
+          </RadioGroup.Label>
+          <div className="space-y-2">
+            {marginAccounts.map((account, i) => (
+              <RadioGroup.Option
+                key={account.publicKey.toString()}
+                value={account}
+                className={({ active, checked }) =>
+                  `${checked ? 'bg-th-bkg-3' : 'bg-th-bkg-1'}
+                      relative rounded-md w-32 px-3 py-3 cursor-pointer default-transition flex hover:bg-th-bkg-3 focus:outline-none`
+                }
+              >
+                {({ active, checked }) => (
+                  <>
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center">
+                        <div className="text-sm">
+                          <RadioGroup.Label as="span" className="text-th-fgd-1">
+                            Wallet {i + 1}
+                          </RadioGroup.Label>
                         </div>
-                      </>
-                    )}
-                  </RadioGroup.Option>
-                ))}
+                      </div>
+                      {checked && (
+                        <div className="flex-shrink-0 text-th-green">
+                          <CheckCircleIcon className="w-4 h-4" />
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </RadioGroup.Option>
+            ))}
+          </div>
+        </RadioGroup>
+      ) : null}
+      <div className="w-full pl-6">
+        <div className="bg-th-bkg-1 flex items-center justify-between mb-4 px-4 py-3 rounded-md">
+          <div className="flex">
+            <div className="pr-6">
+              <div className={`text-th-fgd-4 text-xs`}>Address</div>
+              <div className="font-semibold text-lg">
+                {abbreviateAddress(selectedMarginAccount.publicKey)}
               </div>
-            </RadioGroup>
+            </div>
+            {/* <div className="pr-6">
+              <div className={`text-th-fgd-4 text-xs`}>Value</div>
+              <div className="font-semibold text-lg">
+                ${numeral(12345.6).format('0,0.0')}
+              </div>
+            </div>
+            <div>
+              <div className={`text-th-fgd-4 text-xs`}>Total PNL</div>
+              <div className="font-semibold text-lg">
+                ${numeral(9876.4).format('0,0.0')}
+              </div>
+            </div> */}
+          </div>
+          <div className={`flex items-center`}>
+            <Button
+              className="text-xs flex items-center justify-center sm:ml-2 pt-0 pb-0 h-8 px-3"
+              disabled={!connected || loadingMarginAccount}
+              onClick={() => setShowDepositModal(true)}
+            >
+              Deposit
+            </Button>
+            <Button
+              className="text-xs flex items-center justify-center sm:ml-2 pt-0 pb-0 h-8 px-3"
+              disabled={
+                !connected || !selectedMarginAccount || loadingMarginAccount
+              }
+              onClick={() => setShowWithdrawModal(true)}
+            >
+              Withdraw
+            </Button>
+            <Button
+              className="text-xs flex items-center justify-center sm:ml-2 pt-0 pb-0 h-8 px-3"
+              disabled={
+                !connected || !selectedMarginAccount || loadingMarginAccount
+              }
+              onClick={() => setShowWithdrawModal(true)}
+            >
+              Settle All
+            </Button>
           </div>
         </div>
-      ) : null}
-      {selectedMangoGroup ? (
-        <table className="w-full">
-          <thead>
-            <tr className={`text-center text-th-fgd-4 mb-2 text-xs`}>
-              <th scope="col" className={`flex-auto font-normal text-left`}>
-                Assets
-              </th>
-              <th
-                scope="col"
-                className={`flex-auto font-normal text-right px-2`}
-              >
-                Deposits
-              </th>
-              <th
-                scope="col"
-                className={`flex-auto font-normal text-right px-2`}
-              >
-                Borrows
-              </th>
-              <th
-                scope="col"
-                className="flex-auto font-normal flex justify-end items-center"
-              >
-                <Tooltip content="Deposit APR and Borrow APY">
-                  <div>Deposits / Borrows</div>
-                </Tooltip>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {Object.entries(symbols).map(([name], i) => (
-              <tr key={name} className={`text-th-fgd-1`}>
-                <td className={`flex items-center py-2`}>
-                  <img
-                    alt=""
-                    width="20"
-                    height="20"
-                    src={`/assets/icons/${name.toLowerCase()}.svg`}
-                    className={`mr-2.5`}
-                  />
-                  <span>{name}</span>
-                </td>
-                <td className={`text-right px-2`}>
-                  {selectedMarginAccount
-                    ? floorToDecimal(
-                        selectedMarginAccount.getUiDeposit(
-                          selectedMangoGroup,
-                          i
-                        ),
-                        tokenPrecision[name]
-                      ).toFixed(tokenPrecision[name])
-                    : (0).toFixed(tokenPrecision[name])}
-                </td>
-                <td className={`text-right px-2`}>
-                  {selectedMarginAccount
-                    ? selectedMarginAccount
-                        .getUiBorrow(selectedMangoGroup, i)
-                        .toFixed(tokenPrecision[name])
-                    : (0).toFixed(tokenPrecision[name])}
-                </td>
-                <td className={`text-right`}>
-                  <span className={`text-th-green`}>
-                    {(selectedMangoGroup.getDepositRate(i) * 100).toFixed(2)}%
-                  </span>
-                  <span className={`text-th-fgd-4`}>{'  /  '}</span>
-                  <span className={`text-th-red`}>
-                    {(selectedMangoGroup.getBorrowRate(i) * 100).toFixed(2)}%
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      ) : null}
-      <div className={`flex justify-center items-center mt-4`}>
-        <Button
-          onClick={() => setShowDepositModal(true)}
-          className="w-1/2"
-          disabled={!connected || loadingMarginAccount}
-        >
-          <span>Deposit</span>
-        </Button>
-        <Button
-          onClick={() => setShowWithdrawModal(true)}
-          className="ml-4 w-1/2"
-          disabled={
-            !connected || !selectedMarginAccount || loadingMarginAccount
-          }
-        >
-          <span>Withdraw</span>
-        </Button>
-      </div>
-      <div className={`text-center mt-4 text-th-fgd-4 text-sm`}>
-        Settle funds in the Balances tab
+        {selectedMangoGroup ? (
+          <Table className="w-full">
+            <Thead>
+              <Tr className={`text-th-fgd-3 text-xs`}>
+                <Th scope="col" className={`px-6 py-3 text-left font-normal`}>
+                  Assets
+                </Th>
+                <Th scope="col" className={`px-6 py-3 text-left font-normal`}>
+                  Deposits
+                </Th>
+                <Th scope="col" className={`px-6 py-3 text-left font-normal`}>
+                  Borrows
+                </Th>
+                <Th scope="col" className={`px-6 py-3 text-left font-normal`}>
+                  Unsettled
+                </Th>
+                <Th scope="col" className="px-6 py-3 text-left font-normal">
+                  Deposit Rate
+                </Th>
+                <Th scope="col" className="px-6 py-3 text-left font-normal">
+                  Borrow Rate
+                </Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {Object.entries(symbols).map(([name], i) => (
+                <Tr
+                  key={name}
+                  className={`border-b border-th-bkg-3
+                  ${i % 2 === 0 ? `bg-th-bkg-3` : `bg-th-bkg-2`}
+                `}
+                >
+                  <Td
+                    className={`flex px-6 py-4 whitespace-nowrap text-sm text-th-fgd-1`}
+                  >
+                    <img
+                      alt=""
+                      width="20"
+                      height="20"
+                      src={`/assets/icons/${name.toLowerCase()}.svg`}
+                      className={`mr-2.5`}
+                    />
+                    <span>{name}</span>
+                  </Td>
+                  <Td
+                    className={`px-6 py-4 whitespace-nowrap text-sm text-th-fgd-1`}
+                  >
+                    {selectedMarginAccount
+                      ? floorToDecimal(
+                          selectedMarginAccount.getUiDeposit(
+                            selectedMangoGroup,
+                            i
+                          ),
+                          tokenPrecision[name]
+                        ).toFixed(tokenPrecision[name])
+                      : (0).toFixed(tokenPrecision[name])}
+                  </Td>
+                  <Td
+                    className={`px-6 py-4 whitespace-nowrap text-sm text-th-fgd-1`}
+                  >
+                    {selectedMarginAccount
+                      ? selectedMarginAccount
+                          .getUiBorrow(selectedMangoGroup, i)
+                          .toFixed(tokenPrecision[name])
+                      : (0).toFixed(tokenPrecision[name])}
+                  </Td>
+                  <Td
+                    className={`px-6 py-4 whitespace-nowrap text-sm text-th-fgd-1`}
+                  >
+                    {(0.0).toFixed(tokenPrecision[name])}
+                  </Td>
+                  <Td
+                    className={`px-6 py-4 whitespace-nowrap text-sm text-th-fgd-1`}
+                  >
+                    <span className={`text-th-green`}>
+                      {(selectedMangoGroup.getDepositRate(i) * 100).toFixed(2)}%
+                    </span>
+                  </Td>
+                  <Td
+                    className={`px-6 py-4 whitespace-nowrap text-sm text-th-fgd-1`}
+                  >
+                    <span className={`text-th-red`}>
+                      {(selectedMangoGroup.getBorrowRate(i) * 100).toFixed(2)}%
+                    </span>
+                  </Td>
+                  <Td className={`px-6 text-right`}>
+                    <Button
+                      className="inline-block text-xs items-center justify-center pt-0 pb-0 h-8 px-3"
+                      disabled={!connected || loadingMarginAccount}
+                      onClick={() => setShowDepositModal(true)}
+                    >
+                      Settle
+                    </Button>
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        ) : null}
       </div>
       {showDepositModal && (
         <DepositModal isOpen={showDepositModal} onClose={handleCloseDeposit} />
