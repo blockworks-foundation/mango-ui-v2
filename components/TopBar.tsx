@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import styled from '@emotion/styled'
 import { MenuIcon, XIcon } from '@heroicons/react/outline'
 import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/solid'
 import MenuItem from './MenuItem'
@@ -8,6 +9,10 @@ import { abbreviateAddress } from '../utils'
 import ConnectWalletButton from './ConnectWalletButton'
 import AlertsList from './AlertsList'
 import MarginAccounts from './MarginAccounts'
+
+const StyledAccountButton = styled.div`
+  width: 136px;
+`
 
 const TopBar = () => {
   const connected = useMangoStore((s) => s.wallet.connected)
@@ -50,12 +55,12 @@ const TopBar = () => {
               ) : null}
               <div className="flex">
                 {selectedMarginAccount ? (
-                  <div
-                    className="border-l border-r border-th-bkg-3 cursor-pointer flex items-center px-4"
+                  <StyledAccountButton
+                    className="border-l border-r border-th-bkg-3 cursor-pointer flex items-center justify-end px-4"
                     onClick={() => setShowAccounts(!showAccounts)}
                   >
                     <div className="pr-2 text-right">
-                      <div className="font-semibold pb-0.5">Mango Wallet</div>
+                      <div className="font-semibold pb-0.5">Account</div>
                       <div className="text-2xs text-th-primary">
                         {marginAccounts.length > 0
                           ? abbreviateAddress(selectedMarginAccount.publicKey)
@@ -67,7 +72,7 @@ const TopBar = () => {
                     ) : (
                       <ChevronDownIcon className="h-5 w-5" />
                     )}
-                  </div>
+                  </StyledAccountButton>
                 ) : null}
                 <div className="hidden md:block">
                   <ConnectWalletButton />

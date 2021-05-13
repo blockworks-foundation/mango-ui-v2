@@ -264,6 +264,24 @@ const WithdrawModal = ({ isOpen, onClose }) => {
             </div>
           </Transition>
         ) : null}
+        <div className="flex items-center pb-2 pt-4">
+          <div className="text-th-fgd-1">Account Preview</div>
+          <Tooltip content="The value and leverage of your account if you perform a withdrawal.">
+            <InformationCircleIcon
+              className={`h-5 w-5 ml-2 text-th-primary cursor-help`}
+            />
+          </Tooltip>
+        </div>
+        <div className="border-t border-b border-th-bkg-3 p-2">
+          <div className="flex justify-between pb-2">
+            <div className="text-th-fgd-4">Account Value</div>
+            <div className="text-th-fgd-1">0.00</div>
+          </div>
+          <div className="flex justify-between">
+            <div className="text-th-fgd-4">Leverage</div>
+            <div className="text-th-fgd-1">0.00x</div>
+          </div>
+        </div>
         <div className={`mt-5 flex justify-center`}>
           <Button
             onClick={handleWithdraw}

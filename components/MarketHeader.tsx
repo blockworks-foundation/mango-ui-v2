@@ -1,9 +1,10 @@
-import React from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import numeral from 'numeral'
-import styled from '@emotion/styled'
 import useMarketList from '../hooks/useMarketList'
 import useMangoStore from '../stores/useMangoStore'
 import useMarkPrice from '../hooks/useMarkPrice'
+import useInterval from '../hooks/useInterval'
+import ChartApi from '../utils/chartDataConnector'
 import { isEqual } from '../utils/'
 import UiLock from './UiLock'
 import ManualRefresh from './ManualRefresh'
@@ -19,6 +20,8 @@ const MarketHeader = () => {
     (s) => s.selectedMangoGroup.markets
   )
   const setMangoStore = useMangoStore((s) => s.set)
+
+  const [ohlcv, setOhlcv] = useState(null)
 
   const markets = Object.entries(spotMarkets).map(([name]) => {
     return {
@@ -44,6 +47,38 @@ const MarketHeader = () => {
       state.selectedMarket.address = spotMarkets[mktName]
     })
   }
+
+  const fetchOhlcv = useCallback(async () => {
+    // calculate from and to date (0:00UTC to 23:59:59UTC)
+    const date = new Date()
+    let utcFrom = new Date(
+      Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+    )
+    utcFrom.setUTCHours(0)
+    utcFrom.setUTCMinutes(0)
+    utcFrom.setUTCSeconds(0)
+    let utcTo = new Date(
+      Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+    )
+    utcTo.setUTCHours(23)
+    utcTo.setUTCMinutes(59)
+    utcTo.setUTCSeconds(59)
+    const from = utcFrom.getTime() / 1000
+    const to = utcTo.getTime() / 1000
+
+    const ohlcv = await ChartApi.getOhlcv(selectedMarketName, '1D', from, to)
+    if (ohlcv) {
+      setOhlcv(ohlcv)
+    }
+  }, [selectedMarketName, ohlcv])
+
+  useEffect(() => {
+    fetchOhlcv()
+  }, [fetchOhlcv])
+
+  useInterval(async () => {
+    fetchOhlcv()
+  }, 5000)
 
   return (
     <div className={`flex items-center justify-between pt-4 px-6 md:px-9`}>
@@ -84,11 +119,17 @@ const MarketHeader = () => {
             {numeral(markPrice).format('0,0.00')}
           </div>
         </div>
-        <ChangePercentage change={11} />
+        <ChangePercentage
+          change={ohlcv ? (ohlcv.c[0] - ohlcv.o[0]) / ohlcv.o[0] : null}
+        />
         <div>
           <div className="text-th-fgd-4 text-xs">24hr Vol</div>
           <div className={`font-semibold mt-0.5`}>
-            {numeral(2000000).format('0,0')}
+            {ohlcv ? (
+              numeral(ohlcv.v[0]).format('0,0.000')
+            ) : (
+              <MarketDataLoader />
+            )}
           </div>
         </div>
       </div>
@@ -104,26 +145,32 @@ export default MarketHeader
 
 const ChangePercentage = React.memo<{ change: number }>(
   ({ change }) => {
-    // const previousChange: number = usePrevious(change)
-
     return (
       <div className="px-6">
         <div className="text-th-fgd-4 text-xs">24hr Change</div>
-        <div
-          className={`font-semibold mt-0.5 ${
-            change > 0
-              ? `text-th-green`
-              : change < 0
-              ? `text-th-red`
-              : `text-th-fgd-1`
-          }`}
-        >
-          {change > 0 && <span className={`text-th-green`}>+</span>}
-          {change < 0 && <span className={`text-th-red`}>-</span>}
-          {`${change}%` || '--'}
-        </div>
+        {change ? (
+          <div
+            className={`font-semibold mt-0.5 ${
+              change > 0
+                ? `text-th-green`
+                : change < 0
+                ? `text-th-red`
+                : `text-th-fgd-1`
+            }`}
+          >
+            {change > 0 && <span className={`text-th-green`}>+</span>}
+            {change < 0 && <span className={`text-th-red`}>-</span>}
+            {`${numeral(change).format('0.00%')}` || '--'}
+          </div>
+        ) : (
+          <MarketDataLoader />
+        )}
       </div>
     )
   },
   (prevProps, nextProps) => isEqual(prevProps, nextProps, ['change'])
+)
+
+const MarketDataLoader = () => (
+  <div className="animate-pulse h-8 w-16 rounded-sm" />
 )

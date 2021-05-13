@@ -1,12 +1,16 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useCallback, useEffect, useState, useMemo } from 'react'
 import { nativeToUi } from '@blockworks-foundation/mango-client/lib/utils'
-import { groupBy } from '../utils'
+import { abbreviateAddress, groupBy } from '../utils'
 import useTradeHistory from '../hooks/useTradeHistory'
 import useMangoStore from '../stores/useMangoStore'
+import { useBalances } from '../hooks/useBalances'
 import FloatingElement from './FloatingElement'
 import Tooltip from './Tooltip'
 import Button from './Button'
 import AlertsModal from './AlertsModal'
+import DepositModal from './DepositModal'
+import WithdrawModal from './WithdrawModal'
+import { ElementTitle } from './styles'
 
 const calculatePNL = (tradeHistory, prices, mangoGroup) => {
   if (!tradeHistory.length) return '0.00'
@@ -54,6 +58,7 @@ const calculatePNL = (tradeHistory, prices, mangoGroup) => {
 }
 
 export default function MarginInfo() {
+  const balances = useBalances()
   const connection = useMangoStore((s) => s.connection.current)
   const connected = useMangoStore((s) => s.wallet.connected)
   const selectedMarginAccount = useMangoStore(
@@ -73,6 +78,9 @@ export default function MarginInfo() {
   const [openAlertModal, setOpenAlertModal] = useState(false)
   const tradeHistory = useTradeHistory()
   const tradeHistoryLength = useMemo(() => tradeHistory.length, [tradeHistory])
+
+  const [showDepositModal, setShowDepositModal] = useState(false)
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false)
 
   useEffect(() => {
     if (selectedMangoGroup) {
@@ -152,8 +160,22 @@ export default function MarginInfo() {
     }
   }, [selectedMarginAccount, selectedMangoGroup, tradeHistoryLength])
 
+  const handleCloseDeposit = useCallback(() => {
+    setShowDepositModal(false)
+  }, [])
+
+  const handleCloseWithdraw = useCallback(() => {
+    setShowWithdrawModal(false)
+  }, [])
+
   return (
     <FloatingElement>
+      <ElementTitle noMarignBottom>Account</ElementTitle>
+      {selectedMarginAccount ? (
+        <div className="pb-2.5 text-center text-th-fgd-4 text-xs">
+          {abbreviateAddress(selectedMarginAccount.publicKey)}
+        </div>
+      ) : null}
       <>
         {mAccountInfo
           ? mAccountInfo.map((entry, i) => (

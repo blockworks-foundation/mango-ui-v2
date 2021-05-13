@@ -1,11 +1,7 @@
 import { useCallback, useState } from 'react'
 import numeral from 'numeral'
 import { ExternalLinkIcon } from '@heroicons/react/outline'
-import {
-  ArrowDownIcon,
-  ArrowUpIcon,
-  CheckCircleIcon,
-} from '@heroicons/react/solid'
+import { CheckCircleIcon } from '@heroicons/react/solid'
 import { RadioGroup } from '@headlessui/react'
 import { Table, Thead, Tbody, Tr, Th, Td } from 'react-super-responsive-table'
 import useMangoStore from '../stores/useMangoStore'
@@ -19,6 +15,7 @@ import DepositModal from './DepositModal'
 import WithdrawModal from './WithdrawModal'
 import Button from './Button'
 import Tooltip from './Tooltip'
+import { WalletIcon } from './icons'
 import { MarginAccount } from '@blockworks-foundation/mango-client'
 
 export default function MarginBalances() {
@@ -52,73 +49,79 @@ export default function MarginBalances() {
   }
 
   return (
-    <div className="bg-th-bkg-2 flex md:px-9 py-6">
+    <div className="bg-th-bkg-2 flex grid grid-cols-12 gap-4 md:px-9 py-6">
       {marginAccounts.length > 1 ? (
-        <RadioGroup
-          value={selectedMarginAccount}
-          onChange={(acc) => handleMarginAccountChange(acc)}
-        >
-          <RadioGroup.Label className="sr-only">
-            Margin account
-          </RadioGroup.Label>
-          <div className="space-y-2">
-            {marginAccounts.map((account, i) => (
-              <RadioGroup.Option
-                key={account.publicKey.toString()}
-                value={account}
-                className={({ active, checked }) =>
-                  `${checked ? 'bg-th-bkg-3' : 'bg-th-bkg-1'}
-                      relative rounded-md w-32 px-3 py-3 cursor-pointer default-transition flex hover:bg-th-bkg-3 focus:outline-none`
-                }
-              >
-                {({ active, checked }) => (
-                  <>
-                    <div className="flex items-center justify-between w-full">
-                      <div className="flex items-center">
-                        <div className="text-sm">
-                          <RadioGroup.Label as="span" className="text-th-fgd-1">
-                            Wallet {i + 1}
-                          </RadioGroup.Label>
+        <div className="col-span-2">
+          <RadioGroup
+            value={selectedMarginAccount}
+            onChange={(acc) => handleMarginAccountChange(acc)}
+          >
+            <RadioGroup.Label className="sr-only">
+              Margin account
+            </RadioGroup.Label>
+            <div className="space-y-2">
+              {marginAccounts.map((account, i) => (
+                <RadioGroup.Option
+                  key={account.publicKey.toString()}
+                  value={account}
+                  className={({ active, checked }) =>
+                    `${checked ? 'bg-th-bkg-3' : 'bg-th-bkg-1'}
+                      relative rounded-md w-full px-3 py-3 cursor-pointer default-transition flex hover:bg-th-bkg-3 focus:outline-none`
+                  }
+                >
+                  {({ active, checked }) => (
+                    <>
+                      <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center">
+                          <div className="text-sm">
+                            <RadioGroup.Label
+                              as="span"
+                              className="flex items-center text-th-fgd-1"
+                            >
+                              <WalletIcon className="h-4 w-4 fill-current mr-2" />
+                              Account {i + 1}
+                            </RadioGroup.Label>
+                          </div>
                         </div>
+                        {checked && (
+                          <div className="flex-shrink-0 text-th-green">
+                            <CheckCircleIcon className="w-4 h-4" />
+                          </div>
+                        )}
                       </div>
-                      {checked && (
-                        <div className="flex-shrink-0 text-th-green">
-                          <CheckCircleIcon className="w-4 h-4" />
-                        </div>
-                      )}
-                    </div>
-                  </>
-                )}
-              </RadioGroup.Option>
-            ))}
-          </div>
-        </RadioGroup>
+                    </>
+                  )}
+                </RadioGroup.Option>
+              ))}
+            </div>
+          </RadioGroup>
+        </div>
       ) : null}
-      <div className="w-full pl-6">
-        <div className="bg-th-bkg-1 flex items-center justify-between mb-4 px-4 py-3 rounded-md">
-          <div className="flex">
-            <div className="pr-6">
-              <div className={`text-th-fgd-4 text-xs`}>Address</div>
-              <div className="font-semibold text-lg">
-                {abbreviateAddress(selectedMarginAccount.publicKey)}
-              </div>
+      <div className="col-span-10">
+        <div className="bg-th-bkg-1 flex grid grid-cols-12 gap-4 items-center justify-between mb-4 px-4 py-3 rounded-md">
+          {/* <div className="flex"> */}
+          <div className="col-span-2">
+            <div className={`text-th-fgd-4 text-xs`}>Address</div>
+            <div className="font-semibold text-lg">
+              {abbreviateAddress(selectedMarginAccount.publicKey)}
             </div>
-            {/* <div className="pr-6">
-              <div className={`text-th-fgd-4 text-xs`}>Value</div>
-              <div className="font-semibold text-lg">
-                ${numeral(12345.6).format('0,0.0')}
-              </div>
-            </div>
-            <div>
-              <div className={`text-th-fgd-4 text-xs`}>Total PNL</div>
-              <div className="font-semibold text-lg">
-                ${numeral(9876.4).format('0,0.0')}
-              </div>
-            </div> */}
           </div>
-          <div className={`flex items-center`}>
+          <div className="border-l border-th-bkg-3 col-span-2 pl-3">
+            <div className={`text-th-fgd-4 text-xs`}>Value</div>
+            <div className="font-semibold text-lg">
+              ${numeral(12345.6).format('0,0.0')}
+            </div>
+          </div>
+          <div className="border-l border-th-bkg-3 col-span-2 pl-3">
+            <div className={`text-th-fgd-4 text-xs`}>Total PNL</div>
+            <div className="font-semibold text-lg">
+              ${numeral(9876.4).format('0,0.0')}
+            </div>
+          </div>
+          {/* </div> */}
+          <div className={`col-span-6 flex items-center justify-end`}>
             <Button
-              className="text-xs flex items-center justify-center sm:ml-2 pt-0 pb-0 h-8 px-3"
+              className="text-xs flex items-center justify-center pt-0 pb-0 h-8 px-3"
               disabled={!connected || loadingMarginAccount}
               onClick={() => setShowDepositModal(true)}
             >
@@ -148,23 +151,23 @@ export default function MarginBalances() {
           <Table className="w-full">
             <Thead>
               <Tr className={`text-th-fgd-3 text-xs`}>
-                <Th scope="col" className={`px-6 py-3 text-left font-normal`}>
+                <Th scope="col" className={`px-4 py-3 text-left font-normal`}>
                   Assets
                 </Th>
-                <Th scope="col" className={`px-6 py-3 text-left font-normal`}>
+                <Th scope="col" className={`px-4 py-3 text-left font-normal`}>
                   Deposits
                 </Th>
-                <Th scope="col" className={`px-6 py-3 text-left font-normal`}>
+                <Th scope="col" className={`px-4 py-3 text-left font-normal`}>
                   Borrows
                 </Th>
-                <Th scope="col" className={`px-6 py-3 text-left font-normal`}>
+                <Th scope="col" className={`px-4 py-3 text-left font-normal`}>
                   Unsettled
                 </Th>
-                <Th scope="col" className="px-6 py-3 text-left font-normal">
-                  Deposit Rate
+                <Th scope="col" className="px-4 py-3 text-left font-normal">
+                  Deposit APR
                 </Th>
-                <Th scope="col" className="px-6 py-3 text-left font-normal">
-                  Borrow Rate
+                <Th scope="col" className="px-4 py-3 text-left font-normal">
+                  Borrow APY
                 </Th>
               </Tr>
             </Thead>
@@ -177,7 +180,7 @@ export default function MarginBalances() {
                 `}
                 >
                   <Td
-                    className={`flex px-6 py-4 whitespace-nowrap text-sm text-th-fgd-1`}
+                    className={`flex px-4 py-4 whitespace-nowrap text-sm text-th-fgd-1`}
                   >
                     <img
                       alt=""
@@ -189,7 +192,7 @@ export default function MarginBalances() {
                     <span>{name}</span>
                   </Td>
                   <Td
-                    className={`px-6 py-4 whitespace-nowrap text-sm text-th-fgd-1`}
+                    className={`px-4 py-4 whitespace-nowrap text-sm text-th-fgd-1`}
                   >
                     {selectedMarginAccount
                       ? floorToDecimal(
@@ -202,7 +205,7 @@ export default function MarginBalances() {
                       : (0).toFixed(tokenPrecision[name])}
                   </Td>
                   <Td
-                    className={`px-6 py-4 whitespace-nowrap text-sm text-th-fgd-1`}
+                    className={`px-4 py-4 whitespace-nowrap text-sm text-th-fgd-1`}
                   >
                     {selectedMarginAccount
                       ? selectedMarginAccount
@@ -211,25 +214,25 @@ export default function MarginBalances() {
                       : (0).toFixed(tokenPrecision[name])}
                   </Td>
                   <Td
-                    className={`px-6 py-4 whitespace-nowrap text-sm text-th-fgd-1`}
+                    className={`px-4 py-4 whitespace-nowrap text-sm text-th-fgd-1`}
                   >
                     {(0.0).toFixed(tokenPrecision[name])}
                   </Td>
                   <Td
-                    className={`px-6 py-4 whitespace-nowrap text-sm text-th-fgd-1`}
+                    className={`px-4 py-4 whitespace-nowrap text-sm text-th-fgd-1`}
                   >
                     <span className={`text-th-green`}>
                       {(selectedMangoGroup.getDepositRate(i) * 100).toFixed(2)}%
                     </span>
                   </Td>
                   <Td
-                    className={`px-6 py-4 whitespace-nowrap text-sm text-th-fgd-1`}
+                    className={`px-4 py-4 whitespace-nowrap text-sm text-th-fgd-1`}
                   >
                     <span className={`text-th-red`}>
                       {(selectedMangoGroup.getBorrowRate(i) * 100).toFixed(2)}%
                     </span>
                   </Td>
-                  <Td className={`px-6 text-right`}>
+                  <Td className={`px-4 text-right`}>
                     <Button
                       className="inline-block text-xs items-center justify-center pt-0 pb-0 h-8 px-3"
                       disabled={!connected || loadingMarginAccount}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { RefreshClockwiseIcon } from './icons'
 import useMangoStore from '../stores/useMangoStore'
 import Tooltip from './Tooltip'
