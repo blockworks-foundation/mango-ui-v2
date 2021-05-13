@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import Modal from './Modal'
 import Input from './Input'
 import AccountSelect from './AccountSelect'
@@ -20,6 +20,7 @@ import Tooltip from './Tooltip'
 import { InformationCircleIcon } from '@heroicons/react/outline'
 import { Transition } from '@headlessui/react'
 import { PublicKey } from '@solana/web3.js'
+import { MarginAccount, uiToNative } from '@blockworks-foundation/mango-client'
 
 const WithdrawModal = ({ isOpen, onClose }) => {
   const [inputAmount, setInputAmount] = useState('')
@@ -50,6 +51,53 @@ const WithdrawModal = ({ isOpen, onClose }) => {
     getTokenIndex,
   ])
 
+  useEffect(async () => {
+    if (!selectedMangoGroup || !selectedMarginAccount) return
+
+    const prices = await selectedMangoGroup.getPrices(connection)
+    const mintDecimals = selectedMangoGroup.mintDecimals[tokenIndex]
+    const groupIndex = selectedMangoGroup.indexes[tokenIndex]
+    const deposits = selectedMarginAccount.getUiDeposit(
+      selectedMangoGroup,
+      tokenIndex
+    )
+    const borrows = selectedMarginAccount.getUiBorrow(
+      selectedMangoGroup,
+      tokenIndex
+    )
+
+    // simulate change to deposits & borrow based on input amount
+    const newDeposit = Math.max(0, deposits - inputAmount)
+    const newBorrows = borrows + Math.max(0, inputAmount - deposits)
+
+    // clone MarginAccount and arrays to not modify selectedMarginAccount
+    const simulation = new MarginAccount(null, selectedMarginAccount)
+    simulation.deposits = [...selectedMarginAccount.deposits]
+    simulation.borrows = [...selectedMarginAccount.borrows]
+
+    // update with simulated values
+    simulation.deposits[tokenIndex] =
+      uiToNative(newDeposit, mintDecimals) / groupIndex.deposit
+    simulation.borrows[tokenIndex] =
+      uiToNative(newBorrows, mintDecimals) / groupIndex.borrow
+
+    const equity = simulation.computeValue(selectedMangoGroup, prices)
+    const assetsVal = simulation.getAssetsVal(selectedMangoGroup, prices)
+    const liabsVal = simulation.getLiabsVal(selectedMangoGroup, prices)
+    const collateralRatio = simulation.getCollateralRatio(
+      selectedMangoGroup,
+      prices
+    )
+    const leverage = 1 / Math.max(0, collateralRatio - 1)
+    console.log('simulation', {
+      equity,
+      assetsVal,
+      liabsVal,
+      collateralRatio,
+      leverage,
+    })
+  }, [inputAmount, tokenIndex, selectedMarginAccount, selectedMangoGroup])
+
   const handleSetSelectedAccount = (val) => {
     setInputAmount('')
     setSelectedAccount(val)
@@ -58,11 +106,9 @@ const WithdrawModal = ({ isOpen, onClose }) => {
   const withdrawDisabled = Number(inputAmount) <= 0
 
   const getMaxForSelectedAccount = () => {
-    const marginAccount = useMangoStore.getState().selectedMarginAccount.current
-    const mangoGroup = useMangoStore.getState().selectedMangoGroup.current
     return displayDepositsForMarginAccount(
-      marginAccount,
-      mangoGroup,
+      selectedMarginAccount,
+      selectedMangoGroup,
       tokenIndex
     )
   }
