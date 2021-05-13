@@ -1,5 +1,4 @@
 import React, { useCallback, useMemo, useState } from 'react'
-import numeral from 'numeral'
 import useMangoStore from '../stores/useMangoStore'
 import useMarkPrice from '../hooks/useMarkPrice'
 import usePrevious from '../hooks/usePrevious'
@@ -17,7 +16,7 @@ const MarketHeader = () => {
 
   const [ohlcv, setOhlcv] = useState(null)
   const [loading, setLoading] = useState(false)
-  const change = ohlcv ? (ohlcv.c[0] - ohlcv.o[0]) / ohlcv.o[0] : null
+  const change = ohlcv ? ((ohlcv.c[0] - ohlcv.o[0]) / ohlcv.o[0]) * 100 : null
 
   const fetchOhlcv = useCallback(async () => {
     // calculate from and to date (0:00UTC to 23:59:59UTC)
@@ -86,9 +85,7 @@ const MarketHeader = () => {
         <div className="flex items-center">
           <div className="pr-4 sm:pr-0 sm:w-24">
             <div className="text-th-fgd-4 text-xs">Mark price</div>
-            <div className="font-semibold mt-0.5">
-              {numeral(markPrice).format('0,0.00')}
-            </div>
+            <div className="font-semibold mt-0.5">{markPrice.toFixed(2)}</div>
           </div>
           <div className="pr-4 sm:pr-0 sm:w-24">
             <div className="mb-0.5 text-th-fgd-4 text-xs">24hr Change</div>
@@ -103,7 +100,8 @@ const MarketHeader = () => {
                 }`}
               >
                 {change > 0 && <span className={`text-th-green`}>+</span>}
-                {`${numeral(change).format('0.00%')}` || '--'}
+                {change < 0 && <span className={`text-th-green`}>-</span>}
+                {`${change.toFixed(2)}%` || '--'}
               </div>
             ) : (
               <MarketDataLoader />
@@ -112,11 +110,7 @@ const MarketHeader = () => {
           <div className="pr-4 sm:pr-0 sm:w-24">
             <div className="mb-0.5 text-th-fgd-4 text-xs">24hr Vol</div>
             <div className={`font-semibold`}>
-              {ohlcv && !loading ? (
-                numeral(ohlcv.v[0]).format('0,0.000')
-              ) : (
-                <MarketDataLoader />
-              )}
+              {ohlcv && !loading ? ohlcv.v[0].toFixed(2) : <MarketDataLoader />}
             </div>
           </div>
         </div>
