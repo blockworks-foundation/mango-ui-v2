@@ -114,7 +114,12 @@ const MarketHeader = () => {
             <div className={`font-semibold`}>
               {ohlcv && !loading ? (
                 volume !== '--' ? (
-                  volume.toFixed(2)
+                  <>
+                    {volume.toFixed(2)}
+                    <span className="ml-1 text-th-fgd-3 text-xs">
+                      {selectedMarketName.split('/')[0]}
+                    </span>
+                  </>
                 ) : (
                   volume
                 )
