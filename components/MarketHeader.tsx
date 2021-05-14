@@ -103,7 +103,6 @@ const MarketHeader = () => {
                 }`}
               >
                 {change > 0 && <span className={`text-th-green`}>+</span>}
-                {change < 0 && <span className={`text-th-green`}>-</span>}
                 {change !== '--' ? `${change.toFixed(2)}%` : change}
               </div>
             ) : (
