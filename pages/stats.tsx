@@ -8,14 +8,7 @@ import useConnection from '../hooks/useConnection'
 import TopBar from '../components/TopBar'
 import { formatBalanceDisplay } from '../utils/index'
 import { Table, Thead, Tbody, Tr, Th, Td } from 'react-super-responsive-table'
-
-const DECIMALS = {
-  BTC: 4,
-  ETH: 3,
-  USDT: 2,
-  USDC: 2,
-  WUSDT: 2,
-}
+import { DECIMALS } from '../constants'
 
 const icons = {
   BTC: '/assets/icons/btc.svg',

@@ -8,29 +8,43 @@ import useMarketList from '../hooks/useMarketList'
 import {
   getSymbolForTokenMintAddress,
   displayDepositsForMarginAccount,
-  floorToDecimal,
 } from '../utils/index'
 import useConnection from '../hooks/useConnection'
 import { borrowAndWithdraw, withdraw } from '../utils/mango'
 import Loading from './Loading'
-import Button from './Button'
+import Slider from './Slider'
+import Button, { LinkButton } from './Button'
 import { notify } from '../utils/notifications'
 import Switch from './Switch'
 import Tooltip from './Tooltip'
-import { InformationCircleIcon } from '@heroicons/react/outline'
-import { Transition } from '@headlessui/react'
+import {
+  ExclamationCircleIcon,
+  InformationCircleIcon,
+} from '@heroicons/react/outline'
+import {
+  ChevronLeftIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+} from '@heroicons/react/solid'
+import { Disclosure } from '@headlessui/react'
 import { PublicKey } from '@solana/web3.js'
 import { MarginAccount, uiToNative } from '@blockworks-foundation/mango-client'
+import { DECIMALS } from '../constants'
 
 const WithdrawModal = ({ isOpen, onClose }) => {
-  const [inputAmount, setInputAmount] = useState('')
+  const [inputAmount, setInputAmount] = useState(0)
+  const [invalidAmountMessage, setInvalidAmountMessage] = useState('')
+  const [maxAmount, setMaxAmount] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [includeBorrow, setIncludeBorrow] = useState(false)
+  const [simulation, setSimulation] = useState(null)
+  const [showSimulation, setShowSimulation] = useState(false)
+  const [sliderPercentage, setSliderPercentage] = useState(0)
+  const [maxButtonTransition, setMaxButtonTransition] = useState(false)
   const { getTokenIndex, symbols } = useMarketList()
   const { connection, programId } = useConnection()
   const walletAccounts = useMangoStore((s) => s.wallet.balances)
   const selectedMangoGroup = useMangoStore((s) => s.selectedMangoGroup.current)
-  const mintDecimals = useMangoStore((s) => s.selectedMangoGroup.mintDecimals)
   const selectedMarginAccount = useMangoStore(
     (s) => s.selectedMarginAccount.current
   )
@@ -50,6 +64,9 @@ const WithdrawModal = ({ isOpen, onClose }) => {
     mintAddress,
     getTokenIndex,
   ])
+  const symbol = getSymbolForTokenMintAddress(
+    selectedAccount?.account?.mint.toString()
+  )
 
   useEffect(async () => {
     if (!selectedMangoGroup || !selectedMarginAccount) return
@@ -65,6 +82,27 @@ const WithdrawModal = ({ isOpen, onClose }) => {
       selectedMangoGroup,
       tokenIndex
     )
+
+    const currentAssetsVal =
+      selectedMarginAccount.getAssetsVal(selectedMangoGroup, prices) -
+      getMaxForSelectedAccount() * prices[tokenIndex]
+    const currentLiabs = selectedMarginAccount.getLiabsVal(
+      selectedMangoGroup,
+      prices
+    )
+    // multiply by 0.99 and subtract 0.01 to account for rounding issues
+    const liabsAvail = (currentAssetsVal / 1.2 - currentLiabs) * 0.99 - 0.01
+
+    // calculate max withdraw amount
+    const amountToWithdraw = includeBorrow
+      ? liabsAvail / prices[tokenIndex] + getMaxForSelectedAccount()
+      : getMaxForSelectedAccount()
+
+    if (amountToWithdraw > 0) {
+      setMaxAmount(amountToWithdraw)
+    } else {
+      setMaxAmount(0)
+    }
 
     // simulate change to deposits & borrow based on input amount
     const newDeposit = Math.max(0, deposits - inputAmount)
@@ -89,66 +127,20 @@ const WithdrawModal = ({ isOpen, onClose }) => {
       prices
     )
     const leverage = 1 / Math.max(0, collateralRatio - 1)
-    console.log('simulation', {
+    setSimulation({
       equity,
       assetsVal,
       liabsVal,
       collateralRatio,
       leverage,
     })
-  }, [inputAmount, tokenIndex, selectedMarginAccount, selectedMangoGroup])
-
-  const handleSetSelectedAccount = (val) => {
-    setInputAmount('')
-    setSelectedAccount(val)
-  }
-
-  const withdrawDisabled = Number(inputAmount) <= 0
-
-  const getMaxForSelectedAccount = () => {
-    return displayDepositsForMarginAccount(
-      selectedMarginAccount,
-      selectedMangoGroup,
-      tokenIndex
-    )
-  }
-
-  const setMaxForSelectedAccount = () => {
-    setInputAmount(getMaxForSelectedAccount().toString())
-  }
-
-  const handleIncludeBorrowSwitch = (checked) => {
-    setIncludeBorrow(checked)
-    setInputAmount('')
-  }
-
-  const setMaxBorrowForSelectedAccount = async () => {
-    // get index prices
-    const prices = await selectedMangoGroup.getPrices(connection)
-    // get value of margin account assets minus the selected token
-    const assetsVal =
-      selectedMarginAccount.getAssetsVal(selectedMangoGroup, prices) -
-      getMaxForSelectedAccount() * prices[tokenIndex]
-    const currentLiabs = selectedMarginAccount.getLiabsVal(
-      selectedMangoGroup,
-      prices
-    )
-    // multiply by 0.99 and subtract 0.01 to account for rounding issues
-    const liabsAvail = (assetsVal / 1.2 - currentLiabs) * 0.99 - 0.01
-    const amountToWithdraw =
-      liabsAvail / prices[tokenIndex] + getMaxForSelectedAccount()
-
-    if (amountToWithdraw > 0) {
-      setInputAmount(
-        floorToDecimal(
-          amountToWithdraw,
-          mintDecimals[getTokenIndex(mintAddress)]
-        ).toString()
-      )
-    } else {
-      setInputAmount('0')
-    }
-  }
+  }, [
+    includeBorrow,
+    inputAmount,
+    tokenIndex,
+    selectedMarginAccount,
+    selectedMangoGroup,
+  ])
 
   const handleWithdraw = () => {
     setSubmitting(true)
@@ -216,11 +208,108 @@ const WithdrawModal = ({ isOpen, onClose }) => {
     }
   }
 
+  const handleSetSelectedAccount = (val) => {
+    setInputAmount(0)
+    setSliderPercentage(0)
+    setSelectedAccount(val)
+  }
+
+  const getMaxForSelectedAccount = () => {
+    return displayDepositsForMarginAccount(
+      selectedMarginAccount,
+      selectedMangoGroup,
+      tokenIndex
+    )
+  }
+
   const getBorrowAmount = () => {
     const tokenBalance = getMaxForSelectedAccount()
-    const borrowAmount = parseFloat(inputAmount) - tokenBalance
+    const borrowAmount = inputAmount - tokenBalance
     return borrowAmount > 0 ? borrowAmount : 0
   }
+
+  const getAccountStatusColor = (
+    collateralRatio: number,
+    isRisk?: boolean,
+    isStatus?: boolean
+  ) => {
+    if (collateralRatio < 1.25) {
+      return isRisk ? (
+        <div className="text-th-red">High</div>
+      ) : isStatus ? (
+        'bg-th-red'
+      ) : (
+        'border-th-red text-th-red'
+      )
+    } else if (collateralRatio > 1.25 && collateralRatio < 1.5) {
+      return isRisk ? (
+        <div className="text-th-orange">Moderate</div>
+      ) : isStatus ? (
+        'bg-th-orange'
+      ) : (
+        'border-th-orange text-th-orange'
+      )
+    } else {
+      return isRisk ? (
+        <div className="text-th-green">Low</div>
+      ) : isStatus ? (
+        'bg-th-green'
+      ) : (
+        'border-th-green text-th-green'
+      )
+    }
+  }
+
+  const handleIncludeBorrowSwitch = (checked) => {
+    setIncludeBorrow(checked)
+    setInputAmount(0)
+    setSliderPercentage(0)
+    setInvalidAmountMessage('')
+  }
+
+  const setMaxForSelectedAccount = () => {
+    setInputAmount(getMaxForSelectedAccount())
+    setSliderPercentage(100)
+    setInvalidAmountMessage('')
+    setMaxButtonTransition(true)
+  }
+
+  const setMaxBorrowForSelectedAccount = async () => {
+    setInputAmount(maxAmount)
+    setSliderPercentage(100)
+    setInvalidAmountMessage('')
+    setMaxButtonTransition(true)
+  }
+
+  const onChangeAmountInput = (amount) => {
+    setInputAmount(amount)
+    setSliderPercentage((amount / maxAmount) * 100)
+    setInvalidAmountMessage('')
+  }
+
+  const onChangeSlider = async (percentage) => {
+    const amount = (percentage / 100) * maxAmount
+    setInputAmount(amount)
+    setSliderPercentage(percentage)
+    setInvalidAmountMessage('')
+  }
+
+  const validateAmountInput = (e) => {
+    const amount = e.target.value
+    if (Number(amount) <= 0) {
+      setInvalidAmountMessage('Withdrawal amount must be greater than 0')
+    }
+    if (simulation.collateralRatio < 1.2) {
+      setInvalidAmountMessage('Overleveraged. Reduce the amount to withdraw')
+    }
+  }
+
+  // turn off slider transition for dragging slider handle interaction
+  useEffect(() => {
+    if (maxButtonTransition) {
+      setMaxButtonTransition(false)
+    }
+  }, [maxButtonTransition])
 
   if (!selectedAccount) return null
 
@@ -229,105 +318,245 @@ const WithdrawModal = ({ isOpen, onClose }) => {
       <Modal.Header>
         <ElementTitle noMarignBottom>Withdraw Funds</ElementTitle>
       </Modal.Header>
-      <>
-        <AccountSelect
-          hideAddress
-          accounts={withdrawAccounts}
-          selectedAccount={selectedAccount}
-          onSelectAccount={handleSetSelectedAccount}
-          getBalance={getMaxForSelectedAccount}
-          symbols={symbols}
-        />
-        <div className="flex items-center jusitfy-between text-th-fgd-1 mt-4 p-2 rounded-md bg-th-bkg-3">
-          <div className="flex items-center text-fgd-1 pr-4">
-            <span>Borrow Funds</span>
-            <Tooltip content="Interest is charged on your borrowed balance and is subject to change.">
-              <InformationCircleIcon
-                className={`h-5 w-5 ml-2 text-th-primary cursor-help`}
+      {simulation ? (
+        !showSimulation ? (
+          <>
+            <AccountSelect
+              hideAddress
+              accounts={withdrawAccounts}
+              selectedAccount={selectedAccount}
+              onSelectAccount={handleSetSelectedAccount}
+              getBalance={getMaxForSelectedAccount}
+              symbols={symbols}
+            />
+            <div className="flex items-center jusitfy-between text-th-fgd-1 mt-4 p-2 rounded-md bg-th-bkg-3">
+              <div className="flex items-center text-fgd-1 pr-4">
+                <span>Borrow Funds</span>
+                <Tooltip content="Interest is charged on your borrowed balance and is subject to change.">
+                  <InformationCircleIcon
+                    className={`h-5 w-5 ml-2 text-th-fgd-3 cursor-help`}
+                  />
+                </Tooltip>
+              </div>
+              <Switch
+                checked={includeBorrow}
+                className="ml-auto"
+                onChange={(checked) => handleIncludeBorrowSwitch(checked)}
               />
-            </Tooltip>
-          </div>
-          <Switch
-            checked={includeBorrow}
-            className="ml-auto"
-            onChange={(checked) => handleIncludeBorrowSwitch(checked)}
-          />
-        </div>
-        <div className="flex justify-between pb-2 pt-4">
-          <div className="text-th-fgd-1">Amount</div>
-          <div className="flex space-x-4">
-            <div
-              className="text-th-fgd-1 underline cursor-pointer default-transition hover:text-th-primary hover:no-underline"
-              onClick={
-                includeBorrow
-                  ? setMaxBorrowForSelectedAccount
-                  : setMaxForSelectedAccount
-              }
-            >
-              {includeBorrow ? 'Max with Borrow' : 'Max'}
             </div>
-          </div>
-        </div>
-        <div className="flex items-center">
-          <Input
-            type="number"
-            min="0"
-            className={`border border-th-fgd-4 flex-grow pr-11`}
-            placeholder="0.00"
-            value={inputAmount}
-            onChange={(e) => setInputAmount(e.target.value)}
-            suffix={getSymbolForTokenMintAddress(
-              selectedAccount?.account?.mint.toString()
-            )}
-          />
-        </div>
-        {includeBorrow ? (
-          <Transition
-            appear={true}
-            className="p-2 bg-th-bkg-1 rounded-md mt-4"
-            show={includeBorrow}
-            enter="transition-opacity duration-500"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="transition-opacity duration-500"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <div className="flex justify-between pb-2">
-              <div className="text-th-fgd-3">Borrow Amount</div>
-              <div className="text-th-fgd-1">{`${getBorrowAmount()} ${getSymbolForTokenMintAddress(
-                selectedAccount?.account?.mint.toString()
-              )}`}</div>
-            </div>
-            <div className="flex justify-between">
-              <div className="text-th-fgd-3">Current APR</div>
-              <div className="text-th-fgd-1">
-                {(selectedMangoGroup.getBorrowRate(tokenIndex) * 100).toFixed(
-                  2
-                )}
-                %
+            <div className="flex justify-between pb-2 pt-4">
+              <div className="text-th-fgd-1">Amount</div>
+              <div className="flex space-x-4">
+                <div
+                  className="text-th-fgd-1 underline cursor-pointer default-transition hover:text-th-primary hover:no-underline"
+                  onClick={
+                    includeBorrow
+                      ? setMaxBorrowForSelectedAccount
+                      : setMaxForSelectedAccount
+                  }
+                >
+                  Max
+                </div>
               </div>
             </div>
-          </Transition>
-        ) : null}
-        <div className={`mt-5 flex justify-center`}>
-          <Button
-            onClick={handleWithdraw}
-            disabled={withdrawDisabled}
-            className="w-full"
-          >
-            <div className={`flex items-center justify-center`}>
-              {submitting && <Loading className="-ml-1 mr-3" />}
-              {`Withdraw ${
-                inputAmount ? inputAmount : ''
-              } ${getSymbolForTokenMintAddress(
-                selectedAccount?.account?.mint.toString()
-              )}
-              `}
+            <div className="flex">
+              <Input
+                type="number"
+                min="0"
+                className={`border border-th-fgd-4 flex-grow pr-11`}
+                error={!!invalidAmountMessage}
+                placeholder="0.00"
+                value={inputAmount}
+                onBlur={validateAmountInput}
+                onChange={(e) => onChangeAmountInput(e.target.value)}
+                suffix={symbol}
+              />
+              <Tooltip content="Account Leverage" className="py-1">
+                <span
+                  className={`${getAccountStatusColor(
+                    simulation.collateralRatio
+                  )} bg-th-bkg-1 border flex font-semibold h-10 items-center justify-center ml-2 rounded text-th-fgd-1 w-14`}
+                >
+                  {simulation.leverage < 5
+                    ? simulation.leverage.toFixed(2)
+                    : '>5'}
+                  x
+                </span>
+              </Tooltip>
             </div>
-          </Button>
-        </div>
-      </>
+            {invalidAmountMessage ? (
+              <div className="flex items-center pt-1.5 text-th-red">
+                <ExclamationCircleIcon className="h-4 w-4 mr-1.5" />
+                {invalidAmountMessage}
+              </div>
+            ) : null}
+            <div className="pt-3 pb-4">
+              <Slider
+                disabled={null}
+                value={sliderPercentage}
+                onChange={(v) => onChangeSlider(v)}
+                step={1}
+                maxButtonTransition={maxButtonTransition}
+              />
+            </div>
+            <div className={`mt-5 flex justify-center`}>
+              <Button
+                onClick={() => setShowSimulation(true)}
+                disabled={
+                  Number(inputAmount) <= 0 || simulation.collateralRatio < 1.2
+                }
+                className="w-full"
+              >
+                Next
+              </Button>
+            </div>
+          </>
+        ) : (
+          <>
+            {simulation.collateralRatio < 1.2 ? (
+              <div className="border border-th-red mb-4 p-2 rounded">
+                <div className="flex items-center text-th-red">
+                  <ExclamationCircleIcon className="h-4 w-4 mr-1.5 flex-shrink-0" />
+                  Prices have changed and increased your leverage. Reduce the
+                  withdrawal amount.
+                </div>
+              </div>
+            ) : null}
+            <div className="bg-th-bkg-1 p-4 rounded-lg text-th-fgd-1 text-center">
+              <div className="text-th-fgd-3 pb-1">{`You're about to withdraw`}</div>
+              <div className="flex items-center justify-center">
+                <div className="font-semibold relative text-xl">
+                  {inputAmount}
+                  <span className="absolute bottom-0.5 font-normal ml-1.5 text-xs text-th-fgd-4">
+                    {symbol}
+                  </span>
+                </div>
+              </div>
+              {getBorrowAmount() > 0 ? (
+                <div className="pt-2 text-th-fgd-4">{`Includes borrow of ~${getBorrowAmount().toFixed(
+                  DECIMALS[symbol]
+                )} ${symbol}`}</div>
+              ) : null}
+            </div>
+            <Disclosure>
+              {({ open }) => (
+                <>
+                  <Disclosure.Button
+                    className={`border border-th-fgd-4 default-transition font-normal mt-4 pl-3 pr-2 py-2.5 ${
+                      open ? 'rounded-b-none' : 'rounded-md'
+                    } text-th-fgd-1 w-full hover:bg-th-bkg-3 focus:outline-none`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <span className="flex h-2 w-2 mr-2.5 relative">
+                          <span
+                            className={`animate-ping absolute inline-flex h-full w-full rounded-full ${getAccountStatusColor(
+                              simulation.collateralRatio,
+                              false,
+                              true
+                            )} opacity-75`}
+                          ></span>
+                          <span
+                            className={`relative inline-flex rounded-full h-2 w-2 ${getAccountStatusColor(
+                              simulation.collateralRatio,
+                              false,
+                              true
+                            )}`}
+                          ></span>
+                        </span>
+                        Account Health Check
+                        <Tooltip content="The details of your account after this withdrawal.">
+                          <InformationCircleIcon
+                            className={`h-5 w-5 ml-2 text-th-fgd-3 cursor-help`}
+                          />
+                        </Tooltip>
+                      </div>
+                      {open ? (
+                        <ChevronUpIcon className="h-5 w-5 mr-1" />
+                      ) : (
+                        <ChevronDownIcon className="h-5 w-5 mr-1" />
+                      )}
+                    </div>
+                  </Disclosure.Button>
+                  <Disclosure.Panel
+                    className={`border border-th-fgd-4 border-t-0 p-4 rounded-b-md`}
+                  >
+                    <div>
+                      <div className="flex justify-between pb-2">
+                        <div className="text-th-fgd-4">Account Value</div>
+                        <div className="text-th-fgd-1">
+                          ${simulation.assetsVal.toFixed(2)}
+                        </div>
+                      </div>
+                      <div className="flex justify-between pb-2">
+                        <div className="text-th-fgd-4">Account Risk</div>
+                        <div className="text-th-fgd-1">
+                          {getAccountStatusColor(
+                            simulation.collateralRatio,
+                            true
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex justify-between pb-2">
+                        <div className="text-th-fgd-4">Leverage</div>
+                        <div className="text-th-fgd-1">
+                          {simulation.leverage.toFixed(2)}x
+                        </div>
+                      </div>
+                      <div className="flex justify-between pb-2">
+                        <div className="text-th-fgd-4">Collateral Ratio</div>
+                        <div className="text-th-fgd-1">
+                          {simulation.collateralRatio * 100 < 200
+                            ? Math.floor(simulation.collateralRatio * 100)
+                            : '>200'}
+                          %
+                        </div>
+                      </div>
+                      {simulation.liabsVal > 0.05 ? (
+                        <div className="flex justify-between">
+                          <div className="text-th-fgd-4">Borrow Value</div>
+                          <div className="text-th-fgd-1">
+                            ${simulation.liabsVal.toFixed(2)}
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+                  </Disclosure.Panel>
+                </>
+              )}
+            </Disclosure>
+            <div className={`mt-5 flex justify-center`}>
+              <Button
+                onClick={handleWithdraw}
+                disabled={
+                  Number(inputAmount) <= 0 || simulation.collateralRatio < 1.2
+                }
+                className="w-full"
+              >
+                <div className={`flex items-center justify-center`}>
+                  {submitting && <Loading className="-ml-1 mr-3" />}
+                  Confirm
+                </div>
+              </Button>
+            </div>
+            <LinkButton
+              className="flex items-center mt-4 text-th-fgd-3"
+              onClick={() => setShowSimulation(false)}
+            >
+              <ChevronLeftIcon className="h-5 w-5 mr-1" />
+              Back
+            </LinkButton>
+          </>
+        )
+      ) : (
+        <>
+          <div className="animate-pulse bg-th-bkg-3 h-10 mb-4 rounded w-full" />
+          <div className="animate-pulse bg-th-bkg-3 h-10 mb-4 rounded w-full" />
+          <div className="animate-pulse bg-th-bkg-3 h-10 mb-4 rounded w-full" />
+          <div className="animate-pulse bg-th-bkg-3 h-10 mb-4 rounded w-full" />
+          <div className="animate-pulse bg-th-bkg-3 h-10 mb-4 rounded w-full" />
+        </>
+      )}
     </Modal>
   )
 }
