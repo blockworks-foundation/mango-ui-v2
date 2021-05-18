@@ -119,9 +119,9 @@ const WithdrawModal = ({ isOpen, onClose }) => {
 
     // update with simulated values
     simulation.deposits[tokenIndex] =
-      uiToNative(newDeposit, mintDecimals).div(groupIndex.deposit).toNumber()
+      uiToNative(newDeposit, mintDecimals).toNumber() / groupIndex.deposit
     simulation.borrows[tokenIndex] =
-      uiToNative(newBorrows, mintDecimals).div(groupIndex.borrow).toNumber()
+      uiToNative(newBorrows, mintDecimals).toNumber() / groupIndex.borrow
 
     const equity = simulation.computeValue(selectedMangoGroup, prices)
     const assetsVal = simulation.getAssetsVal(selectedMangoGroup, prices)
