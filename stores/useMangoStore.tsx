@@ -90,7 +90,7 @@ interface MangoStore extends State {
       [address: string]: Market
     }
     mintDecimals: number[]
-    prices: [number]
+    prices: number[]
   }
   marginAccounts: MarginAccount[]
   selectedMarginAccount: {
@@ -138,6 +138,7 @@ const useMangoStore = create<MangoStore>((set, get) => ({
     markets: {},
     srmAccount: null,
     mintDecimals: [],
+    prices: [],
   },
   selectedMarket: {
     name: Object.entries(
@@ -154,7 +155,6 @@ const useMangoStore = create<MangoStore>((set, get) => ({
   mangoClient: new MangoClient(),
   mangoGroups: [],
   marginAccounts: [],
-  prices: [],
   selectedMarginAccount: {
     current: null,
     initialLoad: false,

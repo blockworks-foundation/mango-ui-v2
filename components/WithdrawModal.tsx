@@ -70,7 +70,7 @@ const WithdrawModal = ({ isOpen, onClose }) => {
     selectedAccount?.account?.mint.toString()
   )
 
-  useEffect(async () => {
+  useEffect(() => {
     if (!selectedMangoGroup || !selectedMarginAccount) return
 
     const mintDecimals = selectedMangoGroup.mintDecimals[tokenIndex]
@@ -116,9 +116,9 @@ const WithdrawModal = ({ isOpen, onClose }) => {
 
     // update with simulated values
     simulation.deposits[tokenIndex] =
-      uiToNative(newDeposit, mintDecimals) / groupIndex.deposit
+      uiToNative(newDeposit, mintDecimals).div(groupIndex.deposit).toNumber()
     simulation.borrows[tokenIndex] =
-      uiToNative(newBorrows, mintDecimals) / groupIndex.borrow
+      uiToNative(newBorrows, mintDecimals).div(groupIndex.borrow).toNumber()
 
     const equity = simulation.computeValue(selectedMangoGroup, prices)
     const assetsVal = simulation.getAssetsVal(selectedMangoGroup, prices)
