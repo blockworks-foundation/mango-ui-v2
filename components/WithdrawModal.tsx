@@ -44,6 +44,7 @@ const WithdrawModal = ({ isOpen, onClose }) => {
   const { getTokenIndex, symbols } = useMarketList()
   const { connection, programId } = useConnection()
   const walletAccounts = useMangoStore((s) => s.wallet.balances)
+  const prices = useMangoStore((s) => s.selectedMangoGroup.prices)
   const selectedMangoGroup = useMangoStore((s) => s.selectedMangoGroup.current)
   const selectedMarginAccount = useMangoStore(
     (s) => s.selectedMarginAccount.current
@@ -57,13 +58,14 @@ const WithdrawModal = ({ isOpen, onClose }) => {
     [symbols, walletAccounts]
   )
   const [selectedAccount, setSelectedAccount] = useState(withdrawAccounts[0])
-  const mintAddress = useMemo(() => selectedAccount?.account.mint.toString(), [
-    selectedAccount,
-  ])
-  const tokenIndex = useMemo(() => getTokenIndex(mintAddress), [
-    mintAddress,
-    getTokenIndex,
-  ])
+  const mintAddress = useMemo(
+    () => selectedAccount?.account.mint.toString(),
+    [selectedAccount]
+  )
+  const tokenIndex = useMemo(
+    () => getTokenIndex(mintAddress),
+    [mintAddress, getTokenIndex]
+  )
   const symbol = getSymbolForTokenMintAddress(
     selectedAccount?.account?.mint.toString()
   )
@@ -71,7 +73,6 @@ const WithdrawModal = ({ isOpen, onClose }) => {
   useEffect(async () => {
     if (!selectedMangoGroup || !selectedMarginAccount) return
 
-    const prices = await selectedMangoGroup.getPrices(connection)
     const mintDecimals = selectedMangoGroup.mintDecimals[tokenIndex]
     const groupIndex = selectedMangoGroup.indexes[tokenIndex]
     const deposits = selectedMarginAccount.getUiDeposit(
@@ -137,6 +138,7 @@ const WithdrawModal = ({ isOpen, onClose }) => {
   }, [
     includeBorrow,
     inputAmount,
+    prices,
     tokenIndex,
     selectedMarginAccount,
     selectedMangoGroup,
