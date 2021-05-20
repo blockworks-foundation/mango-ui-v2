@@ -6,15 +6,8 @@ import { PublicKey, Connection } from '@solana/web3.js'
 import { DEFAULT_MANGO_GROUP } from '../utils/mango'
 import useConnection from '../hooks/useConnection'
 import TopBar from '../components/TopBar'
-import { formatBalanceDisplay } from '../utils/index'
+import { formatBalanceDisplay, tokenPrecision } from '../utils/index'
 import { Table, Thead, Tbody, Tr, Th, Td } from 'react-super-responsive-table'
-
-const DECIMALS = {
-  BTC: 4,
-  ETH: 3,
-  USDT: 2,
-  USDC: 2,
-}
 
 const icons = {
   BTC: '/assets/icons/btc.svg',
@@ -227,17 +220,17 @@ export default function StatsPage() {
                   <Td className="px-6 py-4 whitespace-nowrap text-sm text-th-fgd-1">
                     {formatBalanceDisplay(
                       stat.totalDeposits,
-                      DECIMALS[stat.symbol]
+                      tokenPrecision[stat.symbol]
                     ).toLocaleString(undefined, {
-                      maximumFractionDigits: DECIMALS[stat.symbol],
+                      maximumFractionDigits: tokenPrecision[stat.symbol],
                     })}
                   </Td>
                   <Td className="px-6 py-4 whitespace-nowrap text-sm text-th-fgd-1">
                     {formatBalanceDisplay(
                       stat.totalBorrows,
-                      DECIMALS[stat.symbol]
+                      tokenPrecision[stat.symbol]
                     ).toLocaleString(undefined, {
-                      maximumFractionDigits: DECIMALS[stat.symbol],
+                      maximumFractionDigits: tokenPrecision[stat.symbol],
                     })}
                   </Td>
                   <Td className="px-6 py-4 whitespace-nowrap text-sm text-th-fgd-1">
@@ -288,7 +281,7 @@ export default function StatsPage() {
                   xAxis="time"
                   yAxis="totalDeposits"
                   data={selectedStatsData}
-                  labelFormat={(x) => x.toFixed(DECIMALS[selectedAsset])}
+                  labelFormat={(x) => x.toFixed(tokenPrecision[selectedAsset])}
                 />
               </div>
               <div
@@ -300,7 +293,7 @@ export default function StatsPage() {
                   xAxis="time"
                   yAxis="totalBorrows"
                   data={selectedStatsData}
-                  labelFormat={(x) => x.toFixed(DECIMALS[selectedAsset])}
+                  labelFormat={(x) => x.toFixed(tokenPrecision[selectedAsset])}
                 />
               </div>
             </div>
