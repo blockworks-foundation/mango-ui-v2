@@ -321,251 +321,239 @@ const WithdrawModal = ({ isOpen, onClose }) => {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      {simulation ? (
+      {!showSimulation ? (
         <>
-          {!showSimulation ? (
-            <>
-              <Modal.Header>
-                <ElementTitle noMarignBottom>Withdraw Funds</ElementTitle>
-              </Modal.Header>
-              <AccountSelect
-                hideAddress
-                accounts={withdrawAccounts}
-                selectedAccount={selectedAccount}
-                onSelectAccount={handleSetSelectedAccount}
-                getBalance={getMaxForSelectedAccount}
-                symbols={symbols}
-              />
-              <div className="flex items-center jusitfy-between text-th-fgd-1 mt-4 p-2 rounded-md bg-th-bkg-3">
-                <div className="flex items-center text-fgd-1 pr-4">
-                  <span>Borrow Funds</span>
-                  <Tooltip content="Interest is charged on your borrowed balance and is subject to change.">
-                    <InformationCircleIcon
-                      className={`h-5 w-5 ml-2 text-th-fgd-3 cursor-help`}
-                    />
-                  </Tooltip>
-                </div>
-                <Switch
-                  checked={includeBorrow}
-                  className="ml-auto"
-                  onChange={(checked) => handleIncludeBorrowSwitch(checked)}
+          <Modal.Header>
+            <ElementTitle noMarignBottom>Withdraw Funds</ElementTitle>
+          </Modal.Header>
+          <AccountSelect
+            hideAddress
+            accounts={withdrawAccounts}
+            selectedAccount={selectedAccount}
+            onSelectAccount={handleSetSelectedAccount}
+            getBalance={getMaxForSelectedAccount}
+            symbols={symbols}
+          />
+          <div className="flex items-center jusitfy-between text-th-fgd-1 mt-4 p-2 rounded-md bg-th-bkg-3">
+            <div className="flex items-center text-fgd-1 pr-4">
+              <span>Borrow Funds</span>
+              <Tooltip content="Interest is charged on your borrowed balance and is subject to change.">
+                <InformationCircleIcon
+                  className={`h-5 w-5 ml-2 text-th-fgd-3 cursor-help`}
                 />
-              </div>
-              <div className="flex justify-between pb-2 pt-4">
-                <div className="text-th-fgd-1">Amount</div>
-                <div className="flex space-x-4">
-                  <div
-                    className="text-th-fgd-1 underline cursor-pointer default-transition hover:text-th-primary hover:no-underline"
-                    onClick={
-                      includeBorrow
-                        ? setMaxBorrowForSelectedAccount
-                        : setMaxForSelectedAccount
-                    }
-                  >
-                    Max
-                  </div>
-                </div>
-              </div>
-              <div className="flex">
-                <Input
-                  type="number"
-                  min="0"
-                  className={`border border-th-fgd-4 flex-grow pr-11`}
-                  error={!!invalidAmountMessage}
-                  placeholder="0.00"
-                  value={inputAmount}
-                  onBlur={validateAmountInput}
-                  onChange={(e) => onChangeAmountInput(e.target.value)}
-                  suffix={symbol}
-                />
-                <Tooltip content="Account Leverage" className="py-1">
-                  <span
-                    className={`${renderAccountRiskStatus(
-                      simulation.collateralRatio
-                    )} bg-th-bkg-1 border flex font-semibold h-10 items-center justify-center ml-2 rounded text-th-fgd-1 w-14`}
-                  >
-                    {simulation.leverage < 5
-                      ? simulation.leverage.toFixed(2)
-                      : '>5'}
-                    x
-                  </span>
-                </Tooltip>
-              </div>
-              {invalidAmountMessage ? (
-                <div className="flex items-center pt-1.5 text-th-red">
-                  <ExclamationCircleIcon className="h-4 w-4 mr-1.5" />
-                  {invalidAmountMessage}
-                </div>
-              ) : null}
-              <div className="pt-3 pb-4">
-                <Slider
-                  disabled={null}
-                  value={sliderPercentage}
-                  onChange={(v) => onChangeSlider(v)}
-                  step={1}
-                  maxButtonTransition={maxButtonTransition}
-                />
-              </div>
-              <div className={`mt-5 flex justify-center`}>
-                <Button
-                  onClick={() => setShowSimulation(true)}
-                  disabled={
-                    Number(inputAmount) <= 0 || simulation.collateralRatio < 1.2
-                  }
-                  className="w-full"
-                >
-                  Next
-                </Button>
-              </div>
-            </>
-          ) : (
-            <>
-              <Modal.Header>
-                <ElementTitle noMarignBottom>Confirm Withdraw</ElementTitle>
-              </Modal.Header>
-              {simulation.collateralRatio < 1.2 ? (
-                <div className="border border-th-red mb-4 p-2 rounded">
-                  <div className="flex items-center text-th-red">
-                    <ExclamationCircleIcon className="h-4 w-4 mr-1.5 flex-shrink-0" />
-                    Prices have changed and increased your leverage. Reduce the
-                    withdrawal amount.
-                  </div>
-                </div>
-              ) : null}
-              <div className="bg-th-bkg-1 p-4 rounded-lg text-th-fgd-1 text-center">
-                <div className="text-th-fgd-3 pb-1">{`You're about to withdraw`}</div>
-                <div className="flex items-center justify-center">
-                  <div className="font-semibold relative text-xl">
-                    {inputAmount}
-                    <span className="absolute bottom-0.5 font-normal ml-1.5 text-xs text-th-fgd-4">
-                      {symbol}
-                    </span>
-                  </div>
-                </div>
-                {getBorrowAmount() > 0 ? (
-                  <div className="pt-2 text-th-fgd-4">{`Includes borrow of ~${getBorrowAmount().toFixed(
-                    DECIMALS[symbol]
-                  )} ${symbol}`}</div>
-                ) : null}
-              </div>
-              <Disclosure>
-                {({ open }) => (
-                  <>
-                    <Disclosure.Button
-                      className={`border border-th-fgd-4 default-transition font-normal mt-4 pl-3 pr-2 py-2.5 ${
-                        open ? 'rounded-b-none' : 'rounded-md'
-                      } text-th-fgd-1 w-full hover:bg-th-bkg-3 focus:outline-none`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <span className="flex h-2 w-2 mr-2.5 relative">
-                            <span
-                              className={`animate-ping absolute inline-flex h-full w-full rounded-full ${renderAccountRiskStatus(
-                                simulation.collateralRatio,
-                                false,
-                                true
-                              )} opacity-75`}
-                            ></span>
-                            <span
-                              className={`relative inline-flex rounded-full h-2 w-2 ${renderAccountRiskStatus(
-                                simulation.collateralRatio,
-                                false,
-                                true
-                              )}`}
-                            ></span>
-                          </span>
-                          Account Health Check
-                          <Tooltip content="The details of your account after this withdrawal.">
-                            <InformationCircleIcon
-                              className={`h-5 w-5 ml-2 text-th-fgd-3 cursor-help`}
-                            />
-                          </Tooltip>
-                        </div>
-                        {open ? (
-                          <ChevronUpIcon className="h-5 w-5 mr-1" />
-                        ) : (
-                          <ChevronDownIcon className="h-5 w-5 mr-1" />
-                        )}
-                      </div>
-                    </Disclosure.Button>
-                    <Disclosure.Panel
-                      className={`border border-th-fgd-4 border-t-0 p-4 rounded-b-md`}
-                    >
-                      <div>
-                        <div className="flex justify-between pb-2">
-                          <div className="text-th-fgd-4">Account Value</div>
-                          <div className="text-th-fgd-1">
-                            ${simulation.assetsVal.toFixed(2)}
-                          </div>
-                        </div>
-                        <div className="flex justify-between pb-2">
-                          <div className="text-th-fgd-4">Account Risk</div>
-                          <div className="text-th-fgd-1">
-                            {renderAccountRiskStatus(
-                              simulation.collateralRatio,
-                              true
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex justify-between pb-2">
-                          <div className="text-th-fgd-4">Leverage</div>
-                          <div className="text-th-fgd-1">
-                            {simulation.leverage.toFixed(2)}x
-                          </div>
-                        </div>
-                        <div className="flex justify-between">
-                          <div className="text-th-fgd-4">Collateral Ratio</div>
-                          <div className="text-th-fgd-1">
-                            {simulation.collateralRatio * 100 < 200
-                              ? Math.floor(simulation.collateralRatio * 100)
-                              : '>200'}
-                            %
-                          </div>
-                        </div>
-                        {simulation.liabsVal > 0.05 ? (
-                          <div className="flex justify-between pt-2">
-                            <div className="text-th-fgd-4">Borrow Value</div>
-                            <div className="text-th-fgd-1">
-                              ${simulation.liabsVal.toFixed(2)}
-                            </div>
-                          </div>
-                        ) : null}
-                      </div>
-                    </Disclosure.Panel>
-                  </>
-                )}
-              </Disclosure>
-              <div className={`mt-5 flex justify-center`}>
-                <Button
-                  onClick={handleWithdraw}
-                  disabled={
-                    Number(inputAmount) <= 0 || simulation.collateralRatio < 1.2
-                  }
-                  className="w-full"
-                >
-                  <div className={`flex items-center justify-center`}>
-                    {submitting && <Loading className="-ml-1 mr-3" />}
-                    Confirm
-                  </div>
-                </Button>
-              </div>
-              <LinkButton
-                className="flex items-center mt-4 text-th-fgd-3"
-                onClick={() => setShowSimulation(false)}
+              </Tooltip>
+            </div>
+            <Switch
+              checked={includeBorrow}
+              className="ml-auto"
+              onChange={(checked) => handleIncludeBorrowSwitch(checked)}
+            />
+          </div>
+          <div className="flex justify-between pb-2 pt-4">
+            <div className="text-th-fgd-1">Amount</div>
+            <div className="flex space-x-4">
+              <div
+                className="text-th-fgd-1 underline cursor-pointer default-transition hover:text-th-primary hover:no-underline"
+                onClick={
+                  includeBorrow
+                    ? setMaxBorrowForSelectedAccount
+                    : setMaxForSelectedAccount
+                }
               >
-                <ChevronLeftIcon className="h-5 w-5 mr-1" />
-                Back
-              </LinkButton>
-            </>
-          )}
+                Max
+              </div>
+            </div>
+          </div>
+          <div className="flex">
+            <Input
+              type="number"
+              min="0"
+              className={`border border-th-fgd-4 flex-grow pr-11`}
+              error={!!invalidAmountMessage}
+              placeholder="0.00"
+              value={inputAmount}
+              onBlur={validateAmountInput}
+              onChange={(e) => onChangeAmountInput(e.target.value)}
+              suffix={symbol}
+            />
+            <Tooltip content="Account Leverage" className="py-1">
+              <span
+                className={`${renderAccountRiskStatus(
+                  simulation?.collateralRatio
+                )} bg-th-bkg-1 border flex font-semibold h-10 items-center justify-center ml-2 rounded text-th-fgd-1 w-14`}
+              >
+                {simulation?.leverage < 5
+                  ? simulation?.leverage.toFixed(2)
+                  : '>5'}
+                x
+              </span>
+            </Tooltip>
+          </div>
+          {invalidAmountMessage ? (
+            <div className="flex items-center pt-1.5 text-th-red">
+              <ExclamationCircleIcon className="h-4 w-4 mr-1.5" />
+              {invalidAmountMessage}
+            </div>
+          ) : null}
+          <div className="pt-3 pb-4">
+            <Slider
+              disabled={null}
+              value={sliderPercentage}
+              onChange={(v) => onChangeSlider(v)}
+              step={1}
+              maxButtonTransition={maxButtonTransition}
+            />
+          </div>
+          <div className={`mt-5 flex justify-center`}>
+            <Button
+              onClick={() => setShowSimulation(true)}
+              disabled={
+                Number(inputAmount) <= 0 || simulation?.collateralRatio < 1.2
+              }
+              className="w-full"
+            >
+              Next
+            </Button>
+          </div>
         </>
       ) : (
         <>
-          <div className="animate-pulse bg-th-bkg-3 h-10 mb-4 rounded w-full" />
-          <div className="animate-pulse bg-th-bkg-3 h-10 mb-4 rounded w-full" />
-          <div className="animate-pulse bg-th-bkg-3 h-10 mb-4 rounded w-full" />
-          <div className="animate-pulse bg-th-bkg-3 h-10 mb-4 rounded w-full" />
-          <div className="animate-pulse bg-th-bkg-3 h-10 mb-4 rounded w-full" />
+          <Modal.Header>
+            <ElementTitle noMarignBottom>Confirm Withdraw</ElementTitle>
+          </Modal.Header>
+          {simulation?.collateralRatio < 1.2 ? (
+            <div className="border border-th-red mb-4 p-2 rounded">
+              <div className="flex items-center text-th-red">
+                <ExclamationCircleIcon className="h-4 w-4 mr-1.5 flex-shrink-0" />
+                Prices have changed and increased your leverage. Reduce the
+                withdrawal amount.
+              </div>
+            </div>
+          ) : null}
+          <div className="bg-th-bkg-1 p-4 rounded-lg text-th-fgd-1 text-center">
+            <div className="text-th-fgd-3 pb-1">{`You're about to withdraw`}</div>
+            <div className="flex items-center justify-center">
+              <div className="font-semibold relative text-xl">
+                {inputAmount}
+                <span className="absolute bottom-0.5 font-normal ml-1.5 text-xs text-th-fgd-4">
+                  {symbol}
+                </span>
+              </div>
+            </div>
+            {getBorrowAmount() > 0 ? (
+              <div className="pt-2 text-th-fgd-4">{`Includes borrow of ~${getBorrowAmount().toFixed(
+                DECIMALS[symbol]
+              )} ${symbol}`}</div>
+            ) : null}
+          </div>
+          <Disclosure>
+            {({ open }) => (
+              <>
+                <Disclosure.Button
+                  className={`border border-th-fgd-4 default-transition font-normal mt-4 pl-3 pr-2 py-2.5 ${
+                    open ? 'rounded-b-none' : 'rounded-md'
+                  } text-th-fgd-1 w-full hover:bg-th-bkg-3 focus:outline-none`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <span className="flex h-2 w-2 mr-2.5 relative">
+                        <span
+                          className={`animate-ping absolute inline-flex h-full w-full rounded-full ${renderAccountRiskStatus(
+                            simulation?.collateralRatio,
+                            false,
+                            true
+                          )} opacity-75`}
+                        ></span>
+                        <span
+                          className={`relative inline-flex rounded-full h-2 w-2 ${renderAccountRiskStatus(
+                            simulation?.collateralRatio,
+                            false,
+                            true
+                          )}`}
+                        ></span>
+                      </span>
+                      Account Health Check
+                      <Tooltip content="The details of your account after this withdrawal.">
+                        <InformationCircleIcon
+                          className={`h-5 w-5 ml-2 text-th-fgd-3 cursor-help`}
+                        />
+                      </Tooltip>
+                    </div>
+                    {open ? (
+                      <ChevronUpIcon className="h-5 w-5 mr-1" />
+                    ) : (
+                      <ChevronDownIcon className="h-5 w-5 mr-1" />
+                    )}
+                  </div>
+                </Disclosure.Button>
+                <Disclosure.Panel
+                  className={`border border-th-fgd-4 border-t-0 p-4 rounded-b-md`}
+                >
+                  <div>
+                    <div className="flex justify-between pb-2">
+                      <div className="text-th-fgd-4">Account Value</div>
+                      <div className="text-th-fgd-1">
+                        ${simulation?.assetsVal.toFixed(2)}
+                      </div>
+                    </div>
+                    <div className="flex justify-between pb-2">
+                      <div className="text-th-fgd-4">Account Risk</div>
+                      <div className="text-th-fgd-1">
+                        {renderAccountRiskStatus(
+                          simulation?.collateralRatio,
+                          true
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex justify-between pb-2">
+                      <div className="text-th-fgd-4">Leverage</div>
+                      <div className="text-th-fgd-1">
+                        {simulation?.leverage.toFixed(2)}x
+                      </div>
+                    </div>
+                    <div className="flex justify-between">
+                      <div className="text-th-fgd-4">Collateral Ratio</div>
+                      <div className="text-th-fgd-1">
+                        {simulation?.collateralRatio * 100 < 200
+                          ? Math.floor(simulation?.collateralRatio * 100)
+                          : '>200'}
+                        %
+                      </div>
+                    </div>
+                    {simulation?.liabsVal > 0.05 ? (
+                      <div className="flex justify-between pt-2">
+                        <div className="text-th-fgd-4">Borrow Value</div>
+                        <div className="text-th-fgd-1">
+                          ${simulation?.liabsVal.toFixed(2)}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                </Disclosure.Panel>
+              </>
+            )}
+          </Disclosure>
+          <div className={`mt-5 flex justify-center`}>
+            <Button
+              onClick={handleWithdraw}
+              disabled={
+                Number(inputAmount) <= 0 || simulation?.collateralRatio < 1.2
+              }
+              className="w-full"
+            >
+              <div className={`flex items-center justify-center`}>
+                {submitting && <Loading className="-ml-1 mr-3" />}
+                Confirm
+              </div>
+            </Button>
+          </div>
+          <LinkButton
+            className="flex items-center mt-4 text-th-fgd-3"
+            onClick={() => setShowSimulation(false)}
+          >
+            <ChevronLeftIcon className="h-5 w-5 mr-1" />
+            Back
+          </LinkButton>
         </>
       )}
     </Modal>
