@@ -273,8 +273,6 @@ const DepositModal = ({ isOpen, onClose }) => {
     }
   }, [maxButtonTransition])
 
-  if (!selectedAccount) return null
-
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       {!showSimulation ? (
@@ -310,18 +308,20 @@ const DepositModal = ({ isOpen, onClose }) => {
               onChange={(e) => onChangeAmountInput(e.target.value)}
               suffix={symbol}
             />
-            <Tooltip content="Account Leverage" className="py-1">
-              <span
-                className={`${renderAccountRiskStatus(
-                  simulation?.collateralRatio
-                )} bg-th-bkg-1 border flex font-semibold h-10 items-center justify-center ml-2 rounded text-th-fgd-1 w-14`}
-              >
-                {simulation?.leverage < 5
-                  ? simulation?.leverage.toFixed(2)
-                  : '>5'}
-                x
-              </span>
-            </Tooltip>
+            {simulation ? (
+              <Tooltip content="Account Leverage" className="py-1">
+                <span
+                  className={`${renderAccountRiskStatus(
+                    simulation?.collateralRatio
+                  )} bg-th-bkg-1 border flex font-semibold h-10 items-center justify-center ml-2 rounded text-th-fgd-1 w-14`}
+                >
+                  {simulation?.leverage < 5
+                    ? simulation?.leverage.toFixed(2)
+                    : '>5'}
+                  x
+                </span>
+              </Tooltip>
+            ) : null}
           </div>
           {invalidAmountMessage ? (
             <div className="flex items-center pt-1.5 text-th-red">
