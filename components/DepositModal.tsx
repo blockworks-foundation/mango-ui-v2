@@ -367,93 +367,95 @@ const DepositModal = ({ isOpen, onClose }) => {
               </div>
             </div>
           </div>
-          <Disclosure>
-            {({ open }) => (
-              <>
-                <Disclosure.Button
-                  className={`border border-th-fgd-4 default-transition font-normal mt-4 pl-3 pr-2 py-2.5 ${
-                    open ? 'rounded-b-none' : 'rounded-md'
-                  } text-th-fgd-1 w-full hover:bg-th-bkg-3 focus:outline-none`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <span className="flex h-2 w-2 mr-2.5 relative">
-                        <span
-                          className={`animate-ping absolute inline-flex h-full w-full rounded-full ${renderAccountRiskStatus(
-                            simulation?.collateralRatio,
-                            false,
-                            true
-                          )} opacity-75`}
-                        ></span>
-                        <span
-                          className={`relative inline-flex rounded-full h-2 w-2 ${renderAccountRiskStatus(
-                            simulation?.collateralRatio,
-                            false,
-                            true
-                          )}`}
-                        ></span>
-                      </span>
-                      Account Health Check
-                      <Tooltip content="The details of your account after this deposit.">
-                        <InformationCircleIcon
-                          className={`h-5 w-5 ml-2 text-th-fgd-3 cursor-help`}
-                        />
-                      </Tooltip>
-                    </div>
-                    {open ? (
-                      <ChevronUpIcon className="h-5 w-5 mr-1" />
-                    ) : (
-                      <ChevronDownIcon className="h-5 w-5 mr-1" />
-                    )}
-                  </div>
-                </Disclosure.Button>
-                <Disclosure.Panel
-                  className={`border border-th-fgd-4 border-t-0 p-4 rounded-b-md`}
-                >
-                  <div>
-                    <div className="flex justify-between pb-2">
-                      <div className="text-th-fgd-4">Account Value</div>
-                      <div className="text-th-fgd-1">
-                        ${simulation?.assetsVal.toFixed(2)}
+          {simulation ? (
+            <Disclosure>
+              {({ open }) => (
+                <>
+                  <Disclosure.Button
+                    className={`border border-th-fgd-4 default-transition font-normal mt-4 pl-3 pr-2 py-2.5 ${
+                      open ? 'rounded-b-none' : 'rounded-md'
+                    } text-th-fgd-1 w-full hover:bg-th-bkg-3 focus:outline-none`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <span className="flex h-2 w-2 mr-2.5 relative">
+                          <span
+                            className={`animate-ping absolute inline-flex h-full w-full rounded-full ${renderAccountRiskStatus(
+                              simulation?.collateralRatio,
+                              false,
+                              true
+                            )} opacity-75`}
+                          ></span>
+                          <span
+                            className={`relative inline-flex rounded-full h-2 w-2 ${renderAccountRiskStatus(
+                              simulation?.collateralRatio,
+                              false,
+                              true
+                            )}`}
+                          ></span>
+                        </span>
+                        Account Health Check
+                        <Tooltip content="The details of your account after this deposit.">
+                          <InformationCircleIcon
+                            className={`h-5 w-5 ml-2 text-th-fgd-3 cursor-help`}
+                          />
+                        </Tooltip>
                       </div>
+                      {open ? (
+                        <ChevronUpIcon className="h-5 w-5 mr-1" />
+                      ) : (
+                        <ChevronDownIcon className="h-5 w-5 mr-1" />
+                      )}
                     </div>
-                    <div className="flex justify-between pb-2">
-                      <div className="text-th-fgd-4">Account Risk</div>
-                      <div className="text-th-fgd-1">
-                        {renderAccountRiskStatus(
-                          simulation?.collateralRatio,
-                          true
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex justify-between pb-2">
-                      <div className="text-th-fgd-4">Leverage</div>
-                      <div className="text-th-fgd-1">
-                        {simulation?.leverage.toFixed(2)}x
-                      </div>
-                    </div>
-                    <div className="flex justify-between">
-                      <div className="text-th-fgd-4">Collateral Ratio</div>
-                      <div className="text-th-fgd-1">
-                        {simulation?.collateralRatio * 100 < 200
-                          ? Math.floor(simulation?.collateralRatio * 100)
-                          : '>200'}
-                        %
-                      </div>
-                    </div>
-                    {simulation?.liabsVal > 0.05 ? (
-                      <div className="flex justify-between pt-2">
-                        <div className="text-th-fgd-4">Borrow Value</div>
+                  </Disclosure.Button>
+                  <Disclosure.Panel
+                    className={`border border-th-fgd-4 border-t-0 p-4 rounded-b-md`}
+                  >
+                    <div>
+                      <div className="flex justify-between pb-2">
+                        <div className="text-th-fgd-4">Account Value</div>
                         <div className="text-th-fgd-1">
-                          ${simulation?.liabsVal.toFixed(2)}
+                          ${simulation?.assetsVal.toFixed(2)}
                         </div>
                       </div>
-                    ) : null}
-                  </div>
-                </Disclosure.Panel>
-              </>
-            )}
-          </Disclosure>
+                      <div className="flex justify-between pb-2">
+                        <div className="text-th-fgd-4">Account Risk</div>
+                        <div className="text-th-fgd-1">
+                          {renderAccountRiskStatus(
+                            simulation?.collateralRatio,
+                            true
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex justify-between pb-2">
+                        <div className="text-th-fgd-4">Leverage</div>
+                        <div className="text-th-fgd-1">
+                          {simulation?.leverage.toFixed(2)}x
+                        </div>
+                      </div>
+                      <div className="flex justify-between">
+                        <div className="text-th-fgd-4">Collateral Ratio</div>
+                        <div className="text-th-fgd-1">
+                          {simulation?.collateralRatio * 100 < 200
+                            ? Math.floor(simulation?.collateralRatio * 100)
+                            : '>200'}
+                          %
+                        </div>
+                      </div>
+                      {simulation?.liabsVal > 0.05 ? (
+                        <div className="flex justify-between pt-2">
+                          <div className="text-th-fgd-4">Borrow Value</div>
+                          <div className="text-th-fgd-1">
+                            ${simulation?.liabsVal.toFixed(2)}
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+                  </Disclosure.Panel>
+                </>
+              )}
+            </Disclosure>
+          ) : null}
           <div className={`mt-5 flex justify-center`}>
             <Button onClick={handleDeposit} className="w-full">
               <div className={`flex items-center justify-center`}>
