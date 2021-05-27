@@ -318,8 +318,8 @@ const WithdrawModal = ({ isOpen, onClose }) => {
     return temp / step
   }
 
-  const getTokenBalances = () => {
-    const tokens = Object.entries(symbols).map(([name], i) => {
+  const getTokenBalances = () =>
+    Object.entries(symbols).map(([name], i) => {
       return {
         symbol: name,
         balance: floorToDecimal(
@@ -328,8 +328,6 @@ const WithdrawModal = ({ isOpen, onClose }) => {
         ),
       }
     })
-    return tokens.filter((token) => token.balance !== 0)
-  }
 
   // turn off slider transition for dragging slider handle interaction
   useEffect(() => {
@@ -337,6 +335,13 @@ const WithdrawModal = ({ isOpen, onClose }) => {
       setMaxButtonTransition(false)
     }
   }, [maxButtonTransition])
+
+  // turn on borrow toggle when asset balance is zero
+  useEffect(() => {
+    if (withdrawTokenSymbol && getMaxForSelectedAsset() === 0) {
+      setIncludeBorrow(true)
+    }
+  }, [withdrawTokenSymbol])
 
   if (!selectedAccount) return null
 
