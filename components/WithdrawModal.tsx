@@ -32,7 +32,7 @@ import { MarginAccount, uiToNative } from '@blockworks-foundation/mango-client'
 import Select from './Select'
 
 const WithdrawModal = ({ isOpen, onClose }) => {
-  const [withdrawTokenSymbol, setWithdrawTokenSymbol] = useState('')
+  const [withdrawTokenSymbol, setWithdrawTokenSymbol] = useState('USDC')
   const [inputAmount, setInputAmount] = useState(0)
   const [invalidAmountMessage, setInvalidAmountMessage] = useState('')
   const [maxAmount, setMaxAmount] = useState(0)
@@ -50,10 +50,6 @@ const WithdrawModal = ({ isOpen, onClose }) => {
     (s) => s.selectedMarginAccount.current
   )
   const actions = useMangoStore((s) => s.actions)
-
-  const [selectedMint, setSelectedMint] = useState(
-    new PublicKey(Object.values(symbols)[0])
-  )
   const tokenIndex = useMemo(
     () => getTokenIndex(symbols[withdrawTokenSymbol]),
     [withdrawTokenSymbol, getTokenIndex]
@@ -156,7 +152,7 @@ const WithdrawModal = ({ isOpen, onClose }) => {
         mangoGroup,
         marginAccount,
         wallet,
-        selectedMint,
+        new PublicKey(symbols[withdrawTokenSymbol]),
         Number(inputAmount)
       )
         .then((_transSig: string) => {
@@ -183,7 +179,7 @@ const WithdrawModal = ({ isOpen, onClose }) => {
         mangoGroup,
         marginAccount,
         wallet,
-        selectedMint,
+        new PublicKey(symbols[withdrawTokenSymbol]),
         Number(inputAmount)
       )
         .then((_transSig: string) => {
@@ -211,7 +207,6 @@ const WithdrawModal = ({ isOpen, onClose }) => {
     setInputAmount(0)
     setSliderPercentage(0)
     setWithdrawTokenSymbol(symbol)
-    setSelectedMint(new PublicKey(symbols[symbol]))
   }
 
   const getMaxForSelectedAsset = () => {
@@ -338,7 +333,7 @@ const WithdrawModal = ({ isOpen, onClose }) => {
     }
   }, [withdrawTokenSymbol])
 
-  if (!selectedMint) return null
+  if (!withdrawTokenSymbol) return null
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
