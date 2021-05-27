@@ -44,21 +44,16 @@ const WithdrawModal = ({ isOpen, onClose }) => {
   const [maxButtonTransition, setMaxButtonTransition] = useState(false)
   const { getTokenIndex, symbols } = useMarketList()
   const { connection, programId } = useConnection()
-  const walletAccounts = useMangoStore((s) => s.wallet.balances)
   const prices = useMangoStore((s) => s.selectedMangoGroup.prices)
   const selectedMangoGroup = useMangoStore((s) => s.selectedMangoGroup.current)
   const selectedMarginAccount = useMangoStore(
     (s) => s.selectedMarginAccount.current
   )
   const actions = useMangoStore((s) => s.actions)
-  const withdrawAccounts = useMemo(
-    () =>
-      walletAccounts.filter((acc) =>
-        Object.values(symbols).includes(acc.account.mint.toString())
-      ),
-    [symbols, walletAccounts]
+
+  const [selectedMint, setSelectedMint] = useState(
+    new PublicKey(Object.values(symbols)[0])
   )
-  const [selectedAccount, setSelectedAccount] = useState(withdrawAccounts[0])
   const tokenIndex = useMemo(
     () => getTokenIndex(symbols[withdrawTokenSymbol]),
     [withdrawTokenSymbol, getTokenIndex]
@@ -130,6 +125,7 @@ const WithdrawModal = ({ isOpen, onClose }) => {
       prices
     )
     const leverage = 1 / Math.max(0, collateralRatio - 1)
+
     setSimulation({
       equity,
       assetsVal,
@@ -160,8 +156,7 @@ const WithdrawModal = ({ isOpen, onClose }) => {
         mangoGroup,
         marginAccount,
         wallet,
-        selectedAccount.account.mint,
-        selectedAccount.publicKey,
+        selectedMint,
         Number(inputAmount)
       )
         .then((_transSig: string) => {
@@ -188,8 +183,7 @@ const WithdrawModal = ({ isOpen, onClose }) => {
         mangoGroup,
         marginAccount,
         wallet,
-        selectedAccount.account.mint,
-        selectedAccount.publicKey,
+        selectedMint,
         Number(inputAmount)
       )
         .then((_transSig: string) => {
@@ -217,6 +211,7 @@ const WithdrawModal = ({ isOpen, onClose }) => {
     setInputAmount(0)
     setSliderPercentage(0)
     setWithdrawTokenSymbol(symbol)
+    setSelectedMint(new PublicKey(symbols[symbol]))
   }
 
   const getMaxForSelectedAsset = () => {
@@ -343,7 +338,7 @@ const WithdrawModal = ({ isOpen, onClose }) => {
     }
   }, [withdrawTokenSymbol])
 
-  if (!selectedAccount) return null
+  if (!selectedMint) return null
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
