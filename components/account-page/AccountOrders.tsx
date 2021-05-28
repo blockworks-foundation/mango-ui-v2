@@ -1,15 +1,15 @@
 import { useState } from 'react'
 import { TrashIcon } from '@heroicons/react/outline'
-import { useOpenOrders } from '../hooks/useOpenOrders'
-import { cancelOrderAndSettle } from '../utils/mango'
-import Button from './Button'
-import Loading from './Loading'
+import { useOpenOrders } from '../../hooks/useOpenOrders'
+import { cancelOrderAndSettle } from '../../utils/mango'
+import Button from '../Button'
+import Loading from '../Loading'
 import { PublicKey } from '@solana/web3.js'
-import useConnection from '../hooks/useConnection'
-import useMangoStore from '../stores/useMangoStore'
-import { notify } from '../utils/notifications'
+import useConnection from '../../hooks/useConnection'
+import useMangoStore from '../../stores/useMangoStore'
+import { notify } from '../../utils/notifications'
 import { Table, Thead, Tbody, Tr, Th, Td } from 'react-super-responsive-table'
-import SideBadge from './SideBadge'
+import SideBadge from '../SideBadge'
 
 const OpenOrdersTable = () => {
   const openOrders = useOpenOrders()
@@ -50,7 +50,8 @@ const OpenOrdersTable = () => {
   }
 
   return (
-    <div className={`flex flex-col py-6`}>
+    <>
+      <div className="pb-7 pt-1 text-th-fgd-1 text-lg">Open Orders</div>
       <div className={`-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8`}>
         <div className={`align-middle inline-block min-w-full sm:px-6 lg:px-8`}>
           {openOrders && openOrders.length > 0 ? (
@@ -59,7 +60,7 @@ const OpenOrdersTable = () => {
             >
               <Table className={`min-w-full divide-y divide-th-bkg-2`}>
                 <Thead>
-                  <Tr className="text-th-fgd-3">
+                  <Tr className="text-th-fgd-3 text-xs">
                     <Th
                       scope="col"
                       className={`px-6 py-3 text-left font-normal`}
@@ -98,26 +99,37 @@ const OpenOrdersTable = () => {
                       `}
                     >
                       <Td
-                        className={`px-6 py-4 whitespace-nowrap text-sm text-th-fgd-1`}
+                        className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
                       >
-                        {order.marketName}
+                        <div className="flex items-center">
+                          <img
+                            alt=""
+                            width="20"
+                            height="20"
+                            src={`/assets/icons/${order.marketName
+                              .split('/')[0]
+                              .toLowerCase()}.svg`}
+                            className={`mr-2.5`}
+                          />
+                          <div>{order.marketName}</div>
+                        </div>
                       </Td>
                       <Td
-                        className={`px-6 py-4 whitespace-nowrap text-sm text-th-fgd-1`}
+                        className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
                       >
                         <SideBadge side={order.side} />
                       </Td>
                       <Td
-                        className={`px-6 py-4 whitespace-nowrap text-sm text-th-fgd-1`}
+                        className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
                       >
                         {order.size}
                       </Td>
                       <Td
-                        className={`px-6 py-4 whitespace-nowrap text-sm text-th-fgd-1`}
+                        className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
                       >
-                        {order.price}
+                        ${order.price}
                       </Td>
-                      <Td className={`px-6 py-4 whitespace-nowrap text-left`}>
+                      <Td className={`px-6 py-3 whitespace-nowrap text-left`}>
                         <Button
                           onClick={() => handleCancelOrder(order)}
                           className={`flex items-center md:ml-auto px-2 py-1 text-xs`}
@@ -144,7 +156,7 @@ const OpenOrdersTable = () => {
           )}
         </div>
       </div>
-    </div>
+    </>
   )
 }
 

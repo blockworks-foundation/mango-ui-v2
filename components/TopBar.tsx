@@ -26,6 +26,7 @@ const TopBar = () => {
               </div>
               <div className={`hidden md:flex md:space-x-6 md:ml-4 py-2`}>
                 <MenuItem href="/">Trade</MenuItem>
+                <MenuItem href="/account">Account</MenuItem>
                 <MenuItem href="/stats">Stats</MenuItem>
                 <MenuItem href="/alerts">Alerts</MenuItem>
                 <MenuItem href="https://docs.mango.markets/">Learn</MenuItem>
