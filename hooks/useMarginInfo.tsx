@@ -56,7 +56,7 @@ const calculatePNL = (tradeHistory, prices, mangoGroup) => {
     total = total + profitAndLoss[assetName] * prices[assetIndex[assetName]]
   }
 
-  return total.toFixed(2)
+  return isNaN(total) ? 0 : total.toFixed(2)
 }
 
 const useMarginInfo = () => {
@@ -117,20 +117,20 @@ const useMarginInfo = () => {
             ),
           },
           {
-            label: 'Leverage',
-            value: leverage,
-            unit: 'x',
-            currency: '',
-            desc: 'Total position size divided by account value',
-            icon: <ScaleIcon className="h-5 w-5 mr-2 text-th-primary" />,
-          },
-          {
             label: 'Total PNL',
             value: calculatePNL(tradeHistory, prices, selectedMangoGroup),
             unit: '',
             currency: '$',
             desc: 'Total PNL reflects trades placed after March 15th 2021 04:00 AM UTC. Visit the Learn link in the top menu for more information.',
             icon: <ChartBarIcon className="h-5 w-5 mr-2 text-th-primary" />,
+          },
+          {
+            label: 'Leverage',
+            value: leverage,
+            unit: 'x',
+            currency: '',
+            desc: 'Total position size divided by account value',
+            icon: <ScaleIcon className="h-5 w-5 mr-2 text-th-primary" />,
           },
           {
             // TODO: Get collaterization ratio

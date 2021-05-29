@@ -8,6 +8,7 @@ import TopBar from '../components/TopBar'
 import AccountAssets from '../components/account-page/AccountAssets'
 import AccountBorrows from '../components/account-page/AccountBorrows'
 import AccountOrders from '../components/account-page/AccountOrders'
+import AccountHistory from '../components/account-page/AccountHistory'
 
 const TABS = ['Assets', 'Borrows', 'Stats', 'Positions', 'Orders', 'History']
 
@@ -109,13 +110,13 @@ const TabContent = ({ activeTab }) => {
     case 'Borrows':
       return <AccountBorrows />
     case 'Stats':
-      return <div>Cool</div>
+      return <div>Stats</div>
     case 'Positions':
-      return <div>Cool</div>
+      return <div>Positions</div>
     case 'Orders':
       return <AccountOrders />
     case 'History':
-      return <div>Cool</div>
+      return <AccountHistory />
     default:
       return <AccountAssets />
   }

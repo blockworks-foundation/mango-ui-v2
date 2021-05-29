@@ -25,8 +25,8 @@ export default function AccountAssets() {
 
   const [showDepositModal, setShowDepositModal] = useState(false)
   const [showWithdrawModal, setShowWithdrawModal] = useState(false)
-
-  console.log(openOrders)
+  const [withdrawSymbol, setWithdrawSymbol] = useState('')
+  const [depositSymbol, setDepositSymbol] = useState('')
 
   const handleCloseDeposit = useCallback(() => {
     setShowDepositModal(false)
@@ -35,6 +35,16 @@ export default function AccountAssets() {
   const handleCloseWithdraw = useCallback(() => {
     setShowWithdrawModal(false)
   }, [])
+
+  const handleShowWithdraw = (symbol) => {
+    setWithdrawSymbol(symbol)
+    setShowWithdrawModal(true)
+  }
+
+  const handleShowDeposit = (symbol) => {
+    setDepositSymbol(symbol)
+    setShowDepositModal(true)
+  }
 
   const getAccountValue = () =>
     Object.entries(symbols)
@@ -62,12 +72,12 @@ export default function AccountAssets() {
     <>
       <div className="flex items-center justify-between pb-4">
         <div className="text-th-fgd-1 text-lg">Your Assets</div>
-        <div className="bg-th-bkg-3 flex items-center justify-between p-2 rounded">
+        <div className="border border-th-green flex items-center justify-between p-2 rounded">
           <div className="pr-4 text-xs text-th-fgd-3">Total Asset Value:</div>
           <span>${getAccountValue()}</span>
         </div>
       </div>
-      {selectedMangoGroup ? (
+      {selectedMangoGroup && selectedMarginAccount ? (
         <Table className="min-w-full divide-y divide-th-bkg-2">
           <Thead>
             <Tr className="text-th-fgd-3 text-xs">
@@ -114,10 +124,8 @@ export default function AccountAssets() {
                   className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
                 >
                   {selectedMarginAccount
-                    ? selectedMarginAccount
-                        .getUiDeposit(selectedMangoGroup, i)
-                        .toFixed(tokenPrecision[name])
-                    : (0).toFixed(tokenPrecision[name])}
+                    .getUiDeposit(selectedMangoGroup, i)
+                    .toFixed(tokenPrecision[name])}
                 </Td>
                 <Td
                   className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
@@ -128,17 +136,12 @@ export default function AccountAssets() {
                   className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
                 >
                   $
-                  {selectedMarginAccount
-                    ? (
-                        floorToDecimal(
-                          selectedMarginAccount.getUiDeposit(
-                            selectedMangoGroup,
-                            i
-                          ),
-                          tokenPrecision[name]
-                        ) * prices[i]
-                      ).toFixed(2)
-                    : 0.0}
+                  {(
+                    floorToDecimal(
+                      selectedMarginAccount.getUiDeposit(selectedMangoGroup, i),
+                      tokenPrecision[name]
+                    ) * prices[i]
+                  ).toFixed(2)}
                 </Td>
                 <Td
                   className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
@@ -152,20 +155,16 @@ export default function AccountAssets() {
                 >
                   <div className={`flex justify-end`}>
                     <Button
-                      onClick={() => setShowDepositModal(true)}
+                      onClick={() => handleShowDeposit(name)}
                       className="text-xs pt-0 pb-0 h-8 pl-3 pr-3"
                       disabled={!connected || loadingMarginAccount}
                     >
                       <span>Deposit</span>
                     </Button>
                     <Button
-                      onClick={() => setShowWithdrawModal(true)}
+                      onClick={() => handleShowWithdraw(name)}
                       className="ml-3 text-xs pt-0 pb-0 h-8 pl-3 pr-3"
-                      disabled={
-                        !connected ||
-                        !selectedMarginAccount ||
-                        loadingMarginAccount
-                      }
+                      disabled={!connected || loadingMarginAccount}
                     >
                       <span>Withdraw</span>
                     </Button>
@@ -177,12 +176,17 @@ export default function AccountAssets() {
         </Table>
       ) : null}
       {showDepositModal && (
-        <DepositModal isOpen={showDepositModal} onClose={handleCloseDeposit} />
+        <DepositModal
+          isOpen={showDepositModal}
+          onClose={handleCloseDeposit}
+          tokenSymbol={depositSymbol}
+        />
       )}
       {showWithdrawModal && (
         <WithdrawModal
           isOpen={showWithdrawModal}
           onClose={handleCloseWithdraw}
+          tokenSymbol={withdrawSymbol}
         />
       )}
     </>

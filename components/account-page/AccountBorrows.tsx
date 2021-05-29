@@ -60,7 +60,7 @@ export default function AccountAssets() {
     <>
       <div className="flex items-center justify-between pb-4">
         <div className="text-th-fgd-1 text-lg">Your Borrows</div>
-        <div className="bg-th-bkg-3 flex items-center justify-between p-2 rounded">
+        <div className="border border-th-red flex items-center justify-between p-2 rounded">
           <div className="pr-4 text-xs text-th-fgd-3">Total Borrow Value:</div>
           <span>${getAccountBorrowValue()}</span>
         </div>
@@ -136,13 +136,6 @@ export default function AccountAssets() {
                       <Button
                         onClick={() => setShowWithdrawModal(true)}
                         className="text-xs pt-0 pb-0 h-8 pl-3 pr-3"
-                        disabled={!connected || loadingMarginAccount}
-                      >
-                        Borrow
-                      </Button>
-                      <Button
-                        onClick={() => setShowWithdrawModal(true)}
-                        className="ml-3 text-xs pt-0 pb-0 h-8 pl-3 pr-3"
                         disabled={
                           !connected ||
                           !selectedMarginAccount ||
@@ -150,6 +143,13 @@ export default function AccountAssets() {
                         }
                       >
                         Settle
+                      </Button>
+                      <Button
+                        onClick={() => setShowWithdrawModal(true)}
+                        className="ml-3 text-xs pt-0 pb-0 h-8 pl-3 pr-3"
+                        disabled={!connected || loadingMarginAccount}
+                      >
+                        Borrow
                       </Button>
                     </div>
                   </Td>

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { FunctionComponent, useEffect, useMemo, useState } from 'react'
 import Modal from './Modal'
 import Input from './Input'
 import { ElementTitle } from './styles'
@@ -31,8 +31,20 @@ import { PublicKey } from '@solana/web3.js'
 import { MarginAccount, uiToNative } from '@blockworks-foundation/mango-client'
 import Select from './Select'
 
-const WithdrawModal = ({ isOpen, onClose }) => {
-  const [withdrawTokenSymbol, setWithdrawTokenSymbol] = useState('USDC')
+interface WithdrawModalProps {
+  onClose: () => void
+  isOpen: boolean
+  tokenSymbol?: string
+}
+
+const WithdrawModal: FunctionComponent<WithdrawModalProps> = ({
+  isOpen,
+  onClose,
+  tokenSymbol = '',
+}) => {
+  const [withdrawTokenSymbol, setWithdrawTokenSymbol] = useState(
+    tokenSymbol || 'USDC'
+  )
   const [inputAmount, setInputAmount] = useState(0)
   const [invalidAmountMessage, setInvalidAmountMessage] = useState('')
   const [maxAmount, setMaxAmount] = useState(0)

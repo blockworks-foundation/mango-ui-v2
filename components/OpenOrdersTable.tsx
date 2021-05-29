@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { TrashIcon } from '@heroicons/react/outline'
+import Link from 'next/link'
+import { useRouter } from 'next/router'
 import { useOpenOrders } from '../hooks/useOpenOrders'
 import { cancelOrderAndSettle } from '../utils/mango'
 import Button from './Button'
@@ -12,6 +13,7 @@ import { Table, Thead, Tbody, Tr, Th, Td } from 'react-super-responsive-table'
 import SideBadge from './SideBadge'
 
 const OpenOrdersTable = () => {
+  const { asPath } = useRouter()
   const openOrders = useOpenOrders()
   const [cancelId, setCancelId] = useState(null)
   const { connection, programId } = useConnection()
@@ -54,12 +56,10 @@ const OpenOrdersTable = () => {
       <div className={`-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8`}>
         <div className={`align-middle inline-block min-w-full sm:px-6 lg:px-8`}>
           {openOrders && openOrders.length > 0 ? (
-            <div
-              className={`shadow overflow-hidden border-b border-th-bkg-2 sm:rounded-md`}
-            >
+            <div className={`shadow overflow-hidden border-b border-th-bkg-2`}>
               <Table className={`min-w-full divide-y divide-th-bkg-2`}>
                 <Thead>
-                  <Tr className="text-th-fgd-3">
+                  <Tr className="text-th-fgd-3 text-xs">
                     <Th
                       scope="col"
                       className={`px-6 py-3 text-left font-normal`}
@@ -98,37 +98,57 @@ const OpenOrdersTable = () => {
                       `}
                     >
                       <Td
-                        className={`px-6 py-4 whitespace-nowrap text-sm text-th-fgd-1`}
+                        className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
                       >
-                        {order.marketName}
+                        <div className="flex items-center">
+                          <img
+                            alt=""
+                            width="20"
+                            height="20"
+                            src={`/assets/icons/${order.marketName
+                              .split('/')[0]
+                              .toLowerCase()}.svg`}
+                            className={`mr-2.5`}
+                          />
+                          <div>{order.marketName}</div>
+                        </div>
                       </Td>
                       <Td
-                        className={`px-6 py-4 whitespace-nowrap text-sm text-th-fgd-1`}
+                        className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
                       >
                         <SideBadge side={order.side} />
                       </Td>
                       <Td
-                        className={`px-6 py-4 whitespace-nowrap text-sm text-th-fgd-1`}
+                        className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
                       >
                         {order.size}
                       </Td>
                       <Td
-                        className={`px-6 py-4 whitespace-nowrap text-sm text-th-fgd-1`}
+                        className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
                       >
                         {order.price}
                       </Td>
-                      <Td className={`px-6 py-4 whitespace-nowrap text-left`}>
-                        <Button
-                          onClick={() => handleCancelOrder(order)}
-                          className={`flex items-center md:ml-auto px-2 py-1 text-xs`}
-                        >
-                          {cancelId + '' === order?.orderId + '' ? (
-                            <Loading className="-ml-1 mr-3" />
-                          ) : (
-                            <TrashIcon className={`h-4 w-4 mr-1`} />
-                          )}
-                          <span>Cancel</span>
-                        </Button>
+                      <Td className={`px-6 py-3 whitespace-nowrap text-left`}>
+                        <div className={`flex justify-end`}>
+                          <Button
+                            onClick={() =>
+                              console.log('trigger modify order modal')
+                            }
+                            className={`text-xs pt-0 pb-0 h-8 pl-3 pr-3`}
+                          >
+                            Modify
+                          </Button>
+                          <Button
+                            onClick={() => handleCancelOrder(order)}
+                            className={`ml-3 text-xs pt-0 pb-0 h-8 pl-3 pr-3`}
+                          >
+                            {cancelId + '' === order?.orderId + '' ? (
+                              <Loading />
+                            ) : (
+                              <span>Cancel</span>
+                            )}
+                          </Button>
+                        </div>
                       </Td>
                     </Tr>
                   ))}
@@ -139,7 +159,17 @@ const OpenOrdersTable = () => {
             <div
               className={`w-full text-center py-6 bg-th-bkg-1 text-th-fgd-3 rounded-md`}
             >
-              No open orders
+              No open orders.
+              {asPath === '/account' ? (
+                <Link href={'/'}>
+                  <a
+                    className={`inline-flex ml-2 py-0
+        `}
+                  >
+                    Make a trade
+                  </a>
+                </Link>
+              ) : null}
             </div>
           )}
         </div>
