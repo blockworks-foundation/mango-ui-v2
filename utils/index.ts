@@ -180,6 +180,8 @@ export const tokenPrecision = {
 export const DECIMALS = {
   BTC: 5,
   ETH: 4,
+  SOL: 2,
+  SRM: 2,
   USDC: 2,
   USDT: 2,
   WUSDT: 2,

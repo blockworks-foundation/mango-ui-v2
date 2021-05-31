@@ -1,13 +1,19 @@
 import { useCallback, useState } from 'react'
 import { Table, Thead, Tbody, Tr, Th, Td } from 'react-super-responsive-table'
+import useConnection from '../../hooks/useConnection'
 import useMangoStore from '../../stores/useMangoStore'
 import useMarketList from '../../hooks/useMarketList'
+import { notify } from '../../utils/notifications'
+import { sleep } from '../../utils'
+import { PublicKey } from '@solana/web3.js'
 import { floorToDecimal, tokenPrecision } from '../../utils/index'
-import DepositModal from '../DepositModal'
-import WithdrawModal from '../WithdrawModal'
+import { settleBorrow } from '../../utils/mango'
+import BorrowModal from '../BorrowModal'
 import Button from '../Button'
 
 export default function AccountAssets() {
+  const { programId, connection } = useConnection()
+  const actions = useMangoStore((s) => s.actions)
   const selectedMangoGroup = useMangoStore((s) => s.selectedMangoGroup.current)
   const selectedMarginAccount = useMangoStore(
     (s) => s.selectedMarginAccount.current
@@ -20,16 +26,52 @@ export default function AccountAssets() {
 
   const prices = useMangoStore((s) => s.selectedMangoGroup.prices)
 
-  const [showDepositModal, setShowDepositModal] = useState(false)
-  const [showWithdrawModal, setShowWithdrawModal] = useState(false)
+  const [borrowSymbol, setBorrowSymbol] = useState('')
+  const [showBorrowModal, setShowBorrowModal] = useState(false)
 
-  const handleCloseDeposit = useCallback(() => {
-    setShowDepositModal(false)
-  }, [])
+  async function handleSettleBorrow(token, quantity) {
+    const marginAccount = useMangoStore.getState().selectedMarginAccount.current
+    const mangoGroup = useMangoStore.getState().selectedMangoGroup.current
+    const wallet = useMangoStore.getState().wallet.current
+
+    try {
+      await settleBorrow(
+        connection,
+        new PublicKey(programId),
+        mangoGroup,
+        marginAccount,
+        wallet,
+        new PublicKey(symbols[token]),
+        Number(quantity)
+      )
+      await sleep(250)
+      actions.fetchMarginAccounts()
+    } catch (e) {
+      console.warn('Error settling all:', e)
+      if (e.message === 'No unsettled borrows') {
+        notify({
+          message: 'There are no unsettled borrows',
+          type: 'error',
+        })
+      } else {
+        notify({
+          message: 'Error settling borrows',
+          description: e.message,
+          txid: e.txid,
+          type: 'error',
+        })
+      }
+    }
+  }
 
   const handleCloseWithdraw = useCallback(() => {
-    setShowWithdrawModal(false)
+    setShowBorrowModal(false)
   }, [])
+
+  const handleShowBorrow = (symbol) => {
+    setBorrowSymbol(symbol)
+    setShowBorrowModal(true)
+  }
 
   // get the sum of all borrows
   const getAccountBorrowValue = () =>
@@ -134,7 +176,9 @@ export default function AccountAssets() {
                   >
                     <div className={`flex justify-end`}>
                       <Button
-                        onClick={() => setShowWithdrawModal(true)}
+                        onClick={() =>
+                          handleSettleBorrow(asset.name, asset.bal)
+                        }
                         className="text-xs pt-0 pb-0 h-8 pl-3 pr-3"
                         disabled={
                           !connected ||
@@ -145,7 +189,7 @@ export default function AccountAssets() {
                         Settle
                       </Button>
                       <Button
-                        onClick={() => setShowWithdrawModal(true)}
+                        onClick={() => handleShowBorrow(asset)}
                         className="ml-3 text-xs pt-0 pb-0 h-8 pl-3 pr-3"
                         disabled={!connected || loadingMarginAccount}
                       >
@@ -219,7 +263,7 @@ export default function AccountAssets() {
               >
                 <div className={`flex justify-end`}>
                   <Button
-                    onClick={() => setShowWithdrawModal(true)}
+                    onClick={() => handleShowBorrow(asset)}
                     className="text-xs pt-0 pb-0 h-8 pl-3 pr-3"
                     disabled={!connected || loadingMarginAccount}
                   >
@@ -231,13 +275,11 @@ export default function AccountAssets() {
           ))}
         </Tbody>
       </Table>
-      {showDepositModal && (
-        <DepositModal isOpen={showDepositModal} onClose={handleCloseDeposit} />
-      )}
-      {showWithdrawModal && (
-        <WithdrawModal
-          isOpen={showWithdrawModal}
+      {showBorrowModal && (
+        <BorrowModal
+          isOpen={showBorrowModal}
           onClose={handleCloseWithdraw}
+          tokenSymbol={borrowSymbol}
         />
       )}
     </>

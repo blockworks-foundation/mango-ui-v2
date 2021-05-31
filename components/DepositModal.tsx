@@ -377,7 +377,7 @@ const DepositModal: FunctionComponent<DepositModalProps> = ({
               maxButtonTransition={maxButtonTransition}
             />
           </div>
-          <div className={`mt-5 flex justify-center`}>
+          <div className={`pt-8 flex justify-center`}>
             <Button
               onClick={() => setShowSimulation(true)}
               className="w-full"
