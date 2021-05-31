@@ -23,14 +23,14 @@ const MarketHeader = () => {
     // calculate from and to date (0:00UTC to 23:59:59UTC)
     const date = new Date()
     const utcDate = date.getUTCDate()
-    let utcFrom = new Date(
+    const utcFrom = new Date(
       Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
     )
     utcFrom.setUTCDate(utcDate)
     utcFrom.setUTCHours(0)
     utcFrom.setUTCMinutes(0)
     utcFrom.setUTCSeconds(0)
-    let utcTo = new Date(
+    const utcTo = new Date(
       Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
     )
     utcTo.setUTCDate(utcDate)
@@ -113,7 +113,7 @@ const MarketHeader = () => {
             <div className="mb-0.5 text-th-fgd-4 text-xs">24hr Vol</div>
             <div className={`font-semibold`}>
               {ohlcv && !loading ? (
-                volume !== '--' ? (
+                volume && volume !== '--' ? (
                   <>
                     {volume.toFixed(2)}
                     <span className="ml-1 text-th-fgd-3 text-xs">
