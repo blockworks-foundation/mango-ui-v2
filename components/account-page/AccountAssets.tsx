@@ -1,15 +1,13 @@
 import { useCallback, useState } from 'react'
 import { Table, Thead, Tbody, Tr, Th, Td } from 'react-super-responsive-table'
-// import { CashIcon } from '@heroicons/react/outline'
 import useMangoStore from '../../stores/useMangoStore'
-import useMarketList from '../../hooks/useMarketList'
 import { useOpenOrders } from '../../hooks/useOpenOrders'
 import { floorToDecimal, tokenPrecision } from '../../utils/index'
 import DepositModal from '../DepositModal'
 import WithdrawModal from '../WithdrawModal'
 import Button from '../Button'
 
-export default function AccountAssets() {
+export default function AccountAssets({ symbols }) {
   const selectedMangoGroup = useMangoStore((s) => s.selectedMangoGroup.current)
   const selectedMarginAccount = useMangoStore(
     (s) => s.selectedMarginAccount.current
@@ -17,9 +15,10 @@ export default function AccountAssets() {
   const loadingMarginAccount = useMangoStore(
     (s) => s.selectedMarginAccount.initialLoad
   )
-  const openOrders = selectedMarginAccount ? useOpenOrders() : null
+  const openOrders = useOpenOrders()
   const connected = useMangoStore((s) => s.wallet.connected)
-  const { symbols } = useMarketList()
+
+  console.log(openOrders)
 
   const prices = useMangoStore((s) => s.selectedMangoGroup.prices)
 

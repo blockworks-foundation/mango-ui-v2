@@ -84,11 +84,22 @@ const DepositModal: FunctionComponent<DepositModalProps> = ({
   )
 
   useEffect(() => {
-    console.log(Object.keys(symbols).find((key) => key === tokenSymbol))
+    if (tokenSymbol) {
+      const symbolMint = symbols[tokenSymbol]
+      const symbolAccount = walletAccounts.find(
+        (a) => a.account.mint.toString() === symbolMint
+      )
+      if (symbolAccount) {
+        setSelectedAccount(symbolAccount)
+      } else {
+        setSelectedAccount(null)
+      }
+    }
   }, [tokenSymbol])
 
   useEffect(() => {
-    if (!selectedMangoGroup || !selectedMarginAccount) return
+    if (!selectedMangoGroup || !selectedMarginAccount || !selectedAccount)
+      return
 
     const mintDecimals = selectedMangoGroup.mintDecimals[tokenIndex]
     const groupIndex = selectedMangoGroup.indexes[tokenIndex]
@@ -295,6 +306,20 @@ const DepositModal: FunctionComponent<DepositModalProps> = ({
             <div className={`text-th-fgd-3 flex-shrink invisible w-5`}>X</div>
             <ElementTitle noMarignBottom>Deposit Funds</ElementTitle>
           </Modal.Header>
+          {tokenSymbol && !selectedAccount ? (
+            <div className="border border-th-red flex items-center mb-4 p-2.5 rounded-md text-th-red">
+              <ExclamationCircleIcon className="flex-shrink-0 h-5 w-5 mr-2" />
+              <div>
+                <div className="pb-1 text-th-fgd-1">
+                  No {tokenSymbol} wallet address found.
+                </div>
+                <div className="font-normal text-th-fgd-3 text-xs">
+                  Add {tokenSymbol} to your wallet and fund it with{' '}
+                  {tokenSymbol} to deposit.
+                </div>
+              </div>
+            </div>
+          ) : null}
           <AccountSelect
             symbols={symbols}
             accounts={depositAccounts}
@@ -323,7 +348,7 @@ const DepositModal: FunctionComponent<DepositModalProps> = ({
               suffix={symbol}
             />
             {simulation ? (
-              <Tooltip content="Account Leverage" className="py-1">
+              <Tooltip content="Projected Leverage" className="py-1">
                 <span
                   className={`${renderAccountRiskStatus(
                     simulation?.collateralRatio

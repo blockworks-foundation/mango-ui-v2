@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ExternalLinkIcon } from '@heroicons/react/outline'
 import useMangoStore from '../stores/useMangoStore'
+import useMarketList from '../hooks/useMarketList'
 import { abbreviateAddress } from '../utils'
 import useMarginInfo from '../hooks/useMarginInfo'
 import PageBodyContainer from '../components/PageBodyContainer'
@@ -18,6 +19,7 @@ export default function Account() {
   const selectedMarginAccount = useMangoStore(
     (s) => s.selectedMarginAccount.current
   )
+  const { symbols } = useMarketList()
 
   const handleTabChange = (tabName) => {
     setActiveTab(tabName)
@@ -96,17 +98,17 @@ export default function Account() {
               ))}
             </nav>
           </div>
-          <TabContent activeTab={activeTab} />
+          <TabContent activeTab={activeTab} symbols={symbols} />
         </div>
       </PageBodyContainer>
     </div>
   )
 }
 
-const TabContent = ({ activeTab }) => {
+const TabContent = ({ activeTab, symbols }) => {
   switch (activeTab) {
     case 'Assets':
-      return <AccountAssets />
+      return <AccountAssets symbols={symbols} />
     case 'Borrows':
       return <AccountBorrows />
     case 'Stats':
@@ -118,6 +120,6 @@ const TabContent = ({ activeTab }) => {
     case 'History':
       return <AccountHistory />
     default:
-      return <AccountAssets />
+      return <AccountAssets symbols={symbols} />
   }
 }
