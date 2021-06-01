@@ -11,7 +11,14 @@ import AccountBorrows from '../components/account-page/AccountBorrows'
 import AccountOrders from '../components/account-page/AccountOrders'
 import AccountHistory from '../components/account-page/AccountHistory'
 
-const TABS = ['Assets', 'Borrows', 'Stats', 'Positions', 'Orders', 'History']
+const TABS = [
+  'Assets',
+  'Borrows',
+  // 'Stats',
+  // 'Positions',
+  'Orders',
+  'History',
+]
 
 export default function Account() {
   const [activeTab, setActiveTab] = useState(TABS[0])
@@ -32,7 +39,7 @@ export default function Account() {
         <div className="flex flex-col sm:flex-row items-center justify-between pt-8 pb-3 sm:pb-6 md:pt-10">
           <h1 className={`text-th-fgd-1 text-2xl font-semibold`}>Account</h1>
           {selectedMarginAccount ? (
-            <div className="divide-x divide-th-fgd-4 flex flex-col-reverse justify-between w-full pt-4 sm:pt-0 sm:justify-end sm:flex-row">
+            <div className="divide-x divide-th-fgd-4 flex justify-center w-full pt-4 sm:pt-0 sm:justify-end">
               <div className="pr-4 text-xs text-th-fgd-1">
                 <div className="pb-0.5 text-2xs text-th-fgd-3">Acc Owner</div>
                 <a
@@ -65,7 +72,7 @@ export default function Account() {
         <div className="p-6 rounded-lg bg-th-bkg-2">
           <div className="pb-4 text-th-fgd-1 text-lg">Overview</div>
           {accountMarginInfo ? (
-            <div className="grid grid-flow-col grid-cols-4 grid-rows-1 gap-4 pb-10">
+            <div className="grid grid-flow-col grid-cols-1 grid-rows-4 sm:grid-cols-2 sm:grid-rows-2 md:grid-cols-4 md:grid-rows-1 gap-4 pb-10">
               {accountMarginInfo.map((info) => (
                 <div className="bg-th-bkg-3 p-3 rounded-md" key={info.label}>
                   <div className="pb-0.5 text-xs text-th-fgd-3">

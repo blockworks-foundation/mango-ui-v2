@@ -10,6 +10,7 @@ import useMarketList from '../hooks/useMarketList'
 import { floorToDecimal, tokenPrecision } from '../utils/index'
 import DepositModal from './DepositModal'
 import WithdrawModal from './WithdrawModal'
+import BorrowModal from './BorrowModal'
 import Button from './Button'
 import Tooltip from './Tooltip'
 import MarginAccountSelect from './MarginAccountSelect'
@@ -30,6 +31,7 @@ export default function MarginBalances() {
 
   const [showDepositModal, setShowDepositModal] = useState(false)
   const [showWithdrawModal, setShowWithdrawModal] = useState(false)
+  const [showBorrowModal, setShowBorrowModal] = useState(false)
 
   const handleCloseDeposit = useCallback(() => {
     setShowDepositModal(false)
@@ -37,6 +39,10 @@ export default function MarginBalances() {
 
   const handleCloseWithdraw = useCallback(() => {
     setShowWithdrawModal(false)
+  }, [])
+
+  const handleCloseBorrow = useCallback(() => {
+    setShowBorrowModal(false)
   }, [])
 
   const handleMarginAccountChange = (marginAccount: MarginAccount) => {
@@ -150,19 +156,28 @@ export default function MarginBalances() {
         <div className={`flex justify-center items-center mt-4`}>
           <Button
             onClick={() => setShowDepositModal(true)}
-            className="w-1/2"
+            className="w-1/3"
             disabled={!connected || loadingMarginAccount}
           >
             <span>Deposit</span>
           </Button>
           <Button
             onClick={() => setShowWithdrawModal(true)}
-            className="ml-4 w-1/2"
+            className="ml-2 w-1/3"
             disabled={
               !connected || !selectedMarginAccount || loadingMarginAccount
             }
           >
             <span>Withdraw</span>
+          </Button>
+          <Button
+            onClick={() => setShowBorrowModal(true)}
+            className="ml-2 w-1/3"
+            disabled={
+              !connected || !selectedMarginAccount || loadingMarginAccount
+            }
+          >
+            <span>Borrow</span>
           </Button>
         </div>
         <div className={`text-center mt-5 text-th-fgd-3 text-xs`}>
@@ -177,6 +192,9 @@ export default function MarginBalances() {
           isOpen={showWithdrawModal}
           onClose={handleCloseWithdraw}
         />
+      )}
+      {showBorrowModal && (
+        <BorrowModal isOpen={showBorrowModal} onClose={handleCloseBorrow} />
       )}
     </>
   )

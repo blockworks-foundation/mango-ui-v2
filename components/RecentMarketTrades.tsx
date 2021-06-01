@@ -14,7 +14,7 @@ export default function PublicTrades() {
 
   const fetchTradesForChart = useCallback(async () => {
     const newTrades = await ChartApi.getRecentTrades(marketAddress)
-    if (newTrades.length && trades.length === 0) {
+    if (newTrades?.length && trades.length === 0) {
       setTrades(newTrades)
     } else if (
       newTrades?.length &&

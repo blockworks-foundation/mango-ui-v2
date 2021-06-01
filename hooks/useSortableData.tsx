@@ -3,10 +3,8 @@ import { useMemo, useState } from 'react'
 export const useSortableData = (items, config = null) => {
   const [sortConfig, setSortConfig] = useState(config)
 
-  console.log(items)
-
   const sortedItems = useMemo(() => {
-    let sortableItems = [...items]
+    let sortableItems = items ? [...items] : []
     if (sortConfig !== null) {
       sortableItems.sort((a, b) => {
         console.log(a[sortConfig.key])

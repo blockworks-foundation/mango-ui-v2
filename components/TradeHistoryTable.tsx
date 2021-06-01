@@ -1,5 +1,4 @@
-import { useMemo, useState } from 'react'
-import { ArrowSmDownIcon, ArrowSmUpIcon } from '@heroicons/react/solid'
+import { ArrowSmDownIcon } from '@heroicons/react/solid'
 import useTradeHistory from '../hooks/useTradeHistory'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
@@ -12,8 +11,6 @@ const TradeHistoryTable = () => {
   const { asPath } = useRouter()
   const tradeHistory = useTradeHistory()
   const { items, requestSort, sortConfig } = useSortableData(tradeHistory)
-
-  console.log(sortConfig)
 
   const renderTradeDateTime = (timestamp) => {
     const date = new Date(timestamp)

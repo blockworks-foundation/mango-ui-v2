@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import Link from 'next/link'
+import { ArrowSmDownIcon } from '@heroicons/react/solid'
 import { useRouter } from 'next/router'
 import { useOpenOrders } from '../hooks/useOpenOrders'
 import { cancelOrderAndSettle } from '../utils/mango'
-import Button from './Button'
+import Button, { LinkButton } from './Button'
 import Loading from './Loading'
 import { PublicKey } from '@solana/web3.js'
 import useConnection from '../hooks/useConnection'
@@ -11,10 +12,12 @@ import useMangoStore from '../stores/useMangoStore'
 import { notify } from '../utils/notifications'
 import { Table, Thead, Tbody, Tr, Th, Td } from 'react-super-responsive-table'
 import SideBadge from './SideBadge'
+import { useSortableData } from '../hooks/useSortableData'
 
 const OpenOrdersTable = () => {
   const { asPath } = useRouter()
   const openOrders = useOpenOrders()
+  const { items, requestSort, sortConfig } = useSortableData(openOrders)
   const [cancelId, setCancelId] = useState(null)
   const { connection, programId } = useConnection()
   const actions = useMangoStore((s) => s.actions)
@@ -64,25 +67,81 @@ const OpenOrdersTable = () => {
                       scope="col"
                       className={`px-6 py-3 text-left font-normal`}
                     >
-                      Market
+                      <LinkButton
+                        className="flex items-center no-underline"
+                        onClick={() => requestSort('marketName')}
+                      >
+                        Market
+                        <ArrowSmDownIcon
+                          className={`default-transition flex-shrink-0 h-4 w-4 ml-1 ${
+                            sortConfig?.key === 'marketName'
+                              ? sortConfig.direction === 'ascending'
+                                ? 'transform rotate-180'
+                                : 'transform rotate-360'
+                              : null
+                          }`}
+                        />
+                      </LinkButton>
                     </Th>
                     <Th
                       scope="col"
                       className={`px-6 py-3 text-left font-normal`}
                     >
-                      Side
+                      <LinkButton
+                        className="flex items-center no-underline"
+                        onClick={() => requestSort('side')}
+                      >
+                        Side
+                        <ArrowSmDownIcon
+                          className={`default-transition flex-shrink-0 h-4 w-4 ml-1 ${
+                            sortConfig?.key === 'side'
+                              ? sortConfig.direction === 'ascending'
+                                ? 'transform rotate-180'
+                                : 'transform rotate-360'
+                              : null
+                          }`}
+                        />
+                      </LinkButton>
                     </Th>
                     <Th
                       scope="col"
                       className={`px-6 py-3 text-left font-normal`}
                     >
-                      Size
+                      <LinkButton
+                        className="flex items-center no-underline"
+                        onClick={() => requestSort('size')}
+                      >
+                        Size
+                        <ArrowSmDownIcon
+                          className={`default-transition flex-shrink-0 h-4 w-4 ml-1 ${
+                            sortConfig?.key === 'size'
+                              ? sortConfig.direction === 'ascending'
+                                ? 'transform rotate-180'
+                                : 'transform rotate-360'
+                              : null
+                          }`}
+                        />
+                      </LinkButton>
                     </Th>
                     <Th
                       scope="col"
                       className={`px-6 py-3 text-left font-normal`}
                     >
-                      Price
+                      <LinkButton
+                        className="flex items-center no-underline"
+                        onClick={() => requestSort('price')}
+                      >
+                        Price
+                        <ArrowSmDownIcon
+                          className={`default-transition flex-shrink-0 h-4 w-4 ml-1 ${
+                            sortConfig?.key === 'price'
+                              ? sortConfig.direction === 'ascending'
+                                ? 'transform rotate-180'
+                                : 'transform rotate-360'
+                              : null
+                          }`}
+                        />
+                      </LinkButton>
                     </Th>
                     <Th scope="col" className={`relative px-6 py-3`}>
                       <span className={`sr-only`}>Edit</span>
@@ -90,7 +149,7 @@ const OpenOrdersTable = () => {
                   </Tr>
                 </Thead>
                 <Tbody>
-                  {openOrders.map((order, index) => (
+                  {items.map((order, index) => (
                     <Tr
                       key={`${order.orderId}${order.side}`}
                       className={`border-b border-th-bkg-3
@@ -130,14 +189,15 @@ const OpenOrdersTable = () => {
                       </Td>
                       <Td className={`px-6 py-3 whitespace-nowrap text-left`}>
                         <div className={`flex justify-end`}>
-                          <Button
+                          {/* Todo: support order modification */}
+                          {/* <Button
                             onClick={() =>
                               console.log('trigger modify order modal')
                             }
                             className={`text-xs pt-0 pb-0 h-8 pl-3 pr-3`}
                           >
                             Modify
-                          </Button>
+                          </Button> */}
                           <Button
                             onClick={() => handleCancelOrder(order)}
                             className={`ml-3 text-xs pt-0 pb-0 h-8 pl-3 pr-3`}

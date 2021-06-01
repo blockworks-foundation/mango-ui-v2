@@ -113,7 +113,7 @@ const useMarginInfo = () => {
             currency: '$',
             desc: 'The value of the account',
             icon: (
-              <CurrencyDollarIcon className="h-5 w-5 mr-2 text-th-primary" />
+              <CurrencyDollarIcon className="flex-shrink-0 h-5 w-5 mr-2 text-th-primary" />
             ),
           },
           {
@@ -122,7 +122,9 @@ const useMarginInfo = () => {
             unit: '',
             currency: '$',
             desc: 'Total PNL reflects trades placed after March 15th 2021 04:00 AM UTC. Visit the Learn link in the top menu for more information.',
-            icon: <ChartBarIcon className="h-5 w-5 mr-2 text-th-primary" />,
+            icon: (
+              <ChartBarIcon className="flex-shrink-0 h-5 w-5 mr-2 text-th-primary" />
+            ),
           },
           {
             label: 'Leverage',
@@ -130,7 +132,9 @@ const useMarginInfo = () => {
             unit: 'x',
             currency: '',
             desc: 'Total position size divided by account value',
-            icon: <ScaleIcon className="h-5 w-5 mr-2 text-th-primary" />,
+            icon: (
+              <ScaleIcon className="flex-shrink-0 h-5 w-5 mr-2 text-th-primary" />
+            ),
           },
           {
             // TODO: Get collaterization ratio
@@ -140,7 +144,9 @@ const useMarginInfo = () => {
             unit: '%',
             currency: '',
             desc: 'The current collateral ratio',
-            icon: <ChartPieIcon className="h-5 w-5 mr-2 text-th-primary" />,
+            icon: (
+              <ChartPieIcon className="flex-shrink-0 h-5 w-5 mr-2 text-th-primary" />
+            ),
           },
         ])
       })

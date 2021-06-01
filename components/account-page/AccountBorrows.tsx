@@ -100,8 +100,8 @@ export default function AccountAssets() {
 
   return (
     <>
-      <div className="flex items-center justify-between pb-4">
-        <div className="text-th-fgd-1 text-lg">Your Borrows</div>
+      <div className="sm:flex sm:items-center sm:justify-between pb-4">
+        <div className="pb-2 sm:pb-0 text-th-fgd-1 text-lg">Your Borrows</div>
         <div className="border border-th-red flex items-center justify-between p-2 rounded">
           <div className="pr-4 text-xs text-th-fgd-3">Total Borrow Value:</div>
           <span>${getAccountBorrowValue()}</span>
@@ -205,7 +205,7 @@ export default function AccountAssets() {
           <div
             className={`w-full text-center py-6 bg-th-bkg-1 text-th-fgd-3 rounded-md`}
           >
-            You don't have any borrows yet.
+            No borrows found.
           </div>
         )
       ) : null}
@@ -221,6 +221,9 @@ export default function AccountAssets() {
             </Th>
             <Th scope="col" className="px-6 py-3 text-left font-normal">
               Interest APY
+            </Th>
+            <Th scope="col" className="px-6 py-3 text-left font-normal">
+              Available Liquidity
             </Th>
           </Tr>
         </Thead>
@@ -257,6 +260,13 @@ export default function AccountAssets() {
                 <span className={`text-th-green`}>
                   {(selectedMangoGroup.getBorrowRate(i) * 100).toFixed(2)}%
                 </span>
+              </Td>
+              <Td
+                className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
+              >
+                {selectedMangoGroup
+                  .getUiTotalDeposit(i)
+                  .toFixed(tokenPrecision[asset])}
               </Td>
               <Td
                 className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}

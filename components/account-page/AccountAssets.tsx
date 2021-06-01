@@ -18,8 +18,6 @@ export default function AccountAssets({ symbols }) {
   const openOrders = useOpenOrders()
   const connected = useMangoStore((s) => s.wallet.connected)
 
-  console.log(openOrders)
-
   const prices = useMangoStore((s) => s.selectedMangoGroup.prices)
 
   const [showDepositModal, setShowDepositModal] = useState(false)
@@ -49,28 +47,56 @@ export default function AccountAssets({ symbols }) {
     Object.entries(symbols)
       .map(
         ([name], i) =>
-          floorToDecimal(
+          (floorToDecimal(
             selectedMarginAccount.getUiDeposit(selectedMangoGroup, i),
             tokenPrecision[name]
-          ) * prices[i]
+          ) +
+            getOpenOrdersSize(name)) *
+          prices[i]
       )
       .reduce((a, b) => a + b, 0)
       .toFixed(2)
 
-  // const getBalanceInOrders = (symbol) => {
-  //   for (let i = 0; i < openOrders.length; i++) {
-  //     if (openOrders[i].marketName.includes(symbol)) {
-  //       return openOrders[i].side === 'sell'
-  //         ? openOrders[i].size
-  //         : openOrders[i].size * openOrders[i].price
-  //     } else return 0
-  //   }
-  // }
+  const getOpenOrdersSize = (symbol) => {
+    const sum = openOrders.reduce((acc, d) => {
+      const found =
+        d.side === 'sell'
+          ? acc.find(
+              (a) => a.asset === d.marketName.split('/')[0] && a.side === d.side
+            )
+          : acc.find(
+              (a) => a.asset === d.marketName.split('/')[1] && a.side === d.side
+            )
+      const val = d.size
+      if (!found) {
+        d.side === 'sell'
+          ? acc.push({
+              asset: d.marketName.split('/')[0],
+              side: d.side,
+              size: d.size,
+            })
+          : acc.push({
+              asset: d.marketName.split('/')[1],
+              side: d.side,
+              size: d.size,
+            })
+      } else {
+        found.size = found.size + val
+      }
+      return acc
+    }, [])
+    const hasOpenOrder = sum.find((order) => order.asset === symbol)
+    if (hasOpenOrder) {
+      return hasOpenOrder.size
+    } else {
+      return 0
+    }
+  }
 
   return selectedMarginAccount ? (
     <>
-      <div className="flex items-center justify-between pb-4">
-        <div className="text-th-fgd-1 text-lg">Your Assets</div>
+      <div className="sm:flex sm:items-center sm:justify-between pb-4">
+        <div className="pb-2 sm:pb-0 text-th-fgd-1 text-lg">Your Assets</div>
         <div className="border border-th-green flex items-center justify-between p-2 rounded">
           <div className="pr-4 text-xs text-th-fgd-3">Total Asset Value:</div>
           <span>${getAccountValue()}</span>
@@ -84,7 +110,7 @@ export default function AccountAssets({ symbols }) {
                 Asset
               </Th>
               <Th scope="col" className={`px-6 py-3 text-left font-normal`}>
-                Balance
+                Available
               </Th>
               <Th scope="col" className={`px-6 py-3 text-left font-normal`}>
                 In Orders
@@ -129,17 +155,22 @@ export default function AccountAssets({ symbols }) {
                 <Td
                   className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
                 >
-                  0
+                  {getOpenOrdersSize(name).toFixed(tokenPrecision[name])}
                 </Td>
                 <Td
                   className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
                 >
                   $
                   {(
-                    floorToDecimal(
-                      selectedMarginAccount.getUiDeposit(selectedMangoGroup, i),
-                      tokenPrecision[name]
-                    ) * prices[i]
+                    (getOpenOrdersSize(name) +
+                      floorToDecimal(
+                        selectedMarginAccount.getUiDeposit(
+                          selectedMangoGroup,
+                          i
+                        ),
+                        tokenPrecision[name]
+                      )) *
+                    prices[i]
                   ).toFixed(2)}
                 </Td>
                 <Td
