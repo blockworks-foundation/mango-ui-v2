@@ -4,7 +4,7 @@ import { PublicKey } from '@solana/web3.js'
 import useMangoStore from '../stores/useMangoStore'
 import { IDS } from '@blockworks-foundation/mango-client'
 
-const formatTokenMints = (symbols: { [name: string]: string }) => {
+export const formatTokenMints = (symbols: { [name: string]: string }) => {
   return Object.entries(symbols).map(([name, address]) => {
     return {
       address: new PublicKey(address),
