@@ -303,7 +303,6 @@ const DepositModal: FunctionComponent<DepositModalProps> = ({
       {!showSimulation ? (
         <>
           <Modal.Header>
-            <div className={`text-th-fgd-3 flex-shrink invisible w-5`}>X</div>
             <ElementTitle noMarignBottom>Deposit Funds</ElementTitle>
           </Modal.Header>
           {tokenSymbol && !selectedAccount ? (

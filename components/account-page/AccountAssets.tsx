@@ -2,12 +2,15 @@ import { useCallback, useState } from 'react'
 import { Table, Thead, Tbody, Tr, Th, Td } from 'react-super-responsive-table'
 import useMangoStore from '../../stores/useMangoStore'
 import { useOpenOrders } from '../../hooks/useOpenOrders'
+import { useBalances } from '../../hooks/useBalances'
 import { floorToDecimal, tokenPrecision } from '../../utils/index'
 import DepositModal from '../DepositModal'
 import WithdrawModal from '../WithdrawModal'
 import Button from '../Button'
 
 export default function AccountAssets({ symbols }) {
+  const balances = useBalances()
+  console.log(balances)
   const selectedMangoGroup = useMangoStore((s) => s.selectedMangoGroup.current)
   const selectedMarginAccount = useMangoStore(
     (s) => s.selectedMarginAccount.current

@@ -7,12 +7,17 @@ import FloatingElement from './FloatingElement'
 import { ElementTitle } from './styles'
 import useMangoStore from '../stores/useMangoStore'
 import useMarketList from '../hooks/useMarketList'
-import { floorToDecimal, tokenPrecision } from '../utils/index'
+import {
+  abbreviateAddress,
+  floorToDecimal,
+  tokenPrecision,
+} from '../utils/index'
 import DepositModal from './DepositModal'
 import WithdrawModal from './WithdrawModal'
 import BorrowModal from './BorrowModal'
-import Button from './Button'
+import Button, { LinkButton } from './Button'
 import Tooltip from './Tooltip'
+import AccountsModal from './AccountsModal'
 import MarginAccountSelect from './MarginAccountSelect'
 import { MarginAccount } from '@blockworks-foundation/mango-client'
 
@@ -32,6 +37,7 @@ export default function MarginBalances() {
   const [showDepositModal, setShowDepositModal] = useState(false)
   const [showWithdrawModal, setShowWithdrawModal] = useState(false)
   const [showBorrowModal, setShowBorrowModal] = useState(false)
+  const [showAccountsModal, setShowAccountsModal] = useState(false)
 
   const handleCloseDeposit = useCallback(() => {
     setShowDepositModal(false)
@@ -51,33 +57,25 @@ export default function MarginBalances() {
     })
   }
 
+  const handleCloseAccounts = useCallback(() => {
+    setShowAccountsModal(false)
+  }, [])
+
   return (
     <>
       <FloatingElement>
-        <ElementTitle>
-          Margin Account
-          <Tooltip
-            content={
-              <AddressTooltip
-                owner={selectedMarginAccount?.owner.toString()}
-                marginAccount={selectedMarginAccount?.publicKey.toString()}
-              />
-            }
+        <ElementTitle noMarignBottom>Margin Account</ElementTitle>
+
+        <div className="flex justify-center pb-4 pt-2 text-center">
+          <div className="text-th-fgd-3 text-xs">
+            {abbreviateAddress(selectedMarginAccount?.publicKey)}
+          </div>
+          <LinkButton
+            className="ml-2 text-center text-xs text-th-primary"
+            onClick={() => setShowAccountsModal(true)}
           >
-            <div>
-              <InformationCircleIcon
-                className={`h-5 w-5 ml-2 text-th-primary cursor-help`}
-              />
-            </div>
-          </Tooltip>
-        </ElementTitle>
-        <div>
-          {marginAccounts.length > 1 ? (
-            <MarginAccountSelect
-              onChange={handleMarginAccountChange}
-              className="mb-2"
-            />
-          ) : null}
+            Change
+          </LinkButton>
         </div>
         {selectedMangoGroup ? (
           <table className={`min-w-full`}>
@@ -163,7 +161,7 @@ export default function MarginBalances() {
           </Button>
           <Button
             onClick={() => setShowWithdrawModal(true)}
-            className="ml-2 w-1/3"
+            className="ml-3 w-1/3"
             disabled={
               !connected || !selectedMarginAccount || loadingMarginAccount
             }
@@ -172,16 +170,13 @@ export default function MarginBalances() {
           </Button>
           <Button
             onClick={() => setShowBorrowModal(true)}
-            className="ml-2 w-1/3"
+            className="ml-3 w-1/3"
             disabled={
               !connected || !selectedMarginAccount || loadingMarginAccount
             }
           >
             <span>Borrow</span>
           </Button>
-        </div>
-        <div className={`text-center mt-5 text-th-fgd-3 text-xs`}>
-          Settle funds in the Balances tab
         </div>
       </FloatingElement>
       {showDepositModal && (
@@ -196,6 +191,12 @@ export default function MarginBalances() {
       {showBorrowModal && (
         <BorrowModal isOpen={showBorrowModal} onClose={handleCloseBorrow} />
       )}
+      {showAccountsModal ? (
+        <AccountsModal
+          onClose={handleCloseAccounts}
+          isOpen={showAccountsModal}
+        />
+      ) : null}
     </>
   )
 }

@@ -17,6 +17,7 @@ import Button, { LinkButton } from '../components/Button'
 import AlertsModal from '../components/AlertsModal'
 import AlertItem from '../components/AlertItem'
 import PageBodyContainer from '../components/PageBodyContainer'
+import EmptyState from '../components/EmptyState'
 import { abbreviateAddress } from '../utils'
 
 const relativeTime = require('dayjs/plugin/relativeTime')
@@ -189,13 +190,11 @@ export default function Alerts() {
               />
             </>
           ) : (
-            <div className="flex flex-col items-center text-th-fgd-1 px-4 pb-2 rounded-lg">
-              <LinkIcon className="w-6 h-6 mb-1 text-th-primary" />
-              <div className="font-bold text-lg pb-1">Connect Wallet</div>
-              <p className="mb-0 text-center">
-                Connect your wallet to view and create liquidation alerts.
-              </p>
-            </div>
+            <EmptyState
+              desc="Connect a wallet to view and create liquidation alerts"
+              icon={<LinkIcon />}
+              title="Connect Wallet"
+            />
           )}
         </div>
       </PageBodyContainer>

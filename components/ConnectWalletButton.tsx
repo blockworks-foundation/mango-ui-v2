@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import styled from '@emotion/styled'
 import useMangoStore from '../stores/useMangoStore'
 import { Menu } from '@headlessui/react'
@@ -6,61 +6,27 @@ import {
   CurrencyDollarIcon,
   DuplicateIcon,
   LogoutIcon,
-  PhotographIcon,
 } from '@heroicons/react/outline'
 import { WALLET_PROVIDERS, DEFAULT_PROVIDER } from '../hooks/useWallet'
 import useLocalStorageState from '../hooks/useLocalStorageState'
 import { abbreviateAddress, copyToClipboard } from '../utils'
 import WalletSelect from './WalletSelect'
 import { WalletIcon, ProfileIcon } from './icons'
+import AccountsModal from './AccountsModal'
 
 const StyledWalletTypeLabel = styled.div`
   font-size: 0.65rem;
 `
 
-// const WALLET_OPTIONS = [
-//   { name: 'Accounts', icon: <CurrencyDollarIcon /> },
-//   { name: 'Copy address', icon: <DuplicateIcon /> },
-//   { name: 'Disconnect', icon: <LogoutIcon /> },
-// ]
-
 const ConnectWalletButton = () => {
   const wallet = useMangoStore((s) => s.wallet.current)
   const connected = useMangoStore((s) => s.wallet.connected)
   const set = useMangoStore((s) => s.set)
-  const [isCopied, setIsCopied] = useState(false)
+  const [showAccountsModal, setShowAccountsModal] = useState(false)
   const [savedProviderUrl] = useLocalStorageState(
     'walletProvider',
     DEFAULT_PROVIDER.url
   )
-
-  const WALLET_OPTIONS = [
-    { name: 'Accounts', icon: <CurrencyDollarIcon /> },
-    { name: 'Copy address', icon: <DuplicateIcon /> },
-    {
-      name: 'Disconnect',
-      desc: connected ? abbreviateAddress(wallet.publicKey) : null,
-      icon: <LogoutIcon />,
-    },
-  ]
-
-  useEffect(() => {
-    if (isCopied) {
-      const timer = setTimeout(() => {
-        setIsCopied(false)
-      }, 2000)
-      return () => clearTimeout(timer)
-    }
-  }, [isCopied])
-
-  const handleWalletMenu = (option) => {
-    if (option === 'Copy address') {
-      copyToClipboard(wallet.publicKey)
-      setIsCopied(true)
-    } else {
-      wallet.disconnect()
-    }
-  }
 
   const handleWalletConect = () => {
     wallet.connect()
@@ -69,8 +35,12 @@ const ConnectWalletButton = () => {
     })
   }
 
+  const handleCloseAccounts = useCallback(() => {
+    setShowAccountsModal(false)
+  }, [])
+
   return (
-    <div>
+    <>
       {connected && wallet?.publicKey ? (
         <Menu>
           {({ open }) => (
@@ -79,30 +49,44 @@ const ConnectWalletButton = () => {
                 <ProfileIcon className="fill-current h-5 w-5" />
               </Menu.Button>
               <Menu.Items className="bg-th-bkg-1 mt-2 p-1 absolute right-0 shadow-lg outline-none rounded-md w-48 z-20">
-                <>
-                  {WALLET_OPTIONS.map(({ name, desc, icon }) => (
-                    <Menu.Item key={name}>
-                      <button
-                        className="flex flex-row font-normal items-center rounded-none w-full p-2 hover:bg-th-bkg-2 hover:cursor-pointer focus:outline-none"
-                        onClick={() => handleWalletMenu(name)}
-                      >
-                        <div className="w-4 h-4">{icon}</div>
-                        <div className="pl-2 text-left">
-                          {name}
-                          {desc ? (
-                            <div className="text-th-fgd-4 text-xs">{desc}</div>
-                          ) : null}
-                        </div>
-                      </button>
-                    </Menu.Item>
-                  ))}
-                </>
+                <Menu.Item>
+                  <button
+                    className="flex flex-row font-normal items-center rounded-none w-full p-2 hover:bg-th-bkg-2 hover:cursor-pointer focus:outline-none"
+                    onClick={() => setShowAccountsModal(true)}
+                  >
+                    <CurrencyDollarIcon className="h-4 w-4" />
+                    <div className="pl-2 text-left">Accounts</div>
+                  </button>
+                </Menu.Item>
+                <Menu.Item>
+                  <button
+                    className="flex flex-row font-normal items-center rounded-none w-full p-2 hover:bg-th-bkg-2 hover:cursor-pointer focus:outline-none"
+                    onClick={() => copyToClipboard(wallet?.publicKey)}
+                  >
+                    <DuplicateIcon className="h-4 w-4" />
+                    <div className="pl-2 text-left">Copy address</div>
+                  </button>
+                </Menu.Item>
+                <Menu.Item>
+                  <button
+                    className="flex flex-row font-normal items-center rounded-none w-full p-2 hover:bg-th-bkg-2 hover:cursor-pointer focus:outline-none"
+                    onClick={() => wallet.disconnect()}
+                  >
+                    <LogoutIcon className="h-4 w-4" />
+                    <div className="pl-2 text-left">
+                      <div className="pb-0.5">Disconnect</div>
+                      <div className="text-th-fgd-4 text-xs">
+                        {abbreviateAddress(wallet?.publicKey)}
+                      </div>
+                    </div>
+                  </button>
+                </Menu.Item>
               </Menu.Items>
             </div>
           )}
         </Menu>
       ) : (
-        <div className="bg-th-bkg-1 h-full flex divide-x divide-th-bkg-3 justify-between">
+        <div className="bg-th-bkg-1 h-14 flex divide-x divide-th-bkg-3 justify-between">
           <button
             onClick={handleWalletConect}
             disabled={!wallet}
@@ -126,7 +110,13 @@ const ConnectWalletButton = () => {
           </div>
         </div>
       )}
-    </div>
+      {showAccountsModal ? (
+        <AccountsModal
+          onClose={handleCloseAccounts}
+          isOpen={showAccountsModal}
+        />
+      ) : null}
+    </>
   )
 }
 

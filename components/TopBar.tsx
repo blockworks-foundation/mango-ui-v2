@@ -39,7 +39,7 @@ const TopBar = () => {
                 <Menu>
                   {({ open }) => (
                     <div className="relative">
-                      <Menu.Button className="flex items-center focus:outline-none">
+                      <Menu.Button className="flex items-center hover:text-th-primary focus:outline-none">
                         More
                         <div className="pl-1">
                           {open ? (

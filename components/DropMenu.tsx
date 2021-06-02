@@ -5,6 +5,7 @@ import Tooltip from './Tooltip'
 type DropMenuProps = {
   button: ReactNode
   buttonClassName?: string
+  disabled?: boolean
   onChange: (...args: any[]) => any
   options: Array<any>
   toolTipContent?: string
@@ -14,6 +15,7 @@ type DropMenuProps = {
 const DropMenu: FunctionComponent<DropMenuProps> = ({
   button,
   buttonClassName,
+  disabled,
   value,
   onChange,
   options,
@@ -24,7 +26,10 @@ const DropMenu: FunctionComponent<DropMenuProps> = ({
       <Listbox value={value} onChange={onChange}>
         {({ open }) => (
           <>
-            <Listbox.Button className={`${buttonClassName} default-transition`}>
+            <Listbox.Button
+              className={`${buttonClassName} default-transition`}
+              disabled={disabled}
+            >
               {toolTipContent && !open ? (
                 <Tooltip content={toolTipContent} className="text-xs py-1">
                   {button}
