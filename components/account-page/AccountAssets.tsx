@@ -1,14 +1,13 @@
 import { useCallback, useState } from 'react'
 import { Table, Thead, Tbody, Tr, Th, Td } from 'react-super-responsive-table'
 import useMangoStore from '../../stores/useMangoStore'
-import { useOpenOrders } from '../../hooks/useOpenOrders'
 import { useBalances } from '../../hooks/useBalances'
-import { floorToDecimal, tokenPrecision } from '../../utils/index'
+import { tokenPrecision } from '../../utils/index'
 import DepositModal from '../DepositModal'
 import WithdrawModal from '../WithdrawModal'
 import Button from '../Button'
 
-export default function AccountAssets({ symbols }) {
+export default function AccountAssets() {
   const balances = useBalances()
   console.log(balances)
   const selectedMangoGroup = useMangoStore((s) => s.selectedMangoGroup.current)
@@ -18,7 +17,6 @@ export default function AccountAssets({ symbols }) {
   const loadingMarginAccount = useMangoStore(
     (s) => s.selectedMarginAccount.initialLoad
   )
-  const openOrders = useOpenOrders()
   const connected = useMangoStore((s) => s.wallet.connected)
 
   const prices = useMangoStore((s) => s.selectedMangoGroup.prices)
@@ -46,66 +44,28 @@ export default function AccountAssets({ symbols }) {
     setShowDepositModal(true)
   }
 
-  const getAccountValue = () =>
-    Object.entries(symbols)
-      .map(
-        ([name], i) =>
-          (floorToDecimal(
-            selectedMarginAccount.getUiDeposit(selectedMangoGroup, i),
-            tokenPrecision[name]
-          ) +
-            getOpenOrdersSize(name)) *
-          prices[i]
-      )
-      .reduce((a, b) => a + b, 0)
-      .toFixed(2)
-
-  const getOpenOrdersSize = (symbol) => {
-    const sum = openOrders.reduce((acc, d) => {
-      const found =
-        d.side === 'sell'
-          ? acc.find(
-              (a) => a.asset === d.marketName.split('/')[0] && a.side === d.side
-            )
-          : acc.find(
-              (a) => a.asset === d.marketName.split('/')[1] && a.side === d.side
-            )
-      const val = d.size
-      if (!found) {
-        d.side === 'sell'
-          ? acc.push({
-              asset: d.marketName.split('/')[0],
-              side: d.side,
-              size: d.size,
-            })
-          : acc.push({
-              asset: d.marketName.split('/')[1],
-              side: d.side,
-              size: d.size,
-            })
-      } else {
-        found.size = found.size + val
-      }
-      return acc
-    }, [])
-    const hasOpenOrder = sum.find((order) => order.asset === symbol)
-    if (hasOpenOrder) {
-      return hasOpenOrder.size
-    } else {
-      return 0
-    }
-  }
-
   return selectedMarginAccount ? (
     <>
       <div className="sm:flex sm:items-center sm:justify-between pb-4">
         <div className="pb-2 sm:pb-0 text-th-fgd-1 text-lg">Your Assets</div>
-        <div className="border border-th-green flex items-center justify-between p-2 rounded">
-          <div className="pr-4 text-xs text-th-fgd-3">Total Asset Value:</div>
-          <span>${getAccountValue()}</span>
-        </div>
+        {balances.length > 0 ? (
+          <div className="border border-th-green flex items-center justify-between p-2 rounded">
+            <div className="pr-4 text-xs text-th-fgd-3">Total Asset Value:</div>
+            <span>
+              $
+              {balances
+                .reduce(
+                  (acc, d, i) =>
+                    acc +
+                    (d.marginDeposits + d.orders + d.unsettled) * prices[i],
+                  0
+                )
+                .toFixed(2)}
+            </span>
+          </div>
+        ) : null}
       </div>
-      {selectedMangoGroup && selectedMarginAccount ? (
+      {selectedMangoGroup && balances.length > 0 ? (
         <Table className="min-w-full divide-y divide-th-bkg-2">
           <Thead>
             <Tr className="text-th-fgd-3 text-xs">
@@ -119,6 +79,9 @@ export default function AccountAssets({ symbols }) {
                 In Orders
               </Th>
               <Th scope="col" className={`px-6 py-3 text-left font-normal`}>
+                Unsettled
+              </Th>
+              <Th scope="col" className={`px-6 py-3 text-left font-normal`}>
                 Value
               </Th>
               <Th scope="col" className="px-6 py-3 text-left font-normal">
@@ -127,7 +90,7 @@ export default function AccountAssets({ symbols }) {
             </Tr>
           </Thead>
           <Tbody>
-            {Object.entries(symbols).map(([name], i) => (
+            {balances.map((bal, i) => (
               <Tr
                 key={`${i}`}
                 className={`border-b border-th-bkg-3
@@ -142,37 +105,33 @@ export default function AccountAssets({ symbols }) {
                       alt=""
                       width="20"
                       height="20"
-                      src={`/assets/icons/${name.toLowerCase()}.svg`}
+                      src={`/assets/icons/${bal.coin.toLowerCase()}.svg`}
                       className={`mr-2.5`}
                     />
-                    <div>{name}</div>
+                    <div>{bal.coin}</div>
                   </div>
                 </Td>
                 <Td
                   className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
                 >
-                  {selectedMarginAccount
-                    .getUiDeposit(selectedMangoGroup, i)
-                    .toFixed(tokenPrecision[name])}
+                  {bal.marginDeposits.toFixed(tokenPrecision[bal.coin])}
                 </Td>
                 <Td
                   className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
                 >
-                  {getOpenOrdersSize(name).toFixed(tokenPrecision[name])}
+                  {bal.orders.toFixed(tokenPrecision[bal.coin])}
+                </Td>
+                <Td
+                  className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
+                >
+                  {bal.unsettled.toFixed(tokenPrecision[bal.coin])}
                 </Td>
                 <Td
                   className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
                 >
                   $
                   {(
-                    (getOpenOrdersSize(name) +
-                      floorToDecimal(
-                        selectedMarginAccount.getUiDeposit(
-                          selectedMangoGroup,
-                          i
-                        ),
-                        tokenPrecision[name]
-                      )) *
+                    (bal.marginDeposits + bal.orders + bal.unsettled) *
                     prices[i]
                   ).toFixed(2)}
                 </Td>
@@ -188,14 +147,14 @@ export default function AccountAssets({ symbols }) {
                 >
                   <div className={`flex justify-end`}>
                     <Button
-                      onClick={() => handleShowDeposit(name)}
+                      onClick={() => handleShowDeposit(bal.coin)}
                       className="text-xs pt-0 pb-0 h-8 pl-3 pr-3"
                       disabled={!connected || loadingMarginAccount}
                     >
                       <span>Deposit</span>
                     </Button>
                     <Button
-                      onClick={() => handleShowWithdraw(name)}
+                      onClick={() => handleShowWithdraw(bal.coin)}
                       className="ml-3 text-xs pt-0 pb-0 h-8 pl-3 pr-3"
                       disabled={!connected || loadingMarginAccount}
                     >
@@ -207,7 +166,13 @@ export default function AccountAssets({ symbols }) {
             ))}
           </Tbody>
         </Table>
-      ) : null}
+      ) : (
+        <div
+          className={`w-full text-center py-6 bg-th-bkg-1 text-th-fgd-3 rounded-md`}
+        >
+          No assets found.
+        </div>
+      )}
       {showDepositModal && (
         <DepositModal
           isOpen={showDepositModal}

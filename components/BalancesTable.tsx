@@ -59,11 +59,6 @@ const BalancesTable = () => {
     <div className={`flex flex-col py-6`}>
       <div className={`-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8`}>
         <div className={`align-middle inline-block min-w-full sm:px-6 lg:px-8`}>
-          <ElementTitle>
-            <div className="pr-1">{marketName.split('/')[0]}</div>
-            <span className="text-th-fgd-4">/</span>
-            <div className="pl-1">{marketName.split('/')[1]}</div>
-          </ElementTitle>
           {balances.length &&
           (balances.find(({ unsettled }) => unsettled > 0) ||
             balances.find(

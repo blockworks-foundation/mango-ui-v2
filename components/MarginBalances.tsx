@@ -1,8 +1,6 @@
 import { useCallback, useState } from 'react'
-import {
-  ExternalLinkIcon,
-  InformationCircleIcon,
-} from '@heroicons/react/outline'
+import Link from 'next/link'
+import { ExternalLinkIcon, CurrencyDollarIcon } from '@heroicons/react/outline'
 import FloatingElement from './FloatingElement'
 import { ElementTitle } from './styles'
 import useMangoStore from '../stores/useMangoStore'
@@ -15,15 +13,13 @@ import {
 import DepositModal from './DepositModal'
 import WithdrawModal from './WithdrawModal'
 import BorrowModal from './BorrowModal'
-import Button, { LinkButton } from './Button'
+import Button from './Button'
 import Tooltip from './Tooltip'
 import AccountsModal from './AccountsModal'
-import MarginAccountSelect from './MarginAccountSelect'
 import { MarginAccount } from '@blockworks-foundation/mango-client'
 
 export default function MarginBalances() {
   const setMangoStore = useMangoStore((s) => s.set)
-  const marginAccounts = useMangoStore((s) => s.marginAccounts)
   const selectedMangoGroup = useMangoStore((s) => s.selectedMangoGroup.current)
   const selectedMarginAccount = useMangoStore(
     (s) => s.selectedMarginAccount.current
@@ -51,12 +47,6 @@ export default function MarginBalances() {
     setShowBorrowModal(false)
   }, [])
 
-  const handleMarginAccountChange = (marginAccount: MarginAccount) => {
-    setMangoStore((state) => {
-      state.selectedMarginAccount.current = marginAccount
-    })
-  }
-
   const handleCloseAccounts = useCallback(() => {
     setShowAccountsModal(false)
   }, [])
@@ -64,18 +54,29 @@ export default function MarginBalances() {
   return (
     <>
       <FloatingElement>
-        <ElementTitle noMarignBottom>Margin Account</ElementTitle>
-
-        <div className="flex justify-center pb-4 pt-2 text-center">
-          <div className="text-th-fgd-3 text-xs">
-            {abbreviateAddress(selectedMarginAccount?.publicKey)}
+        <div className="flex justify-between pb-3">
+          <div className="w-8 h-8" />
+          <div className="flex flex-col items-center">
+            <ElementTitle noMarignBottom>Margin Account</ElementTitle>
+            {selectedMarginAccount ? (
+              <Link href={'/account'}>
+                <a className="pt-1 text-th-fgd-3 text-xs underline hover:no-underline">
+                  {abbreviateAddress(selectedMarginAccount?.publicKey)}
+                </a>
+              </Link>
+            ) : null}
           </div>
-          <LinkButton
-            className="ml-2 text-center text-xs text-th-primary"
-            onClick={() => setShowAccountsModal(true)}
-          >
-            Change
-          </LinkButton>
+          <div className="flex relative">
+            <Tooltip content={'Accounts'} className="text-xs py-1">
+              <button
+                disabled={!connected}
+                onClick={() => setShowAccountsModal(true)}
+                className="flex items-center justify-center rounded-full bg-th-bkg-3 w-8 h-8 hover:text-th-primary focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <CurrencyDollarIcon className="w-5 h-5" />
+              </button>
+            </Tooltip>
+          </div>
         </div>
         {selectedMangoGroup ? (
           <table className={`min-w-full`}>
@@ -197,61 +198,6 @@ export default function MarginBalances() {
           isOpen={showAccountsModal}
         />
       ) : null}
-    </>
-  )
-}
-
-const AddressTooltip = ({
-  owner,
-  marginAccount,
-}: {
-  owner?: string
-  marginAccount?: string
-}) => {
-  return (
-    <>
-      {owner && marginAccount ? (
-        <>
-          <div className={`flex flex-nowrap text-th-fgd-3`}>
-            Margin Account:
-            <a
-              className="text-th-fgd-1 default-transition hover:text-th-primary"
-              href={'https://explorer.solana.com/address/' + marginAccount}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <div className={`ml-2 flex items-center`}>
-                <span className={`underline`}>
-                  {marginAccount.toString().substr(0, 5) +
-                    '...' +
-                    marginAccount.toString().substr(-5)}
-                </span>
-                <ExternalLinkIcon className={`h-4 w-4 ml-1`} />
-              </div>
-            </a>
-          </div>
-          <div className={`flex flex-nowrap text-th-fgd-3 pt-2`}>
-            Account Owner:
-            <a
-              className="text-th-fgd-1 default-transition hover:text-th-primary"
-              href={'https://explorer.solana.com/address/' + owner}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <div className={`ml-2 flex items-center`}>
-                <span className={`underline`}>
-                  {owner.toString().substr(0, 5) +
-                    '...' +
-                    owner.toString().substr(-5)}
-                </span>
-                <ExternalLinkIcon className={`h-4 w-4 ml-1`} />
-              </div>
-            </a>
-          </div>
-        </>
-      ) : (
-        'Connect a wallet and deposit funds to start trading'
-      )}
     </>
   )
 }

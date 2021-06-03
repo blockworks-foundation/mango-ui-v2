@@ -249,8 +249,14 @@ const useMangoStore = create<MangoStore>((set, get) => ({
         )
         .then((marginAccounts) => {
           if (marginAccounts.length > 0) {
+            const sortedAccounts = marginAccounts
+              .slice()
+              .sort(
+                (a, b) =>
+                  (a.publicKey.toBase58() > b.publicKey.toBase58() && 1) || -1
+              )
             set((state) => {
-              state.marginAccounts = marginAccounts
+              state.marginAccounts = sortedAccounts
               if (state.selectedMarginAccount.current) {
                 state.selectedMarginAccount.current = marginAccounts.find(
                   (ma) =>
@@ -259,7 +265,7 @@ const useMangoStore = create<MangoStore>((set, get) => ({
                     )
                 )
               } else {
-                state.selectedMarginAccount.current = marginAccounts[0]
+                state.selectedMarginAccount.current = sortedAccounts[0]
               }
             })
           }

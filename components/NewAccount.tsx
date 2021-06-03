@@ -1,19 +1,9 @@
 import React, { FunctionComponent, useEffect, useMemo, useState } from 'react'
-import {
-  ExclamationCircleIcon,
-  InformationCircleIcon,
-} from '@heroicons/react/outline'
-import {
-  ChevronLeftIcon,
-  ChevronDownIcon,
-  ChevronUpIcon,
-} from '@heroicons/react/solid'
+import { ExclamationCircleIcon } from '@heroicons/react/outline'
 import {
   nativeToUi,
   sleep,
 } from '@blockworks-foundation/mango-client/lib/utils'
-import { MarginAccount, uiToNative } from '@blockworks-foundation/mango-client'
-import Modal from './Modal'
 import Input from './Input'
 import AccountSelect from './AccountSelect'
 import { ElementTitle } from './styles'
@@ -25,7 +15,7 @@ import {
   trimDecimals,
 } from '../utils/index'
 import useConnection from '../hooks/useConnection'
-import { deposit, initMarginAccountAndDeposit } from '../utils/mango'
+import { initMarginAccountAndDeposit } from '../utils/mango'
 import { PublicKey } from '@solana/web3.js'
 import Loading from './Loading'
 import Button from './Button'
@@ -33,7 +23,7 @@ import Slider from './Slider'
 import { notify } from '../utils/notifications'
 
 interface NewAccountProps {
-  onAccountCreation?: () => void
+  onAccountCreation?: (x?) => void
 }
 
 const NewAccount: FunctionComponent<NewAccountProps> = ({
@@ -107,7 +97,7 @@ const NewAccount: FunctionComponent<NewAccountProps> = ({
         actions.fetchWalletBalances()
         actions.fetchMarginAccounts()
         setSubmitting(false)
-        onAccountCreation()
+        onAccountCreation(_response[0].publicKey)
       })
       .catch((err) => {
         setSubmitting(false)

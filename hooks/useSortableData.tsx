@@ -7,7 +7,6 @@ export const useSortableData = (items, config = null) => {
     let sortableItems = items ? [...items] : []
     if (sortConfig !== null) {
       sortableItems.sort((a, b) => {
-        console.log(a[sortConfig.key])
         if (!isNaN(a[sortConfig.key])) {
           return sortConfig.direction === 'ascending'
             ? a[sortConfig.key] - b[sortConfig.key]

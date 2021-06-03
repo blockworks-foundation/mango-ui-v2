@@ -3,6 +3,7 @@ import { Table, Thead, Tbody, Tr, Th, Td } from 'react-super-responsive-table'
 import useConnection from '../../hooks/useConnection'
 import useMangoStore from '../../stores/useMangoStore'
 import useMarketList from '../../hooks/useMarketList'
+import { useBalances } from '../../hooks/useBalances'
 import { notify } from '../../utils/notifications'
 import { sleep } from '../../utils'
 import { PublicKey } from '@solana/web3.js'
@@ -10,8 +11,10 @@ import { floorToDecimal, tokenPrecision } from '../../utils/index'
 import { settleBorrow } from '../../utils/mango'
 import BorrowModal from '../BorrowModal'
 import Button from '../Button'
+import AccountAssets from './AccountAssets'
 
-export default function AccountAssets() {
+export default function AccountBorrows() {
+  const balances = useBalances()
   const { programId, connection } = useConnection()
   const actions = useMangoStore((s) => s.actions)
   const selectedMangoGroup = useMangoStore((s) => s.selectedMangoGroup.current)
@@ -104,7 +107,12 @@ export default function AccountAssets() {
         <div className="pb-2 sm:pb-0 text-th-fgd-1 text-lg">Your Borrows</div>
         <div className="border border-th-red flex items-center justify-between p-2 rounded">
           <div className="pr-4 text-xs text-th-fgd-3">Total Borrow Value:</div>
-          <span>${getAccountBorrowValue()}</span>
+          <span>
+            $
+            {balances
+              .reduce((acc, d, i) => acc + d.borrows * prices[i], 0)
+              .toFixed(2)}
+          </span>
         </div>
       </div>
       {selectedMangoGroup ? (
@@ -127,78 +135,89 @@ export default function AccountAssets() {
               </Tr>
             </Thead>
             <Tbody>
-              {getAccountBorrows().map((asset, i) => (
-                <Tr
-                  key={`${i}`}
-                  className={`border-b border-th-bkg-3
+              {balances
+                .filter((assets) => assets.borrows > 0)
+                .map((asset, i) => (
+                  <Tr
+                    key={`${i}`}
+                    className={`border-b border-th-bkg-3
                   ${i % 2 === 0 ? `bg-th-bkg-3` : `bg-th-bkg-2`}
                 `}
-                >
-                  <Td
-                    className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
                   >
-                    <div className="flex items-center">
-                      <img
-                        alt=""
-                        width="20"
-                        height="20"
-                        src={`/assets/icons/${asset.name.toLowerCase()}.svg`}
-                        className={`mr-2.5`}
-                      />
-                      <div>{asset.name}</div>
-                    </div>
-                  </Td>
-                  <Td
-                    className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
-                  >
-                    {asset.bal.toFixed(tokenPrecision[asset.name])}
-                  </Td>
-                  <Td
-                    className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
-                  >
-                    $
-                    {(asset.bal * prices[asset.index]).toFixed(
-                      tokenPrecision[asset.name]
-                    )}
-                  </Td>
-                  <Td
-                    className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
-                  >
-                    <span className={`text-th-green`}>
+                    <Td
+                      className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
+                    >
+                      <div className="flex items-center">
+                        <img
+                          alt=""
+                          width="20"
+                          height="20"
+                          src={`/assets/icons/${asset.coin.toLowerCase()}.svg`}
+                          className={`mr-2.5`}
+                        />
+                        <div>{asset.coin}</div>
+                      </div>
+                    </Td>
+                    <Td
+                      className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
+                    >
+                      {asset.borrows.toFixed(tokenPrecision[asset.coin])}
+                    </Td>
+                    <Td
+                      className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
+                    >
+                      $
                       {(
-                        selectedMangoGroup.getBorrowRate(asset.index) * 100
-                      ).toFixed(2)}
-                      %
-                    </span>
-                  </Td>
-                  <Td
-                    className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
-                  >
-                    <div className={`flex justify-end`}>
-                      <Button
-                        onClick={() =>
-                          handleSettleBorrow(asset.name, asset.bal)
-                        }
-                        className="text-xs pt-0 pb-0 h-8 pl-3 pr-3"
-                        disabled={
-                          !connected ||
-                          !selectedMarginAccount ||
-                          loadingMarginAccount
-                        }
-                      >
-                        Settle
-                      </Button>
-                      <Button
-                        onClick={() => handleShowBorrow(asset)}
-                        className="ml-3 text-xs pt-0 pb-0 h-8 pl-3 pr-3"
-                        disabled={!connected || loadingMarginAccount}
-                      >
-                        Borrow
-                      </Button>
-                    </div>
-                  </Td>
-                </Tr>
-              ))}
+                        asset.borrows *
+                        prices[
+                          Object.keys(symbols).findIndex(
+                            (key) => key === asset.coin
+                          )
+                        ]
+                      ).toFixed(tokenPrecision[asset.coin])}
+                    </Td>
+                    <Td
+                      className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
+                    >
+                      <span className={`text-th-green`}>
+                        {(
+                          selectedMangoGroup.getBorrowRate(
+                            Object.keys(symbols).findIndex(
+                              (key) => key === asset.coin
+                            )
+                          ) * 100
+                        ).toFixed(2)}
+                        %
+                      </span>
+                    </Td>
+                    <Td
+                      className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
+                    >
+                      <div className={`flex justify-end`}>
+                        <Button
+                          onClick={() =>
+                            handleSettleBorrow(asset.coin, asset.borrows)
+                          }
+                          className="text-xs pt-0 pb-0 h-8 pl-3 pr-3"
+                          disabled={
+                            !connected ||
+                            !selectedMarginAccount ||
+                            loadingMarginAccount
+                          }
+                        >
+                          Settle
+                        </Button>
+                        <Button
+                          onClick={() => handleShowBorrow(asset.coin)}
+                          className="ml-3 text-xs pt-0 pb-0 h-8 pl-3 pr-3"
+                          disabled={!connected || loadingMarginAccount}
+                        >
+                          Borrow
+                        </Button>
+                      </div>
+                    </Td>
+                  </Tr>
+                ))}
             </Tbody>
           </Table>
         ) : (

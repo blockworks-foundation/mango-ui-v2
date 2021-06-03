@@ -104,34 +104,27 @@ export default function Alerts() {
                     </button>
                   )}
                 </RadioGroup.Option>
-                {marginAccounts
-                  .slice()
-                  .sort(
-                    (a, b) =>
-                      (a.publicKey.toBase58() > b.publicKey.toBase58() && 1) ||
-                      -1
-                  )
-                  .map((acc, i) => (
-                    <RadioGroup.Option
-                      value={acc.publicKey.toString()}
-                      className="focus:outline-none flex-1"
-                      key={i}
-                    >
-                      {({ checked }) => (
-                        <button
-                          className={`${
-                            checked ? 'bg-th-bkg-3' : ''
-                          } font-normal text-th-fgd-1  text-center py-1.5 h-full w-full rounded-none ${
-                            i === marginAccounts.length - 1
-                              ? 'rounded-r-md'
-                              : null
-                          } border-l border-th-fgd-4 hover:bg-th-bkg-3 focus:outline-none`}
-                        >
-                          {abbreviateAddress(acc.publicKey)}
-                        </button>
-                      )}
-                    </RadioGroup.Option>
-                  ))}
+                {marginAccounts.map((acc, i) => (
+                  <RadioGroup.Option
+                    value={acc.publicKey.toString()}
+                    className="focus:outline-none flex-1"
+                    key={i}
+                  >
+                    {({ checked }) => (
+                      <button
+                        className={`${
+                          checked ? 'bg-th-bkg-3' : ''
+                        } font-normal text-th-fgd-1  text-center py-1.5 h-full w-full rounded-none ${
+                          i === marginAccounts.length - 1
+                            ? 'rounded-r-md'
+                            : null
+                        } border-l border-th-fgd-4 hover:bg-th-bkg-3 focus:outline-none`}
+                      >
+                        {abbreviateAddress(acc.publicKey)}
+                      </button>
+                    )}
+                  </RadioGroup.Option>
+                ))}
               </RadioGroup>
             ) : null}
             <Button
