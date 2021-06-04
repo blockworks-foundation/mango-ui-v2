@@ -352,7 +352,7 @@ const WithdrawModal: FunctionComponent<WithdrawModalProps> = ({
             <div className="pb-2 text-th-fgd-1">Asset</div>
             <Select
               value={
-                withdrawTokenSymbol ? (
+                withdrawTokenSymbol && selectedMarginAccount ? (
                   <div className="flex items-center justify-between w-full">
                     <div className="flex items-center">
                       <img

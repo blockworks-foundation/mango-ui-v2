@@ -84,7 +84,8 @@ export default function MarginBalances() {
                 </Menu.Item>
                 <Menu.Item>
                   <button
-                    className="flex flex-row font-normal items-center rounded-none w-full p-2 hover:bg-th-bkg-2 hover:cursor-pointer focus:outline-none"
+                    className="flex flex-row font-normal items-center rounded-none w-full p-2 hover:bg-th-bkg-2 hover:cursor-pointer focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                    disabled={!selectedMarginAccount}
                     onClick={() => setShowBorrowModal(true)}
                   >
                     <div className="pl-2 text-left">Borrow</div>
@@ -100,7 +101,8 @@ export default function MarginBalances() {
                 </Menu.Item>
                 <Menu.Item>
                   <button
-                    className="flex flex-row font-normal items-center rounded-none w-full p-2 hover:bg-th-bkg-2 hover:cursor-pointer focus:outline-none"
+                    className="flex flex-row font-normal items-center rounded-none w-full p-2 hover:bg-th-bkg-2 hover:cursor-pointer focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                    disabled={!selectedMarginAccount}
                     onClick={() => setShowWithdrawModal(true)}
                   >
                     <div className="pl-2 text-left">Withdraw</div>
