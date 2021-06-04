@@ -51,7 +51,7 @@ const AccountOrders = () => {
 
   return (
     <>
-      <div className="pb-2.5 pt-1 text-th-fgd-1 text-lg">Open Orders</div>
+      <div className="pb-3.5 sm:pt-1 text-th-fgd-1 text-lg">Open Orders</div>
       <OpenOrdersTable />
     </>
   )

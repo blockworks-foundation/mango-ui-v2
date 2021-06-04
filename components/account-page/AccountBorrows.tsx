@@ -11,7 +11,7 @@ import { floorToDecimal, tokenPrecision } from '../../utils/index'
 import { settleBorrow } from '../../utils/mango'
 import BorrowModal from '../BorrowModal'
 import Button from '../Button'
-import AccountAssets from './AccountAssets'
+import DepositModal from '../DepositModal'
 
 export default function AccountBorrows() {
   const balances = useBalances()
@@ -30,12 +30,20 @@ export default function AccountBorrows() {
   const prices = useMangoStore((s) => s.selectedMangoGroup.prices)
 
   const [borrowSymbol, setBorrowSymbol] = useState('')
+  const [depositToSettle, setDepositToSettle] = useState(null)
   const [showBorrowModal, setShowBorrowModal] = useState(false)
+  const [showDepositModal, setShowDepositModal] = useState(false)
 
-  async function handleSettleBorrow(token, quantity) {
+  async function handleSettleBorrow(token, borrowQuantity, depositBalance) {
     const marginAccount = useMangoStore.getState().selectedMarginAccount.current
     const mangoGroup = useMangoStore.getState().selectedMangoGroup.current
     const wallet = useMangoStore.getState().wallet.current
+
+    if (borrowQuantity > depositBalance) {
+      const deficit = borrowQuantity - depositBalance
+      handleShowDeposit(token, deficit)
+      return
+    }
 
     try {
       await settleBorrow(
@@ -45,7 +53,7 @@ export default function AccountBorrows() {
         marginAccount,
         wallet,
         new PublicKey(symbols[token]),
-        Number(quantity)
+        Number(borrowQuantity)
       )
       await sleep(250)
       actions.fetchMarginAccounts()
@@ -71,35 +79,22 @@ export default function AccountBorrows() {
     setShowBorrowModal(false)
   }, [])
 
+  const handleCloseDeposit = useCallback(() => {
+    setDepositToSettle(null)
+    setShowDepositModal(false)
+  }, [])
+
   const handleShowBorrow = (symbol) => {
     setBorrowSymbol(symbol)
     setShowBorrowModal(true)
   }
 
-  // get the sum of all borrows
-  const getAccountBorrowValue = () =>
-    Object.entries(symbols)
-      .map(
-        ([name], i) =>
-          floorToDecimal(
-            selectedMarginAccount.getUiBorrow(selectedMangoGroup, i),
-            tokenPrecision[name]
-          ) * prices[i]
-      )
-      .reduce((a, b) => a + b, 0)
-      .toFixed(2)
+  const handleShowDeposit = (symbol, deficit) => {
+    setDepositToSettle({ symbol, deficit })
+    setShowDepositModal(true)
+  }
 
-  // get assets that already have borrow
-  const getAccountBorrows = () =>
-    Object.entries(symbols)
-      .map(([name], i) => {
-        return {
-          name: name,
-          bal: selectedMarginAccount.getUiBorrow(selectedMangoGroup, i),
-          index: i,
-        }
-      })
-      .filter((bal) => bal.bal > 0)
+  console.log(depositToSettle)
 
   return (
     <>
@@ -116,7 +111,7 @@ export default function AccountBorrows() {
         </div>
       </div>
       {selectedMangoGroup ? (
-        getAccountBorrows().length > 0 ? (
+        balances.find((b) => b.borrows > 0) ? (
           <Table className="min-w-full divide-y divide-th-bkg-2">
             <Thead>
               <Tr className="text-th-fgd-3 text-xs">
@@ -196,7 +191,11 @@ export default function AccountBorrows() {
                       <div className={`flex justify-end`}>
                         <Button
                           onClick={() =>
-                            handleSettleBorrow(asset.coin, asset.borrows)
+                            handleSettleBorrow(
+                              asset.coin,
+                              asset.borrows,
+                              asset.marginDeposits
+                            )
                           }
                           className="text-xs pt-0 pb-0 h-8 pl-3 pr-3"
                           disabled={
@@ -309,6 +308,14 @@ export default function AccountBorrows() {
           isOpen={showBorrowModal}
           onClose={handleCloseWithdraw}
           tokenSymbol={borrowSymbol}
+        />
+      )}
+      {showDepositModal && (
+        <DepositModal
+          isOpen={showDepositModal}
+          onClose={handleCloseDeposit}
+          settleDeficit={depositToSettle.deficit}
+          tokenSymbol={depositToSettle.symbol}
         />
       )}
     </>

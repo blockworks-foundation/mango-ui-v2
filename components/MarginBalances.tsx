@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react'
 import Link from 'next/link'
-import { ExternalLinkIcon, CurrencyDollarIcon } from '@heroicons/react/outline'
+import { Menu } from '@headlessui/react'
+import { DotsHorizontalIcon } from '@heroicons/react/outline'
 import FloatingElement from './FloatingElement'
 import { ElementTitle } from './styles'
 import useMangoStore from '../stores/useMangoStore'
@@ -16,10 +17,8 @@ import BorrowModal from './BorrowModal'
 import Button from './Button'
 import Tooltip from './Tooltip'
 import AccountsModal from './AccountsModal'
-import { MarginAccount } from '@blockworks-foundation/mango-client'
 
 export default function MarginBalances() {
-  const setMangoStore = useMangoStore((s) => s.set)
   const selectedMangoGroup = useMangoStore((s) => s.selectedMangoGroup.current)
   const selectedMarginAccount = useMangoStore(
     (s) => s.selectedMarginAccount.current
@@ -54,7 +53,7 @@ export default function MarginBalances() {
   return (
     <>
       <FloatingElement>
-        <div className="flex justify-between pb-3">
+        <div className="flex justify-between pb-5">
           <div className="w-8 h-8" />
           <div className="flex flex-col items-center">
             <ElementTitle noMarignBottom>Margin Account</ElementTitle>
@@ -66,17 +65,50 @@ export default function MarginBalances() {
               </Link>
             ) : null}
           </div>
-          <div className="flex relative">
-            <Tooltip content={'Accounts'} className="text-xs py-1">
-              <button
-                disabled={!connected}
-                onClick={() => setShowAccountsModal(true)}
+          <Menu>
+            <div className="relative h-full">
+              <Menu.Button
                 className="flex items-center justify-center rounded-full bg-th-bkg-3 w-8 h-8 hover:text-th-primary focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={!connected}
               >
-                <CurrencyDollarIcon className="w-5 h-5" />
-              </button>
-            </Tooltip>
-          </div>
+                <DotsHorizontalIcon className="w-5 h-5" />
+              </Menu.Button>
+              <Menu.Items className="bg-th-bkg-1 mt-2 p-1 absolute right-0 shadow-lg outline-none rounded-md w-48 z-20">
+                <Menu.Item>
+                  <button
+                    className="flex flex-row font-normal items-center rounded-none w-full p-2 hover:bg-th-bkg-2 hover:cursor-pointer focus:outline-none"
+                    onClick={() => setShowAccountsModal(true)}
+                  >
+                    <div className="pl-2 text-left">Change Account</div>
+                  </button>
+                </Menu.Item>
+                <Menu.Item>
+                  <button
+                    className="flex flex-row font-normal items-center rounded-none w-full p-2 hover:bg-th-bkg-2 hover:cursor-pointer focus:outline-none"
+                    onClick={() => setShowBorrowModal(true)}
+                  >
+                    <div className="pl-2 text-left">Borrow</div>
+                  </button>
+                </Menu.Item>
+                <Menu.Item>
+                  <button
+                    className="flex flex-row font-normal items-center rounded-none w-full p-2 hover:bg-th-bkg-2 hover:cursor-pointer focus:outline-none"
+                    onClick={() => setShowDepositModal(true)}
+                  >
+                    <div className="pl-2 text-left">Deposit</div>
+                  </button>
+                </Menu.Item>
+                <Menu.Item>
+                  <button
+                    className="flex flex-row font-normal items-center rounded-none w-full p-2 hover:bg-th-bkg-2 hover:cursor-pointer focus:outline-none"
+                    onClick={() => setShowWithdrawModal(true)}
+                  >
+                    <div className="pl-2 text-left">Withdraw</div>
+                  </button>
+                </Menu.Item>
+              </Menu.Items>
+            </div>
+          </Menu>
         </div>
         {selectedMangoGroup ? (
           <table className={`min-w-full`}>
@@ -101,7 +133,10 @@ export default function MarginBalances() {
                   scope="col"
                   className="flex-auto font-normal flex justify-end items-center"
                 >
-                  <Tooltip content="Deposit APR and Borrow APY">
+                  <Tooltip
+                    className="text-xs py-1"
+                    content="Deposit APR and Borrow APY"
+                  >
                     <div>Deposits / Borrows</div>
                   </Tooltip>
                 </th>
@@ -152,33 +187,6 @@ export default function MarginBalances() {
             </tbody>
           </table>
         ) : null}
-        <div className={`flex justify-center items-center mt-4`}>
-          <Button
-            onClick={() => setShowDepositModal(true)}
-            className="w-1/3"
-            disabled={!connected || loadingMarginAccount}
-          >
-            <span>Deposit</span>
-          </Button>
-          <Button
-            onClick={() => setShowWithdrawModal(true)}
-            className="ml-3 w-1/3"
-            disabled={
-              !connected || !selectedMarginAccount || loadingMarginAccount
-            }
-          >
-            <span>Withdraw</span>
-          </Button>
-          <Button
-            onClick={() => setShowBorrowModal(true)}
-            className="ml-3 w-1/3"
-            disabled={
-              !connected || !selectedMarginAccount || loadingMarginAccount
-            }
-          >
-            <span>Borrow</span>
-          </Button>
-        </div>
       </FloatingElement>
       {showDepositModal && (
         <DepositModal isOpen={showDepositModal} onClose={handleCloseDeposit} />

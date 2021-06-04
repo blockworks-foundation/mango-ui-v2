@@ -9,6 +9,7 @@ import {
 import useMangoStore from '../stores/useMangoStore'
 import { MarginAccount } from '@blockworks-foundation/mango-client'
 import { abbreviateAddress } from '../utils'
+import useLocalStorageState from '../hooks/useLocalStorageState'
 import Modal from './Modal'
 import { ElementTitle } from './styles'
 import Button, { LinkButton } from './Button'
@@ -32,8 +33,10 @@ const AccountsModal: FunctionComponent<AccountsModalProps> = ({
   const selectedMangoGroup = useMangoStore((s) => s.selectedMangoGroup.current)
   const prices = useMangoStore((s) => s.selectedMangoGroup.prices)
   const setMangoStore = useMangoStore((s) => s.set)
+  const [, setLastAccountViewed] = useLocalStorageState('lastAccountViewed')
 
   const handleMarginAccountChange = (marginAccount: MarginAccount) => {
+    setLastAccountViewed(marginAccount.publicKey.toString())
     setMangoStore((state) => {
       state.selectedMarginAccount.current = marginAccount
     })
@@ -60,6 +63,34 @@ const AccountsModal: FunctionComponent<AccountsModalProps> = ({
   const handleShowNewAccountForm = () => {
     setNewAccPublicKey(null)
     setShowNewAccountForm(true)
+  }
+
+  const getAccountInfo = (acc) => {
+    const accountEquity = acc
+      .computeValue(selectedMangoGroup, prices)
+      .toFixed(2)
+    let leverage = accountEquity
+      ? (1 / (acc.getCollateralRatio(selectedMangoGroup, prices) - 1)).toFixed(
+          2
+        )
+      : '∞'
+    return (
+      <div className="text-th-fgd-3 text-xs">
+        ${accountEquity}
+        <span className="px-1.5 text-th-fgd-4">|</span>
+        <span
+          className={
+            parseFloat(leverage) > 4
+              ? 'text-th-green'
+              : parseFloat(leverage) > 2
+              ? 'text-th-orange'
+              : 'text-th-green'
+          }
+        >
+          {leverage}x
+        </span>
+      </div>
+    )
   }
 
   return (
@@ -98,7 +129,7 @@ const AccountsModal: FunctionComponent<AccountsModalProps> = ({
                   <RadioGroup.Option
                     key={account.publicKey.toString()}
                     value={account}
-                    className={({ active, checked }) =>
+                    className={({ checked }) =>
                       `${
                         checked
                           ? 'bg-th-bkg-3 ring-1 ring-th-green ring-inset'
@@ -120,13 +151,7 @@ const AccountsModal: FunctionComponent<AccountsModalProps> = ({
                                   </div>
                                   {prices && selectedMangoGroup ? (
                                     <div className="text-th-fgd-3 text-xs">
-                                      $
-                                      {account
-                                        .computeValue(
-                                          selectedMangoGroup,
-                                          prices
-                                        )
-                                        .toFixed(2)}
+                                      {getAccountInfo(account)}
                                     </div>
                                   ) : null}
                                 </div>

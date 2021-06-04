@@ -43,47 +43,45 @@ const ConnectWalletButton = () => {
     <>
       {connected && wallet?.publicKey ? (
         <Menu>
-          {({ open }) => (
-            <div className="relative h-full">
-              <Menu.Button className="bg-th-fgd-4 flex items-center justify-center rounded-full w-9 h-9 text-th-fgd-2 focus:outline-none hover:bg-th-bkg-3 hover:text-th-fgd-3">
-                <ProfileIcon className="fill-current h-5 w-5" />
-              </Menu.Button>
-              <Menu.Items className="bg-th-bkg-1 mt-2 p-1 absolute right-0 shadow-lg outline-none rounded-md w-48 z-20">
-                <Menu.Item>
-                  <button
-                    className="flex flex-row font-normal items-center rounded-none w-full p-2 hover:bg-th-bkg-2 hover:cursor-pointer focus:outline-none"
-                    onClick={() => setShowAccountsModal(true)}
-                  >
-                    <CurrencyDollarIcon className="h-4 w-4" />
-                    <div className="pl-2 text-left">Accounts</div>
-                  </button>
-                </Menu.Item>
-                <Menu.Item>
-                  <button
-                    className="flex flex-row font-normal items-center rounded-none w-full p-2 hover:bg-th-bkg-2 hover:cursor-pointer focus:outline-none"
-                    onClick={() => copyToClipboard(wallet?.publicKey)}
-                  >
-                    <DuplicateIcon className="h-4 w-4" />
-                    <div className="pl-2 text-left">Copy address</div>
-                  </button>
-                </Menu.Item>
-                <Menu.Item>
-                  <button
-                    className="flex flex-row font-normal items-center rounded-none w-full p-2 hover:bg-th-bkg-2 hover:cursor-pointer focus:outline-none"
-                    onClick={() => wallet.disconnect()}
-                  >
-                    <LogoutIcon className="h-4 w-4" />
-                    <div className="pl-2 text-left">
-                      <div className="pb-0.5">Disconnect</div>
-                      <div className="text-th-fgd-4 text-xs">
-                        {abbreviateAddress(wallet?.publicKey)}
-                      </div>
+          <div className="relative h-full">
+            <Menu.Button className="bg-th-fgd-4 flex items-center justify-center rounded-full w-9 h-9 text-th-fgd-2 focus:outline-none hover:bg-th-bkg-3 hover:text-th-fgd-3">
+              <ProfileIcon className="fill-current h-5 w-5" />
+            </Menu.Button>
+            <Menu.Items className="bg-th-bkg-1 mt-2 p-1 absolute right-0 shadow-lg outline-none rounded-md w-48 z-20">
+              <Menu.Item>
+                <button
+                  className="flex flex-row font-normal items-center rounded-none w-full p-2 hover:bg-th-bkg-2 hover:cursor-pointer focus:outline-none"
+                  onClick={() => setShowAccountsModal(true)}
+                >
+                  <CurrencyDollarIcon className="h-4 w-4" />
+                  <div className="pl-2 text-left">Accounts</div>
+                </button>
+              </Menu.Item>
+              <Menu.Item>
+                <button
+                  className="flex flex-row font-normal items-center rounded-none w-full p-2 hover:bg-th-bkg-2 hover:cursor-pointer focus:outline-none"
+                  onClick={() => copyToClipboard(wallet?.publicKey)}
+                >
+                  <DuplicateIcon className="h-4 w-4" />
+                  <div className="pl-2 text-left">Copy address</div>
+                </button>
+              </Menu.Item>
+              <Menu.Item>
+                <button
+                  className="flex flex-row font-normal items-center rounded-none w-full p-2 hover:bg-th-bkg-2 hover:cursor-pointer focus:outline-none"
+                  onClick={() => wallet.disconnect()}
+                >
+                  <LogoutIcon className="h-4 w-4" />
+                  <div className="pl-2 text-left">
+                    <div className="pb-0.5">Disconnect</div>
+                    <div className="text-th-fgd-4 text-xs">
+                      {abbreviateAddress(wallet?.publicKey)}
                     </div>
-                  </button>
-                </Menu.Item>
-              </Menu.Items>
-            </div>
-          )}
+                  </div>
+                </button>
+              </Menu.Item>
+            </Menu.Items>
+          </div>
         </Menu>
       ) : (
         <div className="bg-th-bkg-1 h-14 flex divide-x divide-th-bkg-3 justify-between">

@@ -32,20 +32,23 @@ import Loading from './Loading'
 import Button, { LinkButton } from './Button'
 import Tooltip from './Tooltip'
 import Slider from './Slider'
+import InlineNotification from './InlineNotification'
 import { notify } from '../utils/notifications'
 
 interface DepositModalProps {
   onClose: () => void
   isOpen: boolean
+  settleDeficit?: number
   tokenSymbol?: string
 }
 
 const DepositModal: FunctionComponent<DepositModalProps> = ({
   isOpen,
   onClose,
+  settleDeficit,
   tokenSymbol = '',
 }) => {
-  const [inputAmount, setInputAmount] = useState(0)
+  const [inputAmount, setInputAmount] = useState(settleDeficit || 0)
   const [submitting, setSubmitting] = useState(false)
   const [simulation, setSimulation] = useState(null)
   const [showSimulation, setShowSimulation] = useState(false)
@@ -306,18 +309,18 @@ const DepositModal: FunctionComponent<DepositModalProps> = ({
             <ElementTitle noMarignBottom>Deposit Funds</ElementTitle>
           </Modal.Header>
           {tokenSymbol && !selectedAccount ? (
-            <div className="border border-th-red flex items-center mb-4 p-2.5 rounded-md text-th-red">
-              <ExclamationCircleIcon className="flex-shrink-0 h-5 w-5 mr-2" />
-              <div>
-                <div className="pb-1 text-th-fgd-1">
-                  No {tokenSymbol} wallet address found.
-                </div>
-                <div className="font-normal text-th-fgd-3 text-xs">
-                  Add {tokenSymbol} to your wallet and fund it with{' '}
-                  {tokenSymbol} to deposit.
-                </div>
-              </div>
-            </div>
+            <InlineNotification
+              desc={`Add ${tokenSymbol} to your wallet and fund it with ${tokenSymbol} to deposit.`}
+              title={`No ${tokenSymbol} wallet address found`}
+              type="error"
+            />
+          ) : null}
+          {settleDeficit ? (
+            <InlineNotification
+              desc={`Deposit ${settleDeficit} ${tokenSymbol} before settling your borrow.`}
+              title="Not enough balance to settle"
+              type="error"
+            />
           ) : null}
           <AccountSelect
             symbols={symbols}

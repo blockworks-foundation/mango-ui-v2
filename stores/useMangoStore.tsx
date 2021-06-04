@@ -265,7 +265,14 @@ const useMangoStore = create<MangoStore>((set, get) => ({
                     )
                 )
               } else {
-                state.selectedMarginAccount.current = sortedAccounts[0]
+                const lastAccount = localStorage.getItem('lastAccountViewed')
+                console.log(JSON.parse(lastAccount))
+                state.selectedMarginAccount.current = lastAccount
+                  ? marginAccounts.find(
+                      (ma) =>
+                        ma.publicKey.toString() === JSON.parse(lastAccount)
+                    )
+                  : sortedAccounts[0]
               }
             })
           }

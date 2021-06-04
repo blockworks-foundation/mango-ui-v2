@@ -7,7 +7,7 @@ export default function AccountHistory() {
   const [view, setView] = useState('Trades')
   return (
     <>
-      <div className="flex items-center justify-between pb-2.5 pt-1">
+      <div className="flex items-center justify-between pb-3.5 sm:pt-1">
         <div className="text-th-fgd-1 text-lg">{view.slice(0, -1)} History</div>
         {/* Todo: add this back when the data is available */}
         {/* <div className="flex">
