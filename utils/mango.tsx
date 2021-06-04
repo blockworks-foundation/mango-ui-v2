@@ -362,13 +362,17 @@ export async function withdraw(
   if (token.equals(WRAPPED_SOL_MINT)) {
     wrappedSolAccount = new Account()
     tokenAcc = wrappedSolAccount.publicKey
-    const lamports = Math.round(quantity * LAMPORTS_PER_SOL) + 1e7
+    const space = 165
+    const lamports = await connection.getMinimumBalanceForRentExemption(
+      space,
+      'singleGossip'
+    )
     transaction.add(
       SystemProgram.createAccount({
         fromPubkey: wallet.publicKey,
         newAccountPubkey: tokenAcc,
         lamports,
-        space: 165,
+        space,
         programId: TOKEN_PROGRAM_ID,
       })
     )
@@ -473,13 +477,17 @@ export async function borrowAndWithdraw(
   if (token.equals(WRAPPED_SOL_MINT)) {
     wrappedSolAccount = new Account()
     tokenAcc = wrappedSolAccount.publicKey
-    const lamports = Math.round(withdrawQuantity * LAMPORTS_PER_SOL) + 1e7
+    const space = 165
+    const lamports = await connection.getMinimumBalanceForRentExemption(
+      space,
+      'singleGossip'
+    )
     transaction.add(
       SystemProgram.createAccount({
         fromPubkey: wallet.publicKey,
         newAccountPubkey: tokenAcc,
         lamports,
-        space: 165,
+        space,
         programId: TOKEN_PROGRAM_ID,
       })
     )
@@ -557,6 +565,16 @@ export async function borrowAndWithdraw(
     nativeWithdrawQuantity
   )
   transaction.add(settleBorrowInstruction)
+
+  if (wrappedSolAccount) {
+    transaction.add(
+      closeAccount({
+        source: wrappedSolAccount.publicKey,
+        destination: wallet.publicKey,
+        owner: wallet.publicKey,
+      })
+    )
+  }
 
   const functionName = 'Borrow And Withdraw'
   const sendingMessage = `Sending ${functionName} instruction...`
