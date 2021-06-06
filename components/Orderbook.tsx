@@ -195,26 +195,30 @@ export default function Orderbook({ depth = 8 }) {
                 </div>
                 <div className="flex">
                   <div className="w-1/2">
-                    {orderbookData?.bids.map(({ price, size, sizePercent }) => (
-                      <OrderbookRow
-                        key={price + ''}
-                        price={price}
-                        size={size}
-                        side="buy"
-                        sizePercent={sizePercent}
-                      />
+                    {orderbookData?.bids.map(({ price, size, sizePercent, cumulativeSize }) => (
+                      <Tooltip content={'Cumulative size: ' + cumulativeSize} className="text-xs py-1">
+                        <OrderbookRow
+                          key={price + ''}
+                          price={price}
+                          size={size}
+                          side="buy"
+                          sizePercent={sizePercent}
+                        />
+                      </Tooltip>
                     ))}
                   </div>
                   <div className="w-1/2">
-                    {orderbookData?.asks.map(({ price, size, sizePercent }) => (
-                      <OrderbookRow
-                        invert
-                        key={price + ''}
-                        price={price}
-                        size={size}
-                        side="sell"
-                        sizePercent={sizePercent}
-                      />
+                    {orderbookData?.asks.map(({ price, size, sizePercent, cumulativeSize }) => (
+                      <Tooltip content={'Cumulative size: ' + cumulativeSize} className="text-xs py-1">
+                        <OrderbookRow
+                          invert
+                          key={price + ''}
+                          price={price}
+                          size={size}
+                          side="sell"
+                          sizePercent={sizePercent}
+                        />
+                      </Tooltip>
                     ))}
                   </div>
                 </div>
