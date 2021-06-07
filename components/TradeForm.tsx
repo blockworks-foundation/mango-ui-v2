@@ -9,7 +9,7 @@ import { notify } from '../utils/notifications'
 import { placeAndSettle } from '../utils/mango'
 import { calculateMarketPrice, getDecimalCount } from '../utils'
 import FloatingElement from './FloatingElement'
-import { roundToDecimal } from '../utils/index'
+import { floorToDecimal } from '../utils/index'
 import useMangoStore from '../stores/useMangoStore'
 import Button from './Button'
 import TradeType from './TradeType'
@@ -105,7 +105,7 @@ export default function TradeForm() {
       return
     }
     const rawQuoteSize = baseSize * usePrice
-    const quoteSize = baseSize && roundToDecimal(rawQuoteSize, sizeDecimalCount)
+    const quoteSize = baseSize && floorToDecimal(rawQuoteSize, sizeDecimalCount)
     setQuoteSize(quoteSize)
   }
 
@@ -122,7 +122,7 @@ export default function TradeForm() {
     }
     const usePrice = Number(price) || markPrice
     const rawBaseSize = quoteSize / usePrice
-    const baseSize = quoteSize && roundToDecimal(rawBaseSize, sizeDecimalCount)
+    const baseSize = quoteSize && floorToDecimal(rawBaseSize, sizeDecimalCount)
     setBaseSize(baseSize)
   }
 
@@ -315,7 +315,7 @@ export default function TradeForm() {
                   'border-th-green hover:border-th-green-dark'
                 } text-th-green hover:text-th-fgd-1 hover:bg-th-green-dark flex-grow`}
               >
-                {`Buy ${baseSize > 0 ? baseSize : ''} ${baseCurrency}`}
+                {`${baseSize > 0 ? 'Buy ' + baseSize : 'Enter BUY >= ' + market?.minOrderSize} ${baseCurrency}`}
               </Button>
             ) : (
               <Button
@@ -326,7 +326,7 @@ export default function TradeForm() {
                   'border-th-red hover:border-th-red-dark'
                 } text-th-red hover:text-th-fgd-1 hover:bg-th-red-dark flex-grow`}
               >
-                {`Sell ${baseSize > 0 ? baseSize : ''} ${baseCurrency}`}
+                {`${baseSize > 0 ? 'Sell ' + baseSize : 'Enter SELL bid >= ' + market?.minOrderSize} ${baseCurrency}`}
               </Button>
             )
           ) : (
