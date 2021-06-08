@@ -52,17 +52,29 @@ export default function TradeForm() {
 
   const setBaseSize = (baseSize) =>
     set((s) => {
-      s.tradeForm.baseSize = parseFloat(baseSize)
+      if (!Number.isNaN(parseFloat(baseSize))) {
+        s.tradeForm.baseSize = parseFloat(baseSize)
+      } else {
+        s.tradeForm.baseSize = baseSize
+      }
     })
 
   const setQuoteSize = (quoteSize) =>
     set((s) => {
-      s.tradeForm.quoteSize = parseFloat(quoteSize)
+      if (!Number.isNaN(parseFloat(quoteSize))) {
+        s.tradeForm.quoteSize = parseFloat(quoteSize)
+      } else {
+        s.tradeForm.quoteSize = quoteSize
+      }
     })
 
   const setPrice = (price) =>
     set((s) => {
-      s.tradeForm.price = parseFloat(price)
+      if (!Number.isNaN(parseFloat(price))) {
+        s.tradeForm.price = parseFloat(price)
+      } else {
+        s.tradeForm.price = price
+      }
     })
 
   const setTradeType = (type) =>
@@ -253,8 +265,9 @@ export default function TradeForm() {
         <Input.Group className="mt-4">
           <Input
             type="number"
+            min="0"
             step={market?.tickSize || 1}
-            onChange={(e) => onSetPrice(parseFloat(e.target.value))}
+            onChange={(e) => onSetPrice(e.target.value)}
             value={price}
             disabled={tradeType === 'Market'}
             prefix={'Price'}
@@ -272,8 +285,9 @@ export default function TradeForm() {
         <Input.Group className="mt-4">
           <Input
             type="number"
+            min="0"
             step={market?.minOrderSize || 1}
-            onChange={(e) => onSetBaseSize(parseFloat(e.target.value))}
+            onChange={(e) => onSetBaseSize(e.target.value)}
             value={baseSize}
             className="rounded-r-none"
             wrapperClassName="w-3/5"
@@ -282,8 +296,9 @@ export default function TradeForm() {
           />
           <StyledRightInput
             type="number"
+            min="0"
             step={market?.minOrderSize || 1}
-            onChange={(e) => onSetQuoteSize(parseFloat(e.target.value))}
+            onChange={(e) => onSetQuoteSize(e.target.value)}
             value={quoteSize}
             className="rounded-l-none"
             wrapperClassName="w-2/5"
