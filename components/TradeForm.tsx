@@ -55,7 +55,7 @@ export default function TradeForm() {
   }, [baseCurrency])
 
   useEffect(() => {
-    if (baseSize > market.minOrderSize) {
+    if (market && baseSize > market.minOrderSize) {
       setInvalidInputMessage('')
     }
   }, [baseSize])
