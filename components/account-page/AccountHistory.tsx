@@ -1,22 +1,23 @@
 import { useState } from 'react'
 import TradeHistoryTable from '../TradeHistoryTable'
+import DepositWithdrawTable from '../DepositWithdrawHistoryTable'
+import LiquidationHistoryTable from '../LiquidationHistoryTable'
 
-// const historyViews = ['Trades', 'Deposits', 'Withdrawals', 'Liquidations']
+const historyViews = ['Trades', 'Deposits', 'Withdrawals', 'Liquidations']
 
 export default function AccountHistory() {
-  const [view] = useState('Trades')
+  const [view, setView] = useState('Trades')
   return (
     <>
       <div className="flex items-center justify-between pb-3.5 sm:pt-1">
         <div className="text-th-fgd-1 text-lg">{view.slice(0, -1)} History</div>
-        {/* Todo: add this back when the data is available */}
-        {/* <div className="flex">
+        <div className="flex">
           {historyViews.map((section) => (
             <div
-              className={`border px-3 py-1.5 mr-2 rounded cursor-pointer default-transition
+              className={`border px-3 py-1.5 ml-2 rounded cursor-pointer default-transition
               ${
                 view === section
-                  ? `bg-th-bkg-3 border-th-bkg-3 text-th-primary`
+                  ? `bg-th-bkg-3 border-th-bkg-3 ring-1 ring-inset ring-th-primary text-th-primary`
                   : `border-th-fgd-4 text-th-fgd-1 opacity-80 hover:opacity-100`
               }
             `}
@@ -26,7 +27,7 @@ export default function AccountHistory() {
               {section}
             </div>
           ))}
-        </div> */}
+        </div>
       </div>
       <ViewContent view={view} />
     </>
@@ -38,11 +39,11 @@ const ViewContent = ({ view }) => {
     case 'Trades':
       return <TradeHistoryTable />
     case 'Deposits':
-      return <div>Deposits</div>
+      return <DepositWithdrawTable />
     case 'Withdrawals':
-      return <div>Withdrawals</div>
+      return <DepositWithdrawTable />
     case 'Liquidations':
-      return <div>Liquidations</div>
+      return <LiquidationHistoryTable />
     default:
       return <TradeHistoryTable />
   }
