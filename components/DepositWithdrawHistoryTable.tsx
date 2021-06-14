@@ -170,7 +170,7 @@ const DepositWithdrawHistoryTable = () => {
                       <Td
                         className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
                       >
-                        {transaction.usd_equivalent.toLocaleString()}
+                        ${transaction.usd_equivalent.toLocaleString()}
                       </Td>
                       <Td
                         className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
@@ -181,8 +181,8 @@ const DepositWithdrawHistoryTable = () => {
                           target="_blank"
                           rel="noopener noreferrer"
                         >
-                          <span>Explorer</span>
-                          <ExternalLinkIcon className={`h-4 w-4 ml-2`} />
+                          <span>View Transaction</span>
+                          <ExternalLinkIcon className={`h-4 w-4 ml-1.5`} />
                         </a>
                       </Td>
                     </Tr>
