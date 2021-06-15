@@ -14,7 +14,7 @@ export default function AccountHistory() {
         <div className="flex pb-4 md:pb-0">
           {historyViews.map((section) => (
             <div
-              className={`px-3 py-1.5 mx-1 rounded-md cursor-pointer default-transition bg-th-bkg-3 text-center w-1/4 md:w-auto
+              className={`px-3 py-1.5 mx-1 rounded cursor-pointer default-transition bg-th-bkg-3 text-center w-1/4 md:w-auto
                 ${
                   view === section
                     ? `ring-1 ring-inset ring-th-primary text-th-primary`
@@ -39,9 +39,9 @@ const ViewContent = ({ view }) => {
     case 'Trades':
       return <TradeHistoryTable />
     case 'Deposits':
-      return <DepositWithdrawTable />
+      return <DepositWithdrawTable type="deposits" />
     case 'Withdrawals':
-      return <DepositWithdrawTable />
+      return <DepositWithdrawTable type="withdrawals" />
     case 'Liquidations':
       return <LiquidationHistoryTable />
     default:
