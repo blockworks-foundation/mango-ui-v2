@@ -115,6 +115,9 @@ interface MangoStore extends State {
   settings: {
     uiLocked: boolean
   }
+  depositHistory: any[]
+  liquidationHistory: any[]
+  withdrawalHistory: any[]
   tradeHistory: any[]
   set: (x: any) => void
   actions: {
@@ -170,6 +173,9 @@ const useMangoStore = create<MangoStore>((set, get) => ({
   settings: {
     uiLocked: true,
   },
+  depositHistory: [],
+  liquidationHistory: [],
+  withdrawalHistory: [],
   tradeHistory: [],
   set: (fn) => set(produce(fn)),
   actions: {
@@ -369,6 +375,57 @@ const useMangoStore = create<MangoStore>((set, get) => ({
       )
       set((state) => {
         state.tradeHistory = results
+      })
+    },
+    async fetchDepositHistory(marginAccount = null) {
+      const selectedMarginAccount =
+        marginAccount || get().selectedMarginAccount.current
+      const set = get().set
+
+      if (!selectedMarginAccount) return
+
+      const response = await fetch(
+        `https://serumtaxtime.com/stats/deposits/${selectedMarginAccount.publicKey.toString()}`
+      )
+      const parsedResponse = await response.json()
+      const results = parsedResponse ? parsedResponse : []
+
+      set((state) => {
+        state.depositHistory = results
+      })
+    },
+    async fetchLiquidationHistory(marginAccount = null) {
+      const selectedMarginAccount =
+        marginAccount || get().selectedMarginAccount.current
+      const set = get().set
+
+      if (!selectedMarginAccount) return
+
+      const response = await fetch(
+        `https://serumtaxtime.com/stats/liquidations/${selectedMarginAccount.publicKey.toString()}`
+      )
+      const parsedResponse = await response.json()
+      const results = parsedResponse ? parsedResponse : []
+
+      set((state) => {
+        state.liquidationHistory = results
+      })
+    },
+    async fetchWithdrawalHistory(marginAccount = null) {
+      const selectedMarginAccount =
+        marginAccount || get().selectedMarginAccount.current
+      const set = get().set
+
+      if (!selectedMarginAccount) return
+
+      const response = await fetch(
+        `https://serumtaxtime.com/stats/withdraws/${selectedMarginAccount.publicKey.toString()}`
+      )
+      const parsedResponse = await response.json()
+      const results = parsedResponse ? parsedResponse : []
+
+      set((state) => {
+        state.withdrawalHistory = results
       })
     },
   },

@@ -179,7 +179,7 @@ const TradeHistoryTable = () => {
                         className="flex items-center no-underline"
                         onClick={() => requestSort('loadTimestamp')}
                       >
-                        Approx Date
+                        Date/Time
                         <ArrowSmDownIcon
                           className={`default-transition flex-shrink-0 h-4 w-4 ml-1 ${
                             sortConfig?.key === 'loadTimestamp'
@@ -202,7 +202,7 @@ const TradeHistoryTable = () => {
                       `}
                     >
                       <Td
-                        className={`px-6 py-4 whitespace-nowrap text-sm text-th-fgd-1`}
+                        className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
                       >
                         <div className="flex items-center">
                           <img
@@ -218,37 +218,37 @@ const TradeHistoryTable = () => {
                         </div>
                       </Td>
                       <Td
-                        className={`px-6 py-4 whitespace-nowrap text-sm text-th-fgd-1`}
+                        className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
                       >
                         <SideBadge side={trade.side} />
                       </Td>
                       <Td
-                        className={`px-6 py-4 whitespace-nowrap text-sm text-th-fgd-1`}
+                        className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
                       >
                         {trade.size}
                       </Td>
                       <Td
-                        className={`px-6 py-4 whitespace-nowrap text-sm text-th-fgd-1`}
+                        className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
                       >
                         {trade.price}
                       </Td>
                       <Td
-                        className={`px-6 py-4 whitespace-nowrap text-sm text-th-fgd-1`}
+                        className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
                       >
                         ${(trade.price * trade.size).toFixed(2)}
                       </Td>
                       <Td
-                        className={`px-6 py-4 whitespace-nowrap text-sm text-th-fgd-1`}
+                        className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
                       >
                         {trade.liquidity}
                       </Td>
                       <Td
-                        className={`px-6 py-4 whitespace-nowrap text-sm text-th-fgd-1`}
+                        className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
                       >
-                        {trade.feeCost}
+                        ${trade.feeCost}
                       </Td>
                       <Td
-                        className={`px-6 py-4 whitespace-nowrap text-sm text-th-fgd-1`}
+                        className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
                       >
                         {trade.loadTimestamp
                           ? renderTradeDateTime(trade.loadTimestamp)

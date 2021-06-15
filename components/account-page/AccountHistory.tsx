@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import useMangoStore from '../../stores/useMangoStore'
 import TradeHistoryTable from '../TradeHistoryTable'
 import DepositWithdrawTable from '../DepositWithdrawHistoryTable'
 import LiquidationHistoryTable from '../LiquidationHistoryTable'
@@ -6,7 +7,15 @@ import LiquidationHistoryTable from '../LiquidationHistoryTable'
 const historyViews = ['Trades', 'Deposits', 'Withdrawals', 'Liquidations']
 
 export default function AccountHistory() {
+  const actions = useMangoStore((s) => s.actions)
   const [view, setView] = useState('Trades')
+
+  useEffect(() => {
+    actions.fetchDepositHistory()
+    actions.fetchWithdrawalHistory()
+    actions.fetchLiquidationHistory()
+  }, [])
+
   return (
     <>
       <div className="flex flex-col-reverse md:flex-row md:items-end md:justify-between pb-3.5">
