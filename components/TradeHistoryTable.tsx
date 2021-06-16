@@ -230,7 +230,7 @@ const TradeHistoryTable = () => {
                       <Td
                         className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
                       >
-                        {trade.price}
+                        ${trade.price}
                       </Td>
                       <Td
                         className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}

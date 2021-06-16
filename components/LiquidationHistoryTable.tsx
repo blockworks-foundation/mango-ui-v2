@@ -13,7 +13,6 @@ import useMangoStore from '../stores/useMangoStore'
 import { tokenPrecision } from '../utils'
 import { useSortableData } from '../hooks/useSortableData'
 import { LinkButton } from './Button'
-import Tooltip from './Tooltip'
 
 const LiquidationHistoryTable = () => {
   const liquidationHistory = useMangoStore((s) => s.liquidationHistory)
@@ -82,17 +81,11 @@ const LiquidationHistoryTable = () => {
                     )}
                   </div>
                 </div>
-                <div className="grid grid-flow-col grid-cols-1 grid-rows-5 md:grid-cols-5 md:grid-rows-1 gap-4 pb-8">
+                <div className="grid grid-flow-col grid-cols-1 grid-rows-6 sm:grid-cols-3 sm:grid-rows-2 md:grid-cols-6 md:grid-rows-1 gap-2 pb-8">
                   <div className="border border-th-bkg-3 p-3 rounded-md">
                     <div className="pb-0.5 text-xs text-th-fgd-3">
-                      Collateral Ratio
+                      Liquidated Asset
                     </div>
-                    <div className="text-th-fgd-1">
-                      {(showLiquidationDetail.coll_ratio * 100).toFixed(2)}%
-                    </div>
-                  </div>
-                  <div className="border border-th-bkg-3 p-3 rounded-md">
-                    <div className="pb-0.5 text-xs text-th-fgd-3">Asset</div>
                     <div className="flex items-center">
                       <img
                         alt=""
@@ -107,6 +100,12 @@ const LiquidationHistoryTable = () => {
                     </div>
                   </div>
                   <div className="border border-th-bkg-3 p-3 rounded-md">
+                    <div className="pb-0.5 text-xs text-th-fgd-3">Price</div>
+                    <div className="text-th-fgd-1">
+                      ${showLiquidationDetail.in_token_price.toFixed(2)}
+                    </div>
+                  </div>
+                  <div className="border border-th-bkg-3 p-3 rounded-md">
                     <div className="pb-0.5 text-xs text-th-fgd-3">
                       Bailout Amount
                     </div>
@@ -115,9 +114,11 @@ const LiquidationHistoryTable = () => {
                     </div>
                   </div>
                   <div className="border border-th-bkg-3 p-3 rounded-md">
-                    <div className="pb-0.5 text-xs text-th-fgd-3">Price</div>
+                    <div className="pb-0.5 text-xs text-th-fgd-3">
+                      Bailout Value
+                    </div>
                     <div className="text-th-fgd-1">
-                      ${showLiquidationDetail.in_token_price.toFixed(4)}
+                      ${showLiquidationDetail.in_token_usd.toFixed(4)}
                     </div>
                   </div>
                   <div className="border border-th-bkg-3 p-3 rounded-md">
@@ -126,6 +127,14 @@ const LiquidationHistoryTable = () => {
                     </div>
                     <div className="text-th-fgd-1">
                       ${showLiquidationDetail.liquidation_fee_usd.toFixed(4)}
+                    </div>
+                  </div>
+                  <div className="border border-th-bkg-3 p-3 rounded-md">
+                    <div className="pb-0.5 text-xs text-th-fgd-3">
+                      Collateral Ratio
+                    </div>
+                    <div className="text-th-fgd-1">
+                      {(showLiquidationDetail.coll_ratio * 100).toFixed(2)}%
                     </div>
                   </div>
                 </div>
@@ -143,67 +152,25 @@ const LiquidationHistoryTable = () => {
                           scope="col"
                           className={`px-6 py-3 text-left font-normal`}
                         >
-                          <Tooltip
-                            className="text-xs py-1"
-                            content="Your deposits before liquidation"
-                          >
-                            <span>Start Deposits</span>
-                          </Tooltip>
+                          Price
                         </Th>
                         <Th
                           scope="col"
                           className={`px-6 py-3 text-left font-normal`}
                         >
-                          <Tooltip
-                            className="text-xs py-1"
-                            content="Your deposits after liquidation"
-                          >
-                            <span>End Deposits</span>
-                          </Tooltip>
+                          <span>Start Deposits</span>
                         </Th>
                         <Th
                           scope="col"
                           className={`px-6 py-3 text-left font-normal`}
                         >
-                          <Tooltip
-                            className="text-xs py-1"
-                            content="How much of your deposits were liquidated"
-                          >
-                            <span>Liquidated Deposits</span>
-                          </Tooltip>
+                          <span>Start Borrows</span>
                         </Th>
                         <Th
                           scope="col"
                           className={`px-6 py-3 text-left font-normal`}
                         >
-                          <Tooltip
-                            className="text-xs py-1"
-                            content="Your borrows before liquidation"
-                          >
-                            <span>Start Borrows</span>
-                          </Tooltip>
-                        </Th>
-                        <Th
-                          scope="col"
-                          className={`px-6 py-3 text-left font-normal`}
-                        >
-                          <Tooltip
-                            className="text-xs py-1"
-                            content="Your borrows after liquidation"
-                          >
-                            <span>End Borrows</span>
-                          </Tooltip>
-                        </Th>
-                        <Th
-                          scope="col"
-                          className={`px-6 py-3 text-left font-normal`}
-                        >
-                          <Tooltip
-                            className="text-xs py-1"
-                            content="How much of your borrows were repaid"
-                          >
-                            <span>Bailout Amount</span>
-                          </Tooltip>
+                          <span>Liquidator Transfers</span>
                         </Th>
                       </Tr>
                     </Thead>
@@ -233,17 +200,12 @@ const LiquidationHistoryTable = () => {
                           <Td
                             className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
                           >
+                            ${asset.price.toFixed(2)}
+                          </Td>
+                          <Td
+                            className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
+                          >
                             {asset.start_assets.toFixed(4)}
-                          </Td>
-                          <Td
-                            className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
-                          >
-                            {asset.end_assets.toFixed(4)}
-                          </Td>
-                          <Td
-                            className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
-                          >
-                            {(asset.end_assets - asset.start_assets).toFixed(4)}
                           </Td>
                           <Td
                             className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
@@ -253,12 +215,10 @@ const LiquidationHistoryTable = () => {
                           <Td
                             className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
                           >
-                            {asset.end_liabs.toFixed(4)}
-                          </Td>
-                          <Td
-                            className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
-                          >
-                            {(asset.start_liabs - asset.end_liabs).toFixed(4)}
+                            {+(asset.end_assets - asset.start_assets).toFixed(
+                              4
+                            ) +
+                              +(asset.start_liabs - asset.end_liabs).toFixed(4)}
                           </Td>
                         </Tr>
                       ))}
@@ -297,6 +257,26 @@ const LiquidationHistoryTable = () => {
                       >
                         <LinkButton
                           className="flex items-center no-underline"
+                          onClick={() => requestSort('symbol')}
+                        >
+                          Liquidated Asset
+                          <ArrowSmDownIcon
+                            className={`default-transition flex-shrink-0 h-4 w-4 ml-1 ${
+                              sortConfig?.key === 'symbol'
+                                ? sortConfig.direction === 'ascending'
+                                  ? 'transform rotate-180'
+                                  : 'transform rotate-360'
+                                : null
+                            }`}
+                          />
+                        </LinkButton>
+                      </Th>
+                      {/* <Th
+                        scope="col"
+                        className={`px-6 py-3 text-left font-normal`}
+                      >
+                        <LinkButton
+                          className="flex items-center no-underline"
                           onClick={() => requestSort('coll_ratio')}
                         >
                           Collateral Ratio
@@ -310,19 +290,19 @@ const LiquidationHistoryTable = () => {
                             }`}
                           />
                         </LinkButton>
-                      </Th>
+                      </Th> */}
                       <Th
                         scope="col"
                         className={`px-6 py-3 text-left font-normal`}
                       >
                         <LinkButton
                           className="flex items-center no-underline"
-                          onClick={() => requestSort('symbol')}
+                          onClick={() => requestSort('in_token_price')}
                         >
-                          Asset
+                          Price
                           <ArrowSmDownIcon
                             className={`default-transition flex-shrink-0 h-4 w-4 ml-1 ${
-                              sortConfig?.key === 'symbol'
+                              sortConfig?.key === 'in_token_price'
                                 ? sortConfig.direction === 'ascending'
                                   ? 'transform rotate-180'
                                   : 'transform rotate-360'
@@ -357,12 +337,12 @@ const LiquidationHistoryTable = () => {
                       >
                         <LinkButton
                           className="flex items-center no-underline"
-                          onClick={() => requestSort('in_token_price')}
+                          onClick={() => requestSort('in_token_usd')}
                         >
-                          Price
+                          Bailout Value
                           <ArrowSmDownIcon
                             className={`default-transition flex-shrink-0 h-4 w-4 ml-1 ${
-                              sortConfig?.key === 'in_token_price'
+                              sortConfig?.key === 'in_token_usd'
                                 ? sortConfig.direction === 'ascending'
                                   ? 'transform rotate-180'
                                   : 'transform rotate-360'
@@ -410,11 +390,6 @@ const LiquidationHistoryTable = () => {
                         <Td
                           className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
                         >
-                          {(transaction.coll_ratio * 100).toFixed(2)}%
-                        </Td>
-                        <Td
-                          className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
-                        >
                           <div className="flex items-center">
                             <img
                               alt=""
@@ -425,6 +400,16 @@ const LiquidationHistoryTable = () => {
                             />
                             <div>{transaction.in_token_symbol}</div>
                           </div>
+                        </Td>
+                        {/* <Td
+                          className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
+                        >
+                          {(transaction.coll_ratio * 100).toFixed(2)}%
+                        </Td> */}
+                        <Td
+                          className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
+                        >
+                          ${transaction.in_token_price.toFixed(2)}
                         </Td>
                         <Td
                           className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
@@ -437,7 +422,7 @@ const LiquidationHistoryTable = () => {
                         <Td
                           className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
                         >
-                          ${transaction.in_token_price.toFixed(2)}
+                          ${transaction.in_token_usd.toFixed(2)}
                         </Td>
                         <Td
                           className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
