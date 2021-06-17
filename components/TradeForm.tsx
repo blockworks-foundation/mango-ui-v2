@@ -55,7 +55,7 @@ export default function TradeForm() {
   }, [baseCurrency])
 
   useEffect(() => {
-    if (market && baseSize > market.minOrderSize) {
+    if (market && baseSize >= market.minOrderSize) {
       setInvalidInputMessage('')
     }
   }, [baseSize])
@@ -257,7 +257,7 @@ export default function TradeForm() {
   }
 
   const validateInput = () => {
-    if (baseSize < market.minOrderSize) {
+    if (market && baseSize < market.minOrderSize) {
       setInvalidInputMessage(
         `Size must be greater than or equal to ${market.minOrderSize} ${baseCurrency}`
       )
@@ -267,7 +267,7 @@ export default function TradeForm() {
   const disabledTradeButton =
     (!price && tradeType === 'Limit') ||
     !baseSize ||
-    baseSize < market.minOrderSize ||
+    (market && baseSize < market.minOrderSize) ||
     !connected ||
     submitting
 
