@@ -1,8 +1,9 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   CurrencyDollarIcon,
   ExternalLinkIcon,
   LinkIcon,
+  PencilIcon,
 } from '@heroicons/react/outline'
 import useMangoStore from '../stores/useMangoStore'
 import { abbreviateAddress } from '../utils'
@@ -15,6 +16,11 @@ import AccountOrders from '../components/account-page/AccountOrders'
 import AccountHistory from '../components/account-page/AccountHistory'
 import AccountsModal from '../components/AccountsModal'
 import EmptyState from '../components/EmptyState'
+import Button from '../components/Button'
+import AccountNameForm from '../components/AccountNameForm'
+import Modal from '../components/Modal'
+import { ElementTitle } from '../components/styles'
+import useLocalStorageState from '../hooks/useLocalStorageState'
 
 const TABS = [
   'Assets',
@@ -28,56 +34,83 @@ const TABS = [
 export default function Account() {
   const [activeTab, setActiveTab] = useState(TABS[0])
   const [showAccountsModal, setShowAccountsModal] = useState(false)
+  const [showNameModal, setShowNameModal] = useState(false)
+  const [accountName, setAccountName] = useState('')
   const accountMarginInfo = useMarginInfo()
   const connected = useMangoStore((s) => s.wallet.connected)
   const selectedMarginAccount = useMangoStore(
     (s) => s.selectedMarginAccount.current
   )
+  const [accountNames] = useLocalStorageState('accountNames')
 
   const handleTabChange = (tabName) => {
     setActiveTab(tabName)
   }
-  const handleCloseAccounts = useCallback(() => {
+  const handleCloseAccountsModal = useCallback(() => {
     setShowAccountsModal(false)
   }, [])
+  const handleCloseNameModal = useCallback(() => {
+    setShowNameModal(false)
+  }, [])
+
+  useEffect(() => {
+    if (accountNames && selectedMarginAccount) {
+      const hasName = accountNames.find(
+        (acc) => acc.publicKey === selectedMarginAccount.publicKey.toString()
+      )
+      if (hasName) {
+        setAccountName(hasName.name)
+      } else {
+        setAccountName('')
+      }
+    }
+  }, [accountNames, selectedMarginAccount])
 
   return (
     <div className={`bg-th-bkg-1 text-th-fgd-1 transition-all`}>
       <TopBar />
       <PageBodyContainer>
-        <div className="flex flex-col sm:flex-row items-center justify-between pt-8 pb-3 sm:pb-6 md:pt-10">
-          <h1 className={`text-th-fgd-1 text-2xl font-semibold`}>Account</h1>
+        <div className="flex flex-col sm:flex-row items-end justify-between pt-8 pb-3 sm:pb-6 md:pt-10">
           {selectedMarginAccount ? (
-            <div className="divide-x divide-th-fgd-4 flex justify-center w-full pt-4 sm:pt-0 sm:justify-end">
-              <div className="pr-4 text-xs text-th-fgd-1">
-                <div className="pb-0.5 text-2xs text-th-fgd-3">Owner</div>
-                <a
-                  className="default-transition flex items-center text-th-fgd-2"
-                  href={`https://explorer.solana.com/address/${selectedMarginAccount?.owner}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <span>{abbreviateAddress(selectedMarginAccount?.owner)}</span>
-                  <ExternalLinkIcon className={`h-3 w-3 ml-1`} />
-                </a>
-              </div>
-              <div className="pl-4 text-xs text-th-fgd-1">
-                <div className="pb-0.5 text-2xs text-th-fgd-3">
-                  Margin Account
+            <>
+              <div className="flex items-end">
+                <h1 className={`font-semibold mr-3 text-th-fgd-1 text-2xl`}>
+                  {accountName ? accountName : 'Account'}
+                </h1>
+                <div className="pb-0.5 text-th-fgd-3 ">
+                  {abbreviateAddress(selectedMarginAccount.publicKey)}
                 </div>
+              </div>
+              <div className="flex items-center">
+                <Button
+                  className="text-xs flex items-center justify-center mr-2 pt-0 pb-0 h-8 pl-3 pr-3"
+                  onClick={() => setShowNameModal(true)}
+                >
+                  <div className="flex items-center">
+                    <PencilIcon className="h-4 w-4 mr-1.5" />
+                    {accountName ? 'Edit Name' : 'Add Name'}
+                  </div>
+                </Button>
                 <a
-                  className="default-transition flex items-center text-th-fgd-2"
+                  className="border border-th-fgd-4 bg-th-bkg-2 default-transition flex font-bold h-8 items-center justify-center pl-3 pr-3 rounded-md text-th-fgd-1 text-xs hover:bg-th-bkg-3 hover:text-th-fgd-1 focus:outline-none"
                   href={`https://explorer.solana.com/address/${selectedMarginAccount?.publicKey}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <span>
-                    {abbreviateAddress(selectedMarginAccount?.publicKey)}
-                  </span>
-                  <ExternalLinkIcon className={`h-3 w-3 ml-1`} />
+                  <span>Explorer</span>
+                  <ExternalLinkIcon className={`h-4 w-4 ml-1.5`} />
                 </a>
+                <Button
+                  className="text-xs flex items-center justify-center ml-2 pt-0 pb-0 h-8 pl-3 pr-3"
+                  onClick={() => setShowAccountsModal(true)}
+                >
+                  <div className="flex items-center">
+                    <CurrencyDollarIcon className="h-4 w-4 mr-1.5" />
+                    Accounts
+                  </div>
+                </Button>
               </div>
-            </div>
+            </>
           ) : null}
         </div>
         <div className="bg-th-bkg-2 overflow-none p-6 rounded-lg">
@@ -141,9 +174,20 @@ export default function Account() {
       </PageBodyContainer>
       {showAccountsModal ? (
         <AccountsModal
-          onClose={handleCloseAccounts}
+          onClose={handleCloseAccountsModal}
           isOpen={showAccountsModal}
         />
+      ) : null}
+      {showNameModal ? (
+        <Modal onClose={handleCloseNameModal} isOpen={showNameModal}>
+          <Modal.Header>
+            <ElementTitle noMarignBottom>Name your Account</ElementTitle>
+          </Modal.Header>
+          <AccountNameForm
+            accountName={accountName}
+            onClose={handleCloseNameModal}
+          />
+        </Modal>
       ) : null}
     </div>
   )
