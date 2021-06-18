@@ -81,8 +81,8 @@ export default function MarginInfo() {
           ? selectedMarginAccount.getCollateralRatio(
               selectedMangoGroup,
               prices
-            ) || 200
-          : 200
+            ) || 0
+          : 0
 
         const accountEquity = selectedMarginAccount
           ? selectedMarginAccount.computeValue(selectedMangoGroup, prices)
@@ -129,24 +129,30 @@ export default function MarginInfo() {
             // TODO: Get collaterization ratio
             label: 'Collateral Ratio',
             value:
-              collateralRatio > 2 ? '>200' : (100 * collateralRatio).toFixed(0),
+              collateralRatio <= 0
+                ? 'N/A '
+                : (100 * collateralRatio).toFixed(0),
             unit: '%',
             currency: '',
             desc: 'The current collateral ratio',
           },
           {
-            label: 'Maint. Collateral Ratio',
-            value: (selectedMangoGroup.maintCollRatio * 100).toFixed(0),
-            unit: '%',
-            currency: '',
-            desc: 'The collateral ratio you must maintain to not get liquidated',
+            label: 'Minimum Collateral Required',
+            value: (
+              selectedMangoGroup.maintCollRatio *
+              leverage *
+              accountEquity
+            ).toFixed(2),
+            unit: '',
+            currency: '$',
+            desc: 'The collateral you must maintain to not get liquidated (Maintenance Collateral Ratio = 110%)',
           },
           {
-            label: 'Initial Collateral Ratio',
-            value: (selectedMangoGroup.initCollRatio * 100).toFixed(0),
-            currency: '',
-            unit: '%',
-            desc: 'The collateral ratio required to open a new margin position',
+            label: 'Current Collateral Available',
+            value: (accountEquity + accountEquity * leverage).toFixed(2),
+            unit: '',
+            currency: '$',
+            desc: 'The collateral available to protect margin position',
           },
         ])
       })
