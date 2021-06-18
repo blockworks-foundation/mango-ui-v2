@@ -385,7 +385,7 @@ const useMangoStore = create<MangoStore>((set, get) => ({
       if (!selectedMarginAccount) return
 
       const response = await fetch(
-        `https://serumtaxtime.com/stats/deposits/${selectedMarginAccount.publicKey.toString()}`
+        `https://mango-transaction-log.herokuapp.com/stats/deposits/${selectedMarginAccount.publicKey.toString()}`
       )
       const parsedResponse = await response.json()
       const results = parsedResponse ? parsedResponse : []
@@ -402,7 +402,7 @@ const useMangoStore = create<MangoStore>((set, get) => ({
       if (!selectedMarginAccount) return
 
       const response = await fetch(
-        `https://serumtaxtime.com/stats/liquidations/${selectedMarginAccount.publicKey.toString()}`
+        `https://mango-transaction-log.herokuapp.com/stats/liquidations/${selectedMarginAccount.publicKey.toString()}`
       )
       const parsedResponse = await response.json()
       const results = parsedResponse ? parsedResponse : []
@@ -419,7 +419,7 @@ const useMangoStore = create<MangoStore>((set, get) => ({
       if (!selectedMarginAccount) return
 
       const response = await fetch(
-        `https://serumtaxtime.com/stats/withdraws/${selectedMarginAccount.publicKey.toString()}`
+        `https://mango-transaction-log.herokuapp.com/stats/withdraws/${selectedMarginAccount.publicKey.toString()}`
       )
       const parsedResponse = await response.json()
       const results = parsedResponse ? parsedResponse : []
