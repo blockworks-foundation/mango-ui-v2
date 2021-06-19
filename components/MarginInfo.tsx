@@ -77,31 +77,51 @@ export default function MarginInfo() {
   useEffect(() => {
     if (selectedMangoGroup) {
       selectedMangoGroup.getPrices(connection).then((prices) => {
-        const collateralRatio = selectedMarginAccount
-          ? selectedMarginAccount.getCollateralRatio(
-              selectedMangoGroup,
-              prices
-            ) || 0
-          : 0
 
         const accountEquity = selectedMarginAccount
           ? selectedMarginAccount.computeValue(selectedMangoGroup, prices)
           : 0
+
         let leverage
         if (selectedMarginAccount) {
           leverage = accountEquity
             ? (
-                1 /
-                (selectedMarginAccount.getCollateralRatio(
-                  selectedMangoGroup,
-                  prices
-                ) -
-                  1)
-              ).toFixed(2)
+              1 /
+              (selectedMarginAccount.getCollateralRatio(
+                selectedMangoGroup,
+                prices
+              ) -
+                1)
+            ).toFixed(2)
             : '0'
         } else {
           leverage = '0'
         }
+
+        const accountCollateralRatioCurrent = selectedMarginAccount
+          ? selectedMarginAccount.getCollateralRatio(
+            selectedMangoGroup,
+            prices
+          ) > 100 ?
+            '>10000'
+            :
+            (selectedMarginAccount.getCollateralRatio(
+              selectedMangoGroup,
+              prices
+            ) * 100).toFixed(0) || 0
+          : 0
+
+        const accountCollateralCurrent = selectedMarginAccount
+          ? selectedMarginAccount.getAssetsVal(
+            selectedMangoGroup,
+            prices)
+          : 0
+
+        const accountCollateralRequired = selectedMarginAccount
+          ? (selectedMarginAccount.getAssetsVal(
+            selectedMangoGroup,
+            prices) - accountEquity) * (selectedMangoGroup.maintCollRatio / 100)
+          : 0
 
         setMAccountInfo([
           {
@@ -126,30 +146,22 @@ export default function MarginInfo() {
             desc: 'Total PNL reflects trades placed after March 15th 2021 04:00 AM UTC. Visit the Learn link in the top menu for more information.',
           },
           {
-            // TODO: Get collaterization ratio
             label: 'Collateral Ratio',
-            value:
-              collateralRatio <= 0
-                ? 'N/A '
-                : (100 * collateralRatio).toFixed(0),
+            value: accountCollateralRatioCurrent,
             unit: '%',
             currency: '',
             desc: 'The current collateral ratio',
           },
           {
             label: 'Minimum Collateral Required',
-            value: (
-              selectedMangoGroup.maintCollRatio *
-              leverage *
-              accountEquity
-            ).toFixed(2),
+            value: accountCollateralRequired.toFixed(2),
             unit: '',
             currency: '$',
             desc: 'The collateral you must maintain to not get liquidated (Maintenance Collateral Ratio = 110%)',
           },
           {
             label: 'Current Collateral Available',
-            value: (accountEquity + accountEquity * leverage).toFixed(2),
+            value: accountCollateralCurrent.toFixed(2),
             unit: '',
             currency: '$',
             desc: 'The collateral available to protect margin position',
