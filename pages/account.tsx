@@ -4,9 +4,10 @@ import {
   ExternalLinkIcon,
   LinkIcon,
   PencilIcon,
+  DuplicateIcon,
 } from '@heroicons/react/outline'
 import useMangoStore from '../stores/useMangoStore'
-import { abbreviateAddress } from '../utils'
+import { abbreviateAddress, copyToClipboard } from '../utils'
 import useMarginInfo from '../hooks/useMarginInfo'
 import PageBodyContainer from '../components/PageBodyContainer'
 import TopBar from '../components/TopBar'
@@ -35,6 +36,7 @@ export default function Account() {
   const [activeTab, setActiveTab] = useState(TABS[0])
   const [showAccountsModal, setShowAccountsModal] = useState(false)
   const [showNameModal, setShowNameModal] = useState(false)
+  const [isCopied, setIsCopied] = useState(false)
   const [accountName, setAccountName] = useState('')
   const accountMarginInfo = useMarginInfo()
   const connected = useMangoStore((s) => s.wallet.connected)
@@ -66,6 +68,20 @@ export default function Account() {
     }
   }, [accountNames, selectedMarginAccount])
 
+  useEffect(() => {
+    if (isCopied) {
+      const timer = setTimeout(() => {
+        setIsCopied(false)
+      }, 1500)
+      return () => clearTimeout(timer)
+    }
+  }, [isCopied])
+
+  const handleCopyPublicKey = (code) => {
+    setIsCopied(true)
+    copyToClipboard(code)
+  }
+
   return (
     <div className={`bg-th-bkg-1 text-th-fgd-1 transition-all`}>
       <TopBar />
@@ -77,8 +93,17 @@ export default function Account() {
                 <h1 className={`font-semibold mr-3 text-th-fgd-1 text-2xl`}>
                   {accountName ? accountName : 'Account'}
                 </h1>
-                <div className="pb-0.5 text-th-fgd-3 ">
+                <div className="flex items-center pb-0.5 text-th-fgd-3 ">
                   {abbreviateAddress(selectedMarginAccount.publicKey)}
+                  <DuplicateIcon
+                    className="cursor-pointer default-transition h-4 w-4 ml-1.5 hover:text-th-fgd-1"
+                    onClick={() =>
+                      handleCopyPublicKey(selectedMarginAccount.publicKey)
+                    }
+                  />
+                  {isCopied ? (
+                    <div className="ml-2 text-th-fgd-2 text-xs">Copied!</div>
+                  ) : null}
                 </div>
               </div>
               <div className="flex items-center">

@@ -9,6 +9,7 @@ import AccountSelect from './AccountSelect'
 import { ElementTitle } from './styles'
 import useMangoStore from '../stores/useMangoStore'
 import useMarketList from '../hooks/useMarketList'
+import useLocalStorageState from '../hooks/useLocalStorageState'
 import {
   getSymbolForTokenMintAddress,
   DECIMALS,
@@ -32,8 +33,11 @@ const NewAccount: FunctionComponent<NewAccountProps> = ({
   const [inputAmount, setInputAmount] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [invalidAmountMessage, setInvalidAmountMessage] = useState('')
+  const [invalidNameMessage, setInvalidNameMessage] = useState('')
   const [sliderPercentage, setSliderPercentage] = useState(0)
   const [maxButtonTransition, setMaxButtonTransition] = useState(false)
+  const [name, setName] = useState('')
+  const [showNewAccountName, setShowNewAccountName] = useState(true)
   const { getTokenIndex, symbols } = useMarketList()
   const { connection, programId } = useConnection()
   const mintDecimals = useMangoStore((s) => s.selectedMangoGroup.mintDecimals)
@@ -47,6 +51,7 @@ const NewAccount: FunctionComponent<NewAccountProps> = ({
     [symbols, walletAccounts]
   )
   const [selectedAccount, setSelectedAccount] = useState(depositAccounts[0])
+  const [accountNames, setAccountNames] = useLocalStorageState('accountNames')
 
   const symbol = getSymbolForTokenMintAddress(
     selectedAccount?.account?.mint.toString()
@@ -97,6 +102,16 @@ const NewAccount: FunctionComponent<NewAccountProps> = ({
         actions.fetchWalletBalances()
         actions.fetchMarginAccounts()
         setSubmitting(false)
+        if (name) {
+          accountNames
+            ? setAccountNames([
+                ...accountNames,
+                { publicKey: _response[0].publicKey.toString(), name: name },
+              ])
+            : setAccountNames([
+                { publicKey: _response[0].publicKey.toString(), name: name },
+              ])
+        }
         onAccountCreation(_response[0].publicKey)
       })
       .catch((err) => {
@@ -142,6 +157,22 @@ const NewAccount: FunctionComponent<NewAccountProps> = ({
     validateAmountInput(amount)
   }
 
+  const validateNameInput = () => {
+    if (name.length >= 25) {
+      setInvalidNameMessage('Account name nust be less than 25 characters')
+    }
+    if (name.length === 0) {
+      setInvalidNameMessage('Enter an account name')
+    }
+  }
+
+  const onChangeNameInput = (name) => {
+    setName(name)
+    if (invalidNameMessage) {
+      setInvalidNameMessage('')
+    }
+  }
+
   // turn off slider transition for dragging slider handle interaction
   useEffect(() => {
     if (maxButtonTransition) {
@@ -151,67 +182,95 @@ const NewAccount: FunctionComponent<NewAccountProps> = ({
 
   return (
     <>
-      <ElementTitle noMarignBottom>Create Margin Account</ElementTitle>
-      <div className="text-th-fgd-3 text-center pb-4 pt-2">
-        Make a deposit to initialize a new margin account
-      </div>
-      <AccountSelect
-        symbols={symbols}
-        accounts={depositAccounts}
-        selectedAccount={selectedAccount}
-        onSelectAccount={handleAccountSelect}
-      />
-      <div className="flex justify-between pb-2 pt-4">
-        <div className={`text-th-fgd-1`}>Amount</div>
-        <div
-          className="text-th-fgd-1 underline cursor-pointer default-transition hover:text-th-primary hover:no-underline"
-          onClick={setMaxForSelectedAccount}
-        >
-          Max
-        </div>
-      </div>
-      <div className="flex">
-        <Input
-          type="number"
-          min="0"
-          className={`border border-th-fgd-4 flex-grow pr-11`}
-          placeholder="0.00"
-          error={!!invalidAmountMessage}
-          onBlur={(e) => validateAmountInput(e.target.value)}
-          value={inputAmount}
-          onChange={(e) => onChangeAmountInput(e.target.value)}
-          suffix={symbol}
-        />
-      </div>
-      {invalidAmountMessage ? (
-        <div className="flex items-center pt-1.5 text-th-red">
-          <ExclamationCircleIcon className="h-4 w-4 mr-1.5" />
-          {invalidAmountMessage}
-        </div>
-      ) : null}
-      <div className="pt-3 pb-4">
-        <Slider
-          value={sliderPercentage}
-          onChange={(v) => onChangeSlider(v)}
-          step={1}
-          maxButtonTransition={maxButtonTransition}
-        />
-      </div>
-      <div className={`pt-8 flex justify-center`}>
-        <Button
-          disabled={
-            inputAmount <= 0 ||
-            inputAmount > getBalanceForAccount(selectedAccount)
-          }
-          onClick={handleNewAccountDeposit}
-          className="w-full"
-        >
-          <div className={`flex items-center justify-center`}>
-            {submitting && <Loading className="-ml-1 mr-3" />}
-            Create Account
+      <ElementTitle noMarignBottom>New Account</ElementTitle>
+      {showNewAccountName ? (
+        <>
+          <div className="text-th-fgd-3 text-center pb-4 pt-2">
+            Create a nickname for your account
           </div>
-        </Button>
-      </div>
+          <div className="pb-2 text-th-fgd-1">
+            Account Name <span className="text-th-fgd-3">(Optional)</span>
+          </div>
+          <Input
+            type="text"
+            className={`border border-th-fgd-4 flex-grow`}
+            error={!!invalidNameMessage}
+            placeholder="e.g. Calypso"
+            value={name}
+            onBlur={validateNameInput}
+            onChange={(e) => onChangeNameInput(e.target.value)}
+          />
+          <Button
+            onClick={() => setShowNewAccountName(false)}
+            className="mt-4 w-full"
+          >
+            Next
+          </Button>
+        </>
+      ) : (
+        <>
+          <div className="text-th-fgd-3 text-center pb-4 pt-2">
+            Make a deposit to initialize your new account
+          </div>
+          <AccountSelect
+            symbols={symbols}
+            accounts={depositAccounts}
+            selectedAccount={selectedAccount}
+            onSelectAccount={handleAccountSelect}
+          />
+          <div className="flex justify-between pb-2 pt-4">
+            <div className={`text-th-fgd-1`}>Amount</div>
+            <div
+              className="text-th-fgd-1 underline cursor-pointer default-transition hover:text-th-primary hover:no-underline"
+              onClick={setMaxForSelectedAccount}
+            >
+              Max
+            </div>
+          </div>
+          <div className="flex">
+            <Input
+              type="number"
+              min="0"
+              className={`border border-th-fgd-4 flex-grow pr-11`}
+              placeholder="0.00"
+              error={!!invalidAmountMessage}
+              onBlur={(e) => validateAmountInput(e.target.value)}
+              value={inputAmount}
+              onChange={(e) => onChangeAmountInput(e.target.value)}
+              suffix={symbol}
+            />
+          </div>
+          {invalidAmountMessage ? (
+            <div className="flex items-center pt-1.5 text-th-red">
+              <ExclamationCircleIcon className="h-4 w-4 mr-1.5" />
+              {invalidAmountMessage}
+            </div>
+          ) : null}
+          <div className="pt-3 pb-4">
+            <Slider
+              value={sliderPercentage}
+              onChange={(v) => onChangeSlider(v)}
+              step={1}
+              maxButtonTransition={maxButtonTransition}
+            />
+          </div>
+          <div className={`pt-8 flex justify-center`}>
+            <Button
+              disabled={
+                inputAmount <= 0 ||
+                inputAmount > getBalanceForAccount(selectedAccount)
+              }
+              onClick={handleNewAccountDeposit}
+              className="w-full"
+            >
+              <div className={`flex items-center justify-center`}>
+                {submitting && <Loading className="-ml-1 mr-3" />}
+                Create New Account
+              </div>
+            </Button>
+          </div>
+        </>
+      )}
     </>
   )
 }

@@ -14,6 +14,7 @@ import Modal from './Modal'
 import { ElementTitle } from './styles'
 import Button, { LinkButton } from './Button'
 import NewAccount from './NewAccount'
+import { has } from 'immer/dist/internal'
 
 interface AccountsModalProps {
   onClose: () => void
@@ -26,6 +27,7 @@ const AccountsModal: FunctionComponent<AccountsModalProps> = ({
 }) => {
   const [showNewAccountForm, setShowNewAccountForm] = useState(false)
   const [newAccPublicKey, setNewAccPublicKey] = useState(null)
+  const [namedAccounts, setNamedAccounts] = useState([])
   const marginAccounts = useMangoStore((s) => s.marginAccounts)
   const selectedMarginAccount = useMangoStore(
     (s) => s.selectedMarginAccount.current
@@ -35,6 +37,7 @@ const AccountsModal: FunctionComponent<AccountsModalProps> = ({
   const setMangoStore = useMangoStore((s) => s.set)
   const actions = useMangoStore((s) => s.actions)
   const [, setLastAccountViewed] = useLocalStorageState('lastAccountViewed')
+  const [accountNames] = useLocalStorageState('accountNames')
 
   const handleMarginAccountChange = (marginAccount: MarginAccount) => {
     setLastAccountViewed(marginAccount.publicKey.toString())
@@ -54,6 +57,23 @@ const AccountsModal: FunctionComponent<AccountsModalProps> = ({
       })
     }
   }, [marginAccounts, newAccPublicKey])
+
+  useEffect(() => {
+    if (accountNames && marginAccounts) {
+      const namedAccounts = []
+      for (let i = 0; marginAccounts.length > i; i++) {
+        const hasName = accountNames.find(
+          (acc) => acc.publicKey === marginAccounts[i].publicKey.toString()
+        )
+        if (hasName) {
+          namedAccounts.push({ ...marginAccounts[i], name: hasName.name })
+        } else {
+          namedAccounts.push({ ...marginAccounts[i], name: '' })
+        }
+      }
+      setNamedAccounts(namedAccounts)
+    }
+  }, [accountNames, marginAccounts])
 
   const handleNewAccountCreation = (newAccPublicKey) => {
     if (newAccPublicKey) {
@@ -128,7 +148,7 @@ const AccountsModal: FunctionComponent<AccountsModalProps> = ({
                 Select a Margin Account
               </RadioGroup.Label>
               <div className="space-y-2">
-                {marginAccounts.map((account) => (
+                {marginAccounts.map((account, i) => (
                   <RadioGroup.Option
                     key={account.publicKey.toString()}
                     value={account}
@@ -150,11 +170,13 @@ const AccountsModal: FunctionComponent<AccountsModalProps> = ({
                                 <CurrencyDollarIcon className="h-5 w-5 mr-2.5" />
                                 <div>
                                   <div className="pb-0.5">
-                                    {abbreviateAddress(account.publicKey)}
+                                    {namedAccounts[i] && namedAccounts[i].name
+                                      ? namedAccounts[i].name
+                                      : abbreviateAddress(account.publicKey)}
                                   </div>
                                   {prices && selectedMangoGroup ? (
                                     <div className="text-th-fgd-3 text-xs">
-                                      {getAccountInfo(account)}
+                                      {getAccountInfo(marginAccounts[i])}
                                     </div>
                                   ) : null}
                                 </div>
@@ -178,11 +200,10 @@ const AccountsModal: FunctionComponent<AccountsModalProps> = ({
           <>
             <NewAccount onAccountCreation={handleNewAccountCreation} />
             <LinkButton
-              className="flex items-center mt-4 text-th-fgd-3"
+              className="flex items-center justify-center mt-6 text-th-fgd-2 w-full"
               onClick={() => setShowNewAccountForm(false)}
             >
-              <ChevronLeftIcon className="h-5 w-5 mr-1" />
-              Back
+              Cancel
             </LinkButton>
           </>
         )
