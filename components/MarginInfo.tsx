@@ -77,7 +77,6 @@ export default function MarginInfo() {
   useEffect(() => {
     if (selectedMangoGroup) {
       selectedMangoGroup.getPrices(connection).then((prices) => {
-
         const accountEquity = selectedMarginAccount
           ? selectedMarginAccount.computeValue(selectedMangoGroup, prices)
           : 0
@@ -86,13 +85,13 @@ export default function MarginInfo() {
         if (selectedMarginAccount) {
           leverage = accountEquity
             ? (
-              1 /
-              (selectedMarginAccount.getCollateralRatio(
-                selectedMangoGroup,
-                prices
-              ) -
-                1)
-            ).toFixed(2)
+                1 /
+                (selectedMarginAccount.getCollateralRatio(
+                  selectedMangoGroup,
+                  prices
+                ) -
+                  1)
+              ).toFixed(2)
             : '0'
         } else {
           leverage = '0'
@@ -100,27 +99,26 @@ export default function MarginInfo() {
 
         const accountCollateralRatioCurrent = selectedMarginAccount
           ? selectedMarginAccount.getCollateralRatio(
-            selectedMangoGroup,
-            prices
-          ) > 100 ?
-            '>10000'
-            :
-            (selectedMarginAccount.getCollateralRatio(
               selectedMangoGroup,
               prices
-            ) * 100).toFixed(0) || 0
+            ) > 100
+            ? '>10000'
+            : (
+                selectedMarginAccount.getCollateralRatio(
+                  selectedMangoGroup,
+                  prices
+                ) * 100
+              ).toFixed(0) || 0
           : 0
 
         const accountCollateralCurrent = selectedMarginAccount
-          ? selectedMarginAccount.getAssetsVal(
-            selectedMangoGroup,
-            prices)
+          ? selectedMarginAccount.getAssetsVal(selectedMangoGroup, prices)
           : 0
 
         const accountCollateralRequired = selectedMarginAccount
-          ? (selectedMarginAccount.getAssetsVal(
-            selectedMangoGroup,
-            prices) - accountEquity) * (selectedMangoGroup.maintCollRatio / 100)
+          ? (selectedMarginAccount.getAssetsVal(selectedMangoGroup, prices) -
+              accountEquity) *
+            selectedMangoGroup.maintCollRatio
           : 0
 
         setMAccountInfo([
