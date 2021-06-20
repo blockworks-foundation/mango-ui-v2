@@ -17,7 +17,7 @@ const MarketHeader = () => {
   const [ohlcv, setOhlcv] = useState(null)
   const [loading, setLoading] = useState(false)
   const change = ohlcv ? ((ohlcv.c[0] - ohlcv.o[0]) / ohlcv.o[0]) * 100 : '--'
-  const volume = ohlcv ? ohlcv.v[0] : '--'
+  const volume = ohlcv && ohlcv.v && ohlcv.v.length ? ohlcv.v[0] : '--'
 
   const fetchOhlcv = useCallback(async () => {
     if (!selectedMarketName) return
@@ -49,6 +49,7 @@ const MarketHeader = () => {
     const to = utcTo.getTime() / 1000
 
     const ohlcv = await ChartApi.getOhlcv(selectedMarketName, '1D', from, to)
+    console.log('fetchOhlcv2', ohlcv)
     if (ohlcv) {
       setOhlcv(ohlcv)
       setLoading(false)
