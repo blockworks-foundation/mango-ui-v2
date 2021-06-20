@@ -49,7 +49,6 @@ const MarketHeader = () => {
     const to = utcTo.getTime() / 1000
 
     const ohlcv = await ChartApi.getOhlcv(selectedMarketName, '1D', from, to)
-    console.log('fetchOhlcv2', ohlcv)
     if (ohlcv) {
       setOhlcv(ohlcv)
       setLoading(false)
