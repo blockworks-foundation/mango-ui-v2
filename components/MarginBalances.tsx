@@ -6,6 +6,7 @@ import FloatingElement from './FloatingElement'
 import { ElementTitle } from './styles'
 import useMangoStore from '../stores/useMangoStore'
 import useMarketList from '../hooks/useMarketList'
+import useLocalStorageState from '../hooks/useLocalStorageState'
 import {
   abbreviateAddress,
   floorToDecimal,
@@ -33,6 +34,7 @@ export default function MarginBalances() {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false)
   const [showBorrowModal, setShowBorrowModal] = useState(false)
   const [showAccountsModal, setShowAccountsModal] = useState(false)
+  const [accountNames] = useLocalStorageState('accountNames')
 
   const handleCloseDeposit = useCallback(() => {
     setShowDepositModal(false)
@@ -50,13 +52,22 @@ export default function MarginBalances() {
     setShowAccountsModal(false)
   }, [])
 
+  const accountName =
+    accountNames && selectedMarginAccount
+      ? accountNames.find(
+          (acc) => acc.publicKey === selectedMarginAccount.publicKey.toString()
+        )
+      : ''
+
   return (
     <>
       <FloatingElement>
         <div className="flex justify-between pb-5">
           <div className="w-8 h-8" />
           <div className="flex flex-col items-center">
-            <ElementTitle noMarignBottom>Margin Account</ElementTitle>
+            <ElementTitle noMarignBottom>
+              {accountName ? accountName.name : 'Account'}
+            </ElementTitle>
             {selectedMarginAccount ? (
               <Link href={'/account'}>
                 <a className="pt-1 text-th-fgd-3 text-xs underline hover:no-underline">

@@ -1,17 +1,25 @@
 import { FunctionComponent, useState } from 'react'
 import useMangoStore from '../stores/useMangoStore'
 import useLocalStorageState from '../hooks/useLocalStorageState'
-import { ExclamationCircleIcon } from '@heroicons/react/outline'
+import {
+  ExclamationCircleIcon,
+  InformationCircleIcon,
+} from '@heroicons/react/outline'
 import Input from './Input'
 import Button from './Button'
+import Modal from './Modal'
+import { ElementTitle } from './styles'
+import Tooltip from './Tooltip'
 
-interface AccountNameFormProps {
+interface AccountNameModalProps {
   accountName?: string
+  isOpen: boolean
   onClose?: (x?) => void
 }
 
-const AccountNameForm: FunctionComponent<AccountNameFormProps> = ({
+const AccountNameModal: FunctionComponent<AccountNameModalProps> = ({
   accountName,
+  isOpen,
   onClose,
 }) => {
   const [name, setName] = useState(accountName || '')
@@ -59,7 +67,15 @@ const AccountNameForm: FunctionComponent<AccountNameFormProps> = ({
   }
 
   return (
-    <>
+    <Modal onClose={onClose} isOpen={isOpen}>
+      <Modal.Header>
+        <div className="flex items-center">
+          <ElementTitle noMarignBottom>Name your Account</ElementTitle>
+          <Tooltip content="Account names are stored locally in your browser. If you clear your browser cache they will be lost. We'll be storing them on-chain soon.">
+            <InformationCircleIcon className="h-5 w-5 ml-2 text-th-primary" />
+          </Tooltip>
+        </div>
+      </Modal.Header>
       <div className="pb-2 text-th-fgd-1">Account Name</div>
       <Input
         type="text"
@@ -83,8 +99,8 @@ const AccountNameForm: FunctionComponent<AccountNameFormProps> = ({
       >
         Save Name
       </Button>
-    </>
+    </Modal>
   )
 }
 
-export default AccountNameForm
+export default AccountNameModal

@@ -18,7 +18,7 @@ import AccountHistory from '../components/account-page/AccountHistory'
 import AccountsModal from '../components/AccountsModal'
 import EmptyState from '../components/EmptyState'
 import Button from '../components/Button'
-import AccountNameForm from '../components/AccountNameForm'
+import AccountNameModal from '../components/AccountNameModal'
 import Modal from '../components/Modal'
 import { ElementTitle } from '../components/styles'
 import useLocalStorageState from '../hooks/useLocalStorageState'
@@ -86,10 +86,10 @@ export default function Account() {
     <div className={`bg-th-bkg-1 text-th-fgd-1 transition-all`}>
       <TopBar />
       <PageBodyContainer>
-        <div className="flex flex-col sm:flex-row items-end justify-between pt-8 pb-3 sm:pb-6 md:pt-10">
+        <div className="flex flex-col md:flex-row md:items-end justify-between pt-8 pb-3 sm:pb-6 md:pt-10">
           {selectedMarginAccount ? (
             <>
-              <div className="flex items-end">
+              <div className="flex flex-col sm:flex-row sm:items-end pb-4 md:pb-0">
                 <h1 className={`font-semibold mr-3 text-th-fgd-1 text-2xl`}>
                   {accountName ? accountName : 'Account'}
                 </h1>
@@ -108,7 +108,7 @@ export default function Account() {
               </div>
               <div className="flex items-center">
                 <Button
-                  className="text-xs flex items-center justify-center mr-2 pt-0 pb-0 h-8 pl-3 pr-3"
+                  className="text-xs flex flex-grow items-center justify-center mr-2 pt-0 pb-0 h-8 pl-3 pr-3"
                   onClick={() => setShowNameModal(true)}
                 >
                   <div className="flex items-center">
@@ -117,7 +117,7 @@ export default function Account() {
                   </div>
                 </Button>
                 <a
-                  className="border border-th-fgd-4 bg-th-bkg-2 default-transition flex font-bold h-8 items-center justify-center pl-3 pr-3 rounded-md text-th-fgd-1 text-xs hover:bg-th-bkg-3 hover:text-th-fgd-1 focus:outline-none"
+                  className="border border-th-fgd-4 bg-th-bkg-2 default-transition flex flex-grow font-bold h-8 items-center justify-center pl-3 pr-3 rounded-md text-th-fgd-1 text-xs hover:bg-th-bkg-3 hover:text-th-fgd-1 focus:outline-none"
                   href={`https://explorer.solana.com/address/${selectedMarginAccount?.publicKey}`}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -126,7 +126,7 @@ export default function Account() {
                   <ExternalLinkIcon className={`h-4 w-4 ml-1.5`} />
                 </a>
                 <Button
-                  className="text-xs flex items-center justify-center ml-2 pt-0 pb-0 h-8 pl-3 pr-3"
+                  className="text-xs flex flex-grow items-center justify-center ml-2 pt-0 pb-0 h-8 pl-3 pr-3"
                   onClick={() => setShowAccountsModal(true)}
                 >
                   <div className="flex items-center">
@@ -204,15 +204,11 @@ export default function Account() {
         />
       ) : null}
       {showNameModal ? (
-        <Modal onClose={handleCloseNameModal} isOpen={showNameModal}>
-          <Modal.Header>
-            <ElementTitle noMarignBottom>Name your Account</ElementTitle>
-          </Modal.Header>
-          <AccountNameForm
-            accountName={accountName}
-            onClose={handleCloseNameModal}
-          />
-        </Modal>
+        <AccountNameModal
+          accountName={accountName}
+          isOpen={showNameModal}
+          onClose={handleCloseNameModal}
+        />
       ) : null}
     </div>
   )

@@ -1,5 +1,8 @@
 import React, { FunctionComponent, useEffect, useMemo, useState } from 'react'
-import { ExclamationCircleIcon } from '@heroicons/react/outline'
+import {
+  ExclamationCircleIcon,
+  InformationCircleIcon,
+} from '@heroicons/react/outline'
 import {
   nativeToUi,
   sleep,
@@ -21,6 +24,7 @@ import { PublicKey } from '@solana/web3.js'
 import Loading from './Loading'
 import Button from './Button'
 import Slider from './Slider'
+import Tooltip from './Tooltip'
 import { notify } from '../utils/notifications'
 
 interface NewAccountProps {
@@ -185,8 +189,11 @@ const NewAccount: FunctionComponent<NewAccountProps> = ({
       <ElementTitle noMarignBottom>New Account</ElementTitle>
       {showNewAccountName ? (
         <>
-          <div className="text-th-fgd-3 text-center pb-4 pt-2">
+          <div className="flex items-center justify-center text-th-fgd-3 pb-4 pt-2">
             Create a nickname for your account
+            <Tooltip content="Account names are stored locally in your browser. If you clear your browser cache they will be lost. We'll be storing them on-chain soon.">
+              <InformationCircleIcon className="h-5 w-5 ml-2 text-th-primary" />
+            </Tooltip>
           </div>
           <div className="pb-2 text-th-fgd-1">
             Account Name <span className="text-th-fgd-3">(Optional)</span>
