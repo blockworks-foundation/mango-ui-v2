@@ -6,7 +6,7 @@ import {
   ScaleIcon,
 } from '@heroicons/react/outline'
 import { nativeToUi } from '@blockworks-foundation/mango-client/lib/utils'
-import { groupBy } from '../utils'
+import { groupBy, usdFormatter } from '../utils'
 import useMangoStore from '../stores/useMangoStore'
 import useTradeHistory from '../hooks/useTradeHistory'
 
@@ -51,7 +51,7 @@ const calculatePNL = (tradeHistory, prices, mangoGroup) => {
     total = total + profitAndLoss[assetName] * prices[assetIndex[assetName]]
   }
 
-  return total.toFixed(2)
+  return usdFormatter.format(total)
 }
 
 const useMarginInfo = () => {
@@ -106,9 +106,9 @@ const useMarginInfo = () => {
         setMAccountInfo([
           {
             label: 'Account Value',
-            value: accountEquity.toFixed(2),
+            value: usdFormatter.format(accountEquity),
             unit: '',
-            currency: '$',
+            currency: '',
             desc: 'The value of the account',
             icon: (
               <CurrencyDollarIcon className="flex-shrink-0 h-5 w-5 mr-2 text-th-primary" />
@@ -118,7 +118,7 @@ const useMarginInfo = () => {
             label: 'Total PNL',
             value: calculatePNL(tradeHistory, prices, selectedMangoGroup),
             unit: '',
-            currency: '$',
+            currency: '',
             desc: 'Total PNL reflects trades placed after March 15th 2021 04:00 AM UTC. Visit the Learn link in the top menu for more information.',
             icon: (
               <ChartBarIcon className="flex-shrink-0 h-5 w-5 mr-2 text-th-primary" />
