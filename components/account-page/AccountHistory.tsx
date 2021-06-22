@@ -8,13 +8,16 @@ const historyViews = ['Trades', 'Deposits', 'Withdrawals', 'Liquidations']
 
 export default function AccountHistory() {
   const actions = useMangoStore((s) => s.actions)
+  const selectedMarginAccount = useMangoStore(
+    (s) => s.selectedMarginAccount.current
+  )
   const [view, setView] = useState('Trades')
 
   useEffect(() => {
     actions.fetchDepositHistory()
     actions.fetchWithdrawalHistory()
     actions.fetchLiquidationHistory()
-  }, [])
+  }, [selectedMarginAccount])
 
   return (
     <>
