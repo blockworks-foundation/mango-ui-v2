@@ -22,14 +22,14 @@ export const defaultLayouts = {
   xl: [
     { i: 'tvChart', x: 0, y: 0, w: 6, h: 30 },
     { i: 'orderbook', x: 6, y: 0, w: 3, h: 17 },
-    { i: 'tradeForm', x: 9, y: 0, w: 3, h: 12 },
+    { i: 'tradeForm', x: 9, y: 0, w: 3, h: 13 },
     { i: 'marketTrades', x: 6, y: 1, w: 3, h: 13 },
     { i: 'balanceInfo', x: 9, y: 1, w: 3, h: 15 },
     { i: 'userInfo', x: 0, y: 2, w: 9, h: 19 },
     { i: 'marginInfo', x: 9, y: 2, w: 3, h: 13 },
   ],
   lg: [
-    { i: 'tvChart', x: 0, y: 0, w: 8, h: 26, minW: 2 },
+    { i: 'tvChart', x: 0, y: 0, w: 8, h: 28, minW: 2 },
     { i: 'balanceInfo', x: 8, y: 0, w: 4, h: 15, minW: 2 },
     { i: 'marginInfo', x: 8, y: 1, w: 4, h: 13, minW: 2 },
     { i: 'orderbook', x: 0, y: 2, w: 4, h: 17, minW: 2 },
@@ -38,7 +38,7 @@ export const defaultLayouts = {
     { i: 'userInfo', x: 0, y: 3, w: 12, h: 19, minW: 6 },
   ],
   md: [
-    { i: 'tvChart', x: 0, y: 0, w: 8, h: 26, minW: 2 },
+    { i: 'tvChart', x: 0, y: 0, w: 8, h: 28, minW: 2 },
     { i: 'balanceInfo', x: 8, y: 0, w: 4, h: 15, minW: 2 },
     { i: 'marginInfo', x: 8, y: 1, w: 4, h: 13, minW: 2 },
     { i: 'orderbook', x: 0, y: 2, w: 4, h: 17, minW: 2 },
@@ -49,7 +49,7 @@ export const defaultLayouts = {
   sm: [
     { i: 'tvChart', x: 0, y: 0, w: 12, h: 25, minW: 6 },
     { i: 'balanceInfo', x: 0, y: 1, w: 6, h: 15, minW: 2 },
-    { i: 'marginInfo', x: 6, y: 1, w: 6, h: 13, minW: 2 },
+    { i: 'marginInfo', x: 6, y: 1, w: 6, h: 15, minW: 2 },
     { i: 'tradeForm', x: 0, y: 2, w: 12, h: 13, minW: 3 },
     { i: 'orderbook', x: 0, y: 3, w: 6, h: 17, minW: 3 },
     { i: 'marketTrades', x: 6, y: 3, w: 6, h: 17, minW: 2 },

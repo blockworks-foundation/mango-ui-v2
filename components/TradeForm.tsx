@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { ExclamationCircleIcon } from '@heroicons/react/outline'
 import styled from '@emotion/styled'
 import useMarket from '../hooks/useMarket'
 import useIpAddress from '../hooks/useIpAddress'
@@ -30,6 +31,7 @@ export default function TradeForm() {
     (s) => s.tradeForm
   )
   const { ipAllowed } = useIpAddress()
+  const [invalidInputMessage, setInvalidInputMessage] = useState('')
   const [postOnly, setPostOnly] = useState(false)
   const [ioc, setIoc] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -44,6 +46,33 @@ export default function TradeForm() {
       ),
     []
   )
+
+  useEffect(() => {
+    setBaseSize('')
+    setInvalidInputMessage('')
+    setPrice('')
+    setQuoteSize('')
+  }, [baseCurrency])
+
+  useEffect(() => {
+    if (market && baseSize >= market.minOrderSize) {
+      setInvalidInputMessage('')
+    }
+  }, [baseSize])
+
+  useEffect(() => {
+    const usePrice = tradeType === 'Limit' ? Number(price) : markPrice
+    if (baseSize) {
+      const rawQuoteSize = Number(baseSize) * usePrice
+      const quoteSize = floorToDecimal(rawQuoteSize, sizeDecimalCount)
+      setQuoteSize(quoteSize)
+    }
+    if (quoteSize && usePrice && !baseSize) {
+      const rawBaseSize = quoteSize / usePrice
+      const baseSize = floorToDecimal(rawBaseSize, sizeDecimalCount)
+      setBaseSize(baseSize)
+    }
+  }, [price, tradeType])
 
   const setSide = (side) =>
     set((s) => {
@@ -227,19 +256,31 @@ export default function TradeForm() {
     }
   }
 
+  const validateInput = () => {
+    if (market && baseSize < market.minOrderSize) {
+      setInvalidInputMessage(
+        `Size must be greater than or equal to ${market.minOrderSize} ${baseCurrency}`
+      )
+    }
+  }
+
   const disabledTradeButton =
-    (!price && tradeType === 'Limit') || !baseSize || !connected || submitting
+    (!price && tradeType === 'Limit') ||
+    !baseSize ||
+    (market && baseSize < market.minOrderSize) ||
+    !connected ||
+    submitting
 
   return (
     <FloatingElement>
       <div>
-        <div className={`flex text-base text-th-fgd-4`}>
+        <div className={`flex mb-4 text-base text-th-fgd-4`}>
           <button
             onClick={() => setSide('buy')}
             className={`flex-1 outline-none focus:outline-none`}
           >
             <div
-              className={`hover:text-th-green pb-1 transition-colors duration-500
+              className={`border-b-2 border-th-bkg-3 hover:text-th-green pb-2 transition-colors duration-500
                 ${
                   side === 'buy' &&
                   `text-th-green hover:text-th-green border-b-2 border-th-green`
@@ -253,7 +294,7 @@ export default function TradeForm() {
             className={`flex-1 outline-none focus:outline-none`}
           >
             <div
-              className={`hover:text-th-red pb-1 transition-colors duration-500
+              className={`border-b-2 border-th-bkg-3 hover:text-th-red pb-2 transition-colors duration-500
                 ${
                   side === 'sell' &&
                   `text-th-red hover:text-th-red border-b-2 border-th-red`
@@ -264,7 +305,7 @@ export default function TradeForm() {
             </div>
           </button>
         </div>
-        <Input.Group className="mt-4">
+        <Input.Group className="mt-2">
           <Input
             type="number"
             min="0"
@@ -289,6 +330,7 @@ export default function TradeForm() {
             type="number"
             min="0"
             step={market?.minOrderSize || 1}
+            onBlur={() => validateInput()}
             onChange={(e) => onSetBaseSize(e.target.value)}
             value={baseSize}
             className="rounded-r-none"
@@ -300,6 +342,7 @@ export default function TradeForm() {
             type="number"
             min="0"
             step={market?.minOrderSize || 1}
+            onBlur={() => validateInput()}
             onChange={(e) => onSetQuoteSize(e.target.value)}
             value={quoteSize}
             className="rounded-l-none"
@@ -307,6 +350,12 @@ export default function TradeForm() {
             suffix={quoteCurrency}
           />
         </Input.Group>
+        {invalidInputMessage ? (
+          <div className="flex items-center pt-1.5 text-th-red">
+            <ExclamationCircleIcon className="h-4 w-4 mr-1.5" />
+            {invalidInputMessage}
+          </div>
+        ) : null}
         {tradeType !== 'Market' ? (
           <div className="flex items-center mt-4">
             <Switch checked={postOnly} onChange={postOnChange}>
@@ -332,11 +381,7 @@ export default function TradeForm() {
                   'border-th-green hover:border-th-green-dark'
                 } text-th-green hover:text-th-fgd-1 hover:bg-th-green-dark flex-grow`}
               >
-                {`${
-                  baseSize > 0
-                    ? 'Buy ' + baseSize
-                    : 'Set BUY bid >= ' + market?.minOrderSize
-                } ${baseCurrency}`}
+                {`${baseSize > 0 ? 'Buy ' + baseSize : 'Buy'} ${baseCurrency}`}
               </Button>
             ) : (
               <Button
@@ -348,9 +393,7 @@ export default function TradeForm() {
                 } text-th-red hover:text-th-fgd-1 hover:bg-th-red-dark flex-grow`}
               >
                 {`${
-                  baseSize > 0
-                    ? 'Sell ' + baseSize
-                    : 'Set SELL bid >= ' + market?.minOrderSize
+                  baseSize > 0 ? 'Sell ' + baseSize : 'Sell'
                 } ${baseCurrency}`}
               </Button>
             )
