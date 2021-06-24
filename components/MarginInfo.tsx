@@ -142,14 +142,14 @@ export default function MarginInfo() {
           },
           {
             label: 'Maintenance Collateral Ratio',
-            value: 110,
+            value: '110',
             unit: '%',
             currency: '',
             desc: 'The collateral ratio you must maintain to not get liquidated',
           },
           {
             label: 'Initial Collateral Ratio',
-            value: 120,
+            value: '120',
             unit: '%',
             currency: '',
             desc: 'The collateral ratio required to open a new margin position',
