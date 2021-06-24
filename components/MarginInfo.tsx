@@ -75,51 +75,24 @@ export default function MarginInfo() {
   const [openAlertModal, setOpenAlertModal] = useState(false)
 
   useEffect(() => {
-    if (selectedMangoGroup) {
+    if (selectedMangoGroup && selectedMarginAccount) {
       selectedMangoGroup.getPrices(connection).then((prices) => {
-        const accountEquity = selectedMarginAccount
-          ? selectedMarginAccount.computeValue(selectedMangoGroup, prices)
-          : 0
-
-        let leverage
-        if (selectedMarginAccount) {
-          leverage = accountEquity
-            ? (
-                1 /
-                (selectedMarginAccount.getCollateralRatio(
-                  selectedMangoGroup,
-                  prices
-                ) -
-                  1)
-              ).toFixed(2)
-            : '0'
-        } else {
-          leverage = '0'
-        }
-
-        const accountCollateralRatioCurrent = selectedMarginAccount
-          ? selectedMarginAccount.getCollateralRatio(
-              selectedMangoGroup,
-              prices
-            ) > 100
-            ? '>10000'
-            : (
-                selectedMarginAccount.getCollateralRatio(
-                  selectedMangoGroup,
-                  prices
-                ) * 100
-              ).toFixed(0) || 0
-          : 0
-
-        const accountCollateralCurrent = selectedMarginAccount
-          ? selectedMarginAccount.getAssetsVal(selectedMangoGroup, prices)
-          : 0
-
-        const accountCollateralRequired = selectedMarginAccount
-          ? (selectedMarginAccount.getAssetsVal(selectedMangoGroup, prices) -
-              accountEquity) *
-            selectedMangoGroup.maintCollRatio
-          : 0
+        const accountEquity = selectedMarginAccount.computeValue(
+          selectedMangoGroup,
+          prices
+        )
+        const assetsVal = selectedMarginAccount.getAssetsVal(
+          selectedMangoGroup,
+          prices
+        )
+        const liabsVal = selectedMarginAccount.getLiabsVal(
+          selectedMangoGroup,
+          prices
+        )
+        const collateralRatio = assetsVal / liabsVal
+        const leverage = accountEquity
+          ? (1 / (collateralRatio - 1)).toFixed(2)
+          : '0'
 
         setMAccountInfo([
           {
@@ -141,28 +114,45 @@ export default function MarginInfo() {
             value: calculatePNL(tradeHistory, prices, selectedMangoGroup),
             unit: '',
             currency: '$',
-            desc: 'Total PNL reflects trades placed after March 15th 2021 04:00 AM UTC. Visit the Learn link in the top menu for more information.',
+            desc: 'Total PNL reflects trades but not liquidations. Visit the Learn link in the top menu for more information.',
+          },
+          {
+            label: 'Current Assets Value',
+            value: assetsVal.toFixed(2),
+            unit: '',
+            currency: '$',
+            desc: 'The current value of all your assets',
+          },
+          {
+            label: 'Current Liabilities Value',
+            value: liabsVal.toFixed(2),
+            unit: '',
+            currency: '$',
+            desc: 'The current value of all your liabilities',
           },
           {
             label: 'Collateral Ratio',
-            value: accountCollateralRatioCurrent,
+            value:
+              collateralRatio > 9.99
+                ? '>999'
+                : (collateralRatio * 100).toFixed(0),
             unit: '%',
             currency: '',
             desc: 'The current collateral ratio',
           },
           {
-            label: 'Minimum Collateral Required',
-            value: accountCollateralRequired.toFixed(2),
-            unit: '',
-            currency: '$',
-            desc: 'The collateral you must maintain to not get liquidated (Maintenance Collateral Ratio = 110%)',
+            label: 'Maintenance Collateral Ratio',
+            value: 110,
+            unit: '%',
+            currency: '',
+            desc: 'The collateral ratio you must maintain to not get liquidated',
           },
           {
-            label: 'Current Collateral Available',
-            value: accountCollateralCurrent.toFixed(2),
-            unit: '',
-            currency: '$',
-            desc: 'The collateral available to protect margin position',
+            label: 'Initial Collateral Ratio',
+            value: 120,
+            unit: '%',
+            currency: '',
+            desc: 'The collateral ratio required to open a new margin position',
           },
         ])
       })
