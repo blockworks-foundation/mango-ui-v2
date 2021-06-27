@@ -39,19 +39,22 @@ export function useBalances(): Balances[] {
       return []
     }
 
-    const nativeBaseFree = openOrders?.baseTokenFree || 0
-    const nativeQuoteFree = openOrders?.quoteTokenFree || 0
-
-    const nativeBaseLocked = openOrders
-      ? openOrders.baseTokenTotal - nativeBaseFree
-      : 0
-    const nativeQuoteLocked = openOrders
-      ? openOrders?.quoteTokenTotal - nativeQuoteFree
-      : 0
-
-    const nativeBaseUnsettled = openOrders?.baseTokenFree || 0
-    const nativeQuoteUnsettled = openOrders?.quoteTokenFree || 0
-    const tokenIndex = marketIndex
+    let nativeBaseFree = 0
+    let nativeQuoteFree = 0
+    let nativeBaseLocked = 0
+    let nativeQuoteLocked = 0
+    if (openOrders) {
+      nativeBaseFree = openOrders.baseTokenFree.toNumber()
+      nativeQuoteFree = openOrders.quoteTokenFree
+        .add(openOrders['referrerRebatesAccrued'])
+        .toNumber()
+      nativeBaseLocked = openOrders.baseTokenTotal
+        .sub(openOrders.baseTokenFree)
+        .toNumber()
+      nativeQuoteLocked = openOrders.quoteTokenTotal
+        .sub(openOrders.quoteTokenFree)
+        .toNumber()
+    }
 
     const net = (borrows, currencyIndex) => {
       const amount =
@@ -82,14 +85,14 @@ export function useBalances(): Balances[] {
         ),
         orders: nativeToUi(
           nativeBaseLocked,
-          mangoGroup.mintDecimals[tokenIndex]
+          mangoGroup.mintDecimals[marketIndex]
         ),
         openOrders,
         unsettled: nativeToUi(
-          nativeBaseUnsettled,
-          mangoGroup.mintDecimals[tokenIndex]
+          nativeBaseFree,
+          mangoGroup.mintDecimals[marketIndex]
         ),
-        net: net(nativeBaseLocked, tokenIndex),
+        net: net(nativeBaseLocked, marketIndex),
       },
       {
         market,

@@ -225,3 +225,8 @@ export const trimDecimals = (n, digits) => {
 
   return temp / step
 }
+
+export const usdFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+})
