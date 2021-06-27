@@ -187,6 +187,15 @@ export const DECIMALS = {
   WUSDT: 2,
 }
 
+// Precision for depositing/withdrawing
+export const DECIMALS = {
+  BTC: 5,
+  ETH: 4,
+  USDC: 2,
+  USDT: 2,
+  WUSDT: 2,
+}
+
 export const getSymbolForTokenMintAddress = (address: string): string => {
   if (address && address.length) {
     return TOKEN_MINTS.find((m) => m.address.toString() === address)?.name || ''
@@ -211,8 +220,8 @@ export const copyToClipboard = (copyThis) => {
 
 // Truncate decimals without rounding
 export const trimDecimals = (n, digits) => {
-  const step = Math.pow(10, digits || 0)
-  const temp = Math.trunc(step * n)
+  var step = Math.pow(10, digits || 0)
+  var temp = Math.trunc(step * n)
 
   return temp / step
 }

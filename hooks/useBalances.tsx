@@ -8,10 +8,9 @@ import {
   floorToDecimal,
 } from '../utils'
 import useAllMarkets from './useAllMarkets'
-import { sumBy } from 'lodash'
 
 export function useBalances(): Balances[] {
-  const balances = []
+  let balances = []
   const markets = useAllMarkets()
   const mangoGroup = useMangoStore((s) => s.selectedMangoGroup.current)
   const marginAccount = useMangoStore((s) => s.selectedMarginAccount.current)
@@ -41,23 +40,23 @@ export function useBalances(): Balances[] {
     }
 
     const nativeBaseFree = openOrders?.baseTokenFree || 0
-    const nativeQuoteFree =
-      (openOrders?.quoteTokenFree || 0) +
-      (openOrders?.['referrerRebatesAccrued'].toNumber() || 0)
+    const nativeQuoteFree = openOrders?.quoteTokenFree || 0
 
     const nativeBaseLocked = openOrders
-      ? openOrders.baseTokenTotal - openOrders?.baseTokenFree
+      ? openOrders.baseTokenTotal - nativeBaseFree
       : 0
     const nativeQuoteLocked = openOrders
-      ? openOrders?.quoteTokenTotal - (openOrders?.quoteTokenFree || 0)
+      ? openOrders?.quoteTokenTotal - nativeQuoteFree
       : 0
 
+    const nativeBaseUnsettled = openOrders?.baseTokenFree || 0
+    const nativeQuoteUnsettled = openOrders?.quoteTokenFree || 0
     const tokenIndex = marketIndex
 
-    const net = (locked, currencyIndex) => {
+    const net = (borrows, currencyIndex) => {
       const amount =
         marginAccount.getNativeDeposit(mangoGroup, currencyIndex) +
-        locked -
+        borrows -
         marginAccount.getNativeBorrow(mangoGroup, currencyIndex)
 
       return floorToDecimal(
@@ -85,8 +84,9 @@ export function useBalances(): Balances[] {
           nativeBaseLocked,
           mangoGroup.mintDecimals[tokenIndex]
         ),
+        openOrders,
         unsettled: nativeToUi(
-          nativeBaseFree,
+          nativeBaseUnsettled,
           mangoGroup.mintDecimals[tokenIndex]
         ),
         net: net(nativeBaseLocked, tokenIndex),
@@ -105,41 +105,25 @@ export function useBalances(): Balances[] {
           mangoGroup,
           quoteCurrencyIndex
         ),
+        openOrders,
         orders: nativeToUi(
           nativeQuoteLocked,
           mangoGroup.mintDecimals[quoteCurrencyIndex]
         ),
         unsettled: nativeToUi(
-          nativeQuoteFree,
+          nativeQuoteUnsettled,
           mangoGroup.mintDecimals[quoteCurrencyIndex]
         ),
         net: net(nativeQuoteLocked, quoteCurrencyIndex),
       },
     ]
-    balances.push(marketPair)
+    balances = balances.concat(marketPair)
   }
 
-  const baseBalances = balances.map((b) => b[0])
-  const quoteBalances = balances.map((b) => b[1])
-  const quoteMeta = quoteBalances[0]
-  const quoteInOrders = sumBy(quoteBalances, 'orders')
-  const unsettled = sumBy(quoteBalances, 'unsettled')
-  const net =
-    quoteMeta.marginDeposits + unsettled - quoteMeta.borrows - quoteInOrders
-  const quoteCurrencyIndex = Object.entries(symbols).findIndex(
-    (x) => x[0] === quoteMeta.coin
-  )
+  balances.sort((a, b) => (a.coin > b.coin ? 1 : -1))
+  balances = balances.filter(function (elem, index, self) {
+    return index === self.map((a) => a.coin).indexOf(elem.coin)
+  })
 
-  return baseBalances.concat([
-    {
-      market: null,
-      key: `${quoteMeta.coin}${quoteMeta.coin}`,
-      coin: quoteMeta.coin,
-      marginDeposits: quoteMeta.marginDeposits,
-      borrows: quoteMeta.borrows,
-      orders: quoteInOrders,
-      unsettled,
-      net: floorToDecimal(net, mangoGroup.mintDecimals[quoteCurrencyIndex]),
-    },
-  ])
+  return balances
 }

@@ -179,27 +179,13 @@ const AccountSelect = ({
                   </Listbox.Option>
                 )
               })}
-              {missingTokens && accounts.length !== Object.keys(symbols).length
-                ? missingTokens.map((token) => (
-                    <Listbox.Option disabled key={token} value={token}>
-                      <div
-                        className={`opacity-50 p-2 hover:cursor-not-allowed`}
-                      >
-                        <div className={`flex items-center text-th-fgd-1`}>
-                          <img
-                            alt=""
-                            width="20"
-                            height="20"
-                            src={`/assets/icons/${token.toLowerCase()}.svg`}
-                            className="mr-2"
-                          />
-                          <div className={`flex-grow text-left`}>{token}</div>
-                          <div className={`text-xs`}>No wallet address</div>
-                        </div>
-                      </div>
-                    </Listbox.Option>
-                  ))
-                : null}
+              {missingTokens && accounts.length !== 3 ? (
+                <Listbox.Option value="" disabled={true}>
+                  <div className="flex items-center justify-center text-th-fgd-1 p-2">
+                    Wallet token address not found for: {missingTokens}
+                  </div>
+                </Listbox.Option>
+              ) : null}
             </Listbox.Options>
           </>
         )}

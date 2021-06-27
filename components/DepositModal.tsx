@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Disclosure } from '@headlessui/react'
 import {
   ExclamationCircleIcon,
@@ -32,23 +32,10 @@ import Loading from './Loading'
 import Button, { LinkButton } from './Button'
 import Tooltip from './Tooltip'
 import Slider from './Slider'
-import InlineNotification from './InlineNotification'
 import { notify } from '../utils/notifications'
 
-interface DepositModalProps {
-  onClose: () => void
-  isOpen: boolean
-  settleDeficit?: number
-  tokenSymbol?: string
-}
-
-const DepositModal: FunctionComponent<DepositModalProps> = ({
-  isOpen,
-  onClose,
-  settleDeficit,
-  tokenSymbol = '',
-}) => {
-  const [inputAmount, setInputAmount] = useState(settleDeficit || 0)
+const DepositModal = ({ isOpen, onClose }) => {
+  const [inputAmount, setInputAmount] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [simulation, setSimulation] = useState(null)
   const [showSimulation, setShowSimulation] = useState(false)
@@ -87,22 +74,7 @@ const DepositModal: FunctionComponent<DepositModalProps> = ({
   )
 
   useEffect(() => {
-    if (tokenSymbol) {
-      const symbolMint = symbols[tokenSymbol]
-      const symbolAccount = walletAccounts.find(
-        (a) => a.account.mint.toString() === symbolMint
-      )
-      if (symbolAccount) {
-        setSelectedAccount(symbolAccount)
-      } else {
-        setSelectedAccount(null)
-      }
-    }
-  }, [tokenSymbol])
-
-  useEffect(() => {
-    if (!selectedMangoGroup || !selectedMarginAccount || !selectedAccount)
-      return
+    if (!selectedMangoGroup || !selectedMarginAccount) return
 
     const mintDecimals = selectedMangoGroup.mintDecimals[tokenIndex]
     const groupIndex = selectedMangoGroup.indexes[tokenIndex]
@@ -267,7 +239,8 @@ const DepositModal: FunctionComponent<DepositModalProps> = ({
     }
   }
 
-  const validateAmountInput = (amount) => {
+  const validateAmountInput = (e) => {
+    const amount = e.target.value
     if (Number(amount) <= 0) {
       setInvalidAmountMessage('Enter an amount to deposit')
     }
@@ -288,14 +261,9 @@ const DepositModal: FunctionComponent<DepositModalProps> = ({
   const onChangeSlider = async (percentage) => {
     const max = getBalanceForAccount(selectedAccount)
     const amount = (percentage / 100) * max
-    if (percentage === 100) {
-      setInputAmount(amount)
-    } else {
-      setInputAmount(trimDecimals(amount, DECIMALS[symbol]))
-    }
+    setInputAmount(trimDecimals(amount, DECIMALS[symbol]))
     setSliderPercentage(percentage)
     setInvalidAmountMessage('')
-    validateAmountInput(amount)
   }
 
   // turn off slider transition for dragging slider handle interaction
@@ -310,22 +278,9 @@ const DepositModal: FunctionComponent<DepositModalProps> = ({
       {!showSimulation ? (
         <>
           <Modal.Header>
+            <div className={`text-th-fgd-3 flex-shrink invisible w-5`}>X</div>
             <ElementTitle noMarignBottom>Deposit Funds</ElementTitle>
           </Modal.Header>
-          {tokenSymbol && !selectedAccount ? (
-            <InlineNotification
-              desc={`Add ${tokenSymbol} to your wallet and fund it with ${tokenSymbol} to deposit.`}
-              title={`No ${tokenSymbol} wallet address found`}
-              type="error"
-            />
-          ) : null}
-          {settleDeficit ? (
-            <InlineNotification
-              desc={`Deposit ${settleDeficit} ${tokenSymbol} before settling your borrow.`}
-              title="Not enough balance to settle"
-              type="error"
-            />
-          ) : null}
           <AccountSelect
             symbols={symbols}
             accounts={depositAccounts}
@@ -348,13 +303,13 @@ const DepositModal: FunctionComponent<DepositModalProps> = ({
               className={`border border-th-fgd-4 flex-grow pr-11`}
               placeholder="0.00"
               error={!!invalidAmountMessage}
-              onBlur={(e) => validateAmountInput(e.target.value)}
+              onBlur={validateAmountInput}
               value={inputAmount}
               onChange={(e) => onChangeAmountInput(e.target.value)}
               suffix={symbol}
             />
-            {/* {simulation ? (
-              <Tooltip content="Projected Leverage" className="py-1">
+            {simulation ? (
+              <Tooltip content="Account Leverage" className="py-1">
                 <span
                   className={`${renderAccountRiskStatus(
                     simulation?.collateralRatio
@@ -366,7 +321,7 @@ const DepositModal: FunctionComponent<DepositModalProps> = ({
                   x
                 </span>
               </Tooltip>
-            ) : null} */}
+            ) : null}
           </div>
           {invalidAmountMessage ? (
             <div className="flex items-center pt-1.5 text-th-red">
@@ -383,7 +338,7 @@ const DepositModal: FunctionComponent<DepositModalProps> = ({
               maxButtonTransition={maxButtonTransition}
             />
           </div>
-          <div className={`pt-8 flex justify-center`}>
+          <div className={`mt-5 flex justify-center`}>
             <Button
               onClick={() => setShowSimulation(true)}
               className="w-full"
