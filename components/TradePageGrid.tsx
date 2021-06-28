@@ -22,7 +22,7 @@ export const defaultLayouts = {
   xl: [
     { i: 'tvChart', x: 0, y: 0, w: 6, h: 30 },
     { i: 'orderbook', x: 6, y: 0, w: 3, h: 17 },
-    { i: 'tradeForm', x: 9, y: 0, w: 3, h: 12 },
+    { i: 'tradeForm', x: 9, y: 0, w: 3, h: 13 },
     { i: 'marketTrades', x: 6, y: 1, w: 3, h: 13 },
     { i: 'balanceInfo', x: 9, y: 1, w: 3, h: 15 },
     { i: 'userInfo', x: 0, y: 2, w: 9, h: 19 },

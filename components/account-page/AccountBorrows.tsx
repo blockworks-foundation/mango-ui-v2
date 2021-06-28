@@ -223,7 +223,7 @@ export default function AccountBorrows() {
           <div
             className={`w-full text-center py-6 bg-th-bkg-1 text-th-fgd-3 rounded-md`}
           >
-            No borrows found.
+            No borrows
           </div>
         )
       ) : null}
