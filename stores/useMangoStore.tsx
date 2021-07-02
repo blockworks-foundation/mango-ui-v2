@@ -119,6 +119,8 @@ interface MangoStore extends State {
   liquidationHistory: any[]
   withdrawalHistory: any[]
   tradeHistory: any[]
+  pnlHistory: any[]
+  pnlLeaderboard: any[]
   set: (x: any) => void
   actions: {
     [key: string]: () => void
@@ -177,6 +179,8 @@ const useMangoStore = create<MangoStore>((set, get) => ({
   liquidationHistory: [],
   withdrawalHistory: [],
   tradeHistory: [],
+  pnlHistory: [],
+  pnlLeaderboard: [],
   set: (fn) => set(produce(fn)),
   actions: {
     async fetchWalletBalances() {
@@ -426,6 +430,37 @@ const useMangoStore = create<MangoStore>((set, get) => ({
 
       set((state) => {
         state.withdrawalHistory = results
+      })
+    },
+    async fetchPnlHistory(marginAccount = null) {
+      const selectedMarginAccount =
+        marginAccount || get().selectedMarginAccount.current
+      const set = get().set
+
+      if (!selectedMarginAccount) return
+
+      const response = await fetch(
+        `https://mango-transaction-log.herokuapp.com/stats/pnl_history/${selectedMarginAccount.publicKey.toString()}`
+      )
+      const parsedResponse = await response.json()
+      const results = parsedResponse ? parsedResponse : []
+
+      set((state) => {
+        state.pnlHistory = results
+      })
+    },
+    async fetchPnlLeaderboard(start?: string) {
+      const baseUrl =
+        'https://mango-transaction-log.herokuapp.com/stats/pnl_leaderboard'
+
+      const url = start ? `${baseUrl}?start_date=${start}` : baseUrl
+
+      const response = await fetch(url)
+      const parsedResponse = await response.json()
+      const results = parsedResponse ? parsedResponse : []
+
+      set((state) => {
+        state.pnlLeaderboard = results
       })
     },
   },
