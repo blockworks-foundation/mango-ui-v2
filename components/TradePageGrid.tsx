@@ -68,6 +68,8 @@ export const defaultLayouts = {
 
 export const GRID_LAYOUT_KEY = 'mangoSavedLayouts-2.2'
 
+const breakpoints = { xl: 1600, lg: 1200, md: 1110, sm: 768, xs: 0 }
+
 const TradePageGrid = () => {
   const { uiLocked } = useMangoStore((s) => s.settings)
   const [savedLayouts, setSavedLayouts] = useLocalStorageState(
@@ -85,11 +87,18 @@ const TradePageGrid = () => {
   useEffect(() => setMounted(true), [])
   if (!mounted) return null
 
+  const adjustOrderBook = (layouts) => {
+    const breakpoint = Responsive.utils.getBreakpointFromWidth(breakpoints, (window.innerWidth - 63))
+    const orderbookLayout = layouts[breakpoint].find(obj => {return obj.i === 'orderbook'})
+    const orderBookDepth = ((orderbookLayout.h * .8571) - 6.4643)
+    return orderBookDepth
+  }
+
   return (
     <ResponsiveGridLayout
       className="layout"
       layouts={savedLayouts || defaultLayouts}
-      breakpoints={{ xl: 1600, lg: 1200, md: 1110, sm: 768, xs: 0 }}
+      breakpoints={breakpoints}
       cols={{ xl: 12, lg: 12, md: 12, sm: 12, xs: 1 }}
       rowHeight={15}
       isDraggable={!uiLocked}
@@ -102,7 +111,9 @@ const TradePageGrid = () => {
         </FloatingElement>
       </div>
       <div key="orderbook">
-        <Orderbook />
+        <Orderbook 
+          depth={adjustOrderBook(savedLayouts || defaultLayouts)}
+        />
       </div>
       <div key="tradeForm">
         <TradeForm />
