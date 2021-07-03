@@ -90,8 +90,8 @@ const TradePageGrid = () => {
   const adjustOrderBook = (layouts) => {
     const breakpoint = Responsive.utils.getBreakpointFromWidth(breakpoints, (window.innerWidth - 63))
     const orderbookLayout = layouts[breakpoint].find(obj => {return obj.i === 'orderbook'})
-    const orderBookDepth = ((orderbookLayout.h * .8571) - 6.4643)
-    return orderBookDepth
+    const orderBookDepth = Math.round((orderbookLayout.h * .891) - 7.2)
+    return orderBookDepth > 0 ? orderBookDepth : 1
   }
 
   return (
