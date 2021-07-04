@@ -9,6 +9,7 @@ import Button, { LinkButton } from '../components/Button'
 import Input from '../components/Input'
 import Slider from '../components/Slider'
 import { useState, useEffect } from 'react'
+import Tooltip from '../components/Tooltip'
 
 export default function LiquidationCalculator() {
   const balances = useBalances()
@@ -125,7 +126,11 @@ export default function LiquidationCalculator() {
     let price
     {
       pricesInitialized ? (price = priceValues[index]) : InitializePrices()
-      price = priceValues[index]
+      if (index === 4) {
+        price = priceValues[index]
+      } else {
+        price = (priceValues[index] * sliderPercentage * 2) / 100
+      }
     }
     return price
   }
@@ -191,6 +196,18 @@ export default function LiquidationCalculator() {
     return collateralRatio.toFixed(0)
   }
 
+  function getLiquidationMovePercent(dV, bV) {
+    let percentMove
+    dV && bV
+      ? (percentMove =
+          (1 - 100 / (getScenarioCollateralRatio(dV, bV) / 1.1)) * 100)
+      : (percentMove = 0)
+    if (percentMove <= 0) {
+      return 'Account Liquidated'
+    }
+    return percentMove.toFixed(0) + '%'
+  }
+
   function resetAll() {
     setSliderPercentage(50)
     setDepositsInitialized(false)
@@ -198,7 +215,6 @@ export default function LiquidationCalculator() {
     setPricesInitialized(false)
   }
 
-  // Slider functionality
   const onChangeSlider = async (percentage) => {
     setSliderPercentage(percentage)
   }
@@ -221,7 +237,7 @@ export default function LiquidationCalculator() {
                   <div className="flex">
                     <div className="bg-th-bkg-1 border border-th-fgd-4 flex items-center px-3 h-8 rounded">
                       <div className="pr-5 text-th-fgd-3 text-xs">
-                        Collateral Modifier
+                        Edit All Prices
                       </div>
                       <div className="-mt-1.5 w-32">
                         <Slider
@@ -350,6 +366,7 @@ export default function LiquidationCalculator() {
                                   type="number"
                                   value={getPrice(i)}
                                   onChange={(e) => setPrice(e.target.value, i)}
+                                  disabled={name === 'USDC' ? true : false}
                                 />
                               </Td>
                               <Td
@@ -405,6 +422,33 @@ export default function LiquidationCalculator() {
                       depositValues,
                       borrowValues
                     )}%`}
+                  </div>
+                </div>
+                <div className="flex items-center justify-between pb-3">
+                  <div className="text-th-fgd-3">Min. Ratio Required</div>
+                  <div className="font-bold">110%</div>
+                </div>
+                <div className="flex items-center justify-between pb-3">
+                  <div className="text-th-fgd-3">Risk</div>
+                  {getScenarioCollateralRatio(depositValues, borrowValues) >
+                  150 ? (
+                    <div className="font-bold text-th-green">Low</div>
+                  ) : getScenarioCollateralRatio(depositValues, borrowValues) >
+                    125 ? (
+                    <div className="font-bold text-th-orange">Moderate</div>
+                  ) : (
+                    <div className="font-bold text-th-red">High</div>
+                  )}
+                </div>
+                <div className="flex items-center justify-between pb-3">
+                  <Tooltip content="The percentage move in total assets value which would result in the liquidation of your account.">
+                    <div className="text-th-fgd-3">Price Move To Liquidate</div>
+                  </Tooltip>
+                  <div className="font-bold">
+                    {`${getLiquidationMovePercent(
+                      depositValues,
+                      borrowValues
+                    )}`}
                   </div>
                 </div>
               </div>
