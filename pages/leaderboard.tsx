@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react'
+import { ChartBarIcon, HashtagIcon } from '@heroicons/react/outline'
 import useMangoStore from '../stores/useMangoStore'
 import { usdFormatter } from '../utils'
 import PageBodyContainer from '../components/PageBodyContainer'
 import TopBar from '../components/TopBar'
 import LeaderboardTable from '../components/LeaderboardTable'
+import { LinkButton } from '../components/Button'
 
 export default function Leaderboard() {
   const [loading, setLoading] = useState(false)
-  const [timeRange, setTimeRange] = useState('All Time')
-  const [selectedAccountRank, setSelectedAccountRank] = useState(null)
+  const [timeRange, setTimeRange] = useState(null)
+  const [offsetResults, setOffsetResults] = useState(0)
   const actions = useMangoStore((s) => s.actions)
+  const accountPnl = useMangoStore((s) => s.accountPnl)
   const pnlLeaderboard = useMangoStore((s) => s.pnlLeaderboard)
   const selectedMarginAccount = useMangoStore(
     (s) => s.selectedMarginAccount.current
@@ -20,29 +23,34 @@ export default function Leaderboard() {
   }, [])
 
   useEffect(() => {
-    if (selectedMarginAccount && pnlLeaderboard.length > 0) {
-      const findAccount = pnlLeaderboard.find(
-        (acc) =>
-          acc.margin_account === selectedMarginAccount.publicKey.toString()
-      )
-      setSelectedAccountRank(findAccount)
-    }
-  }, [loading, selectedMarginAccount, pnlLeaderboard])
+    actions.fetchPnlByAccount(null, timeRange)
+  }, [selectedMarginAccount])
 
-  const handleFilterByDate = async (range) => {
-    if (range === 'all') {
+  const handleShowMore = async () => {
+    const offset = offsetResults + 25
+    await actions.fetchPnlLeaderboard(offset, timeRange)
+    setOffsetResults(offset)
+  }
+
+  const handleFilterByDate = async (range?: number) => {
+    if (range) {
       setLoading(true)
-      await actions.fetchPnlLeaderboard()
+      await actions.fetchPnlLeaderboard(0, range)
+      if (selectedMarginAccount) {
+        await actions.fetchPnlByAccount(null, range)
+      }
       setLoading(false)
-      setTimeRange(`All Time`)
+      setOffsetResults(0)
+      setTimeRange(range)
     } else {
-      const startAt = new Date(
-        Date.now() - range * 24 * 60 * 60 * 1000
-      ).toLocaleDateString('en-ZA')
       setLoading(true)
-      await actions.fetchPnlLeaderboard(startAt)
+      await actions.fetchPnlLeaderboard(0)
+      if (selectedMarginAccount) {
+        await actions.fetchPnlByAccount()
+      }
       setLoading(false)
-      setTimeRange(`Last ${range} days`)
+      setOffsetResults(0)
+      setTimeRange(null)
     }
   }
 
@@ -50,7 +58,7 @@ export default function Leaderboard() {
     <div className={`bg-th-bkg-1 text-th-fgd-1 transition-all`}>
       <TopBar />
       <PageBodyContainer>
-        <div className="flex flex-col sm:flex-row sm:justify-between pt-8 pb-3 sm:pb-6 md:pt-10">
+        <div className="flex justify-between pt-8 pb-3 sm:pb-6 md:pt-10">
           <h1 className={`text-th-fgd-1 text-2xl font-semibold`}>
             Leaderboard
           </h1>
@@ -58,12 +66,12 @@ export default function Leaderboard() {
             <button
               className={`bg-th-bkg-3 px-2 py-1 ml-2 rounded-md cursor-pointer default-transition font-normal focus:outline-none
               ${
-                timeRange === 'Last 7 days'
+                timeRange === 7
                   ? `ring-1 ring-inset ring-th-primary text-th-primary`
                   : `text-th-fgd-1 opacity-50 hover:opacity-100`
               }
             `}
-              disabled={timeRange === 'Last 7 days'}
+              disabled={timeRange === 7}
               onClick={() => handleFilterByDate(7)}
             >
               7D
@@ -71,12 +79,12 @@ export default function Leaderboard() {
             <button
               className={`bg-th-bkg-3 px-2 py-1 ml-2 rounded-md cursor-pointer default-transition font-normal focus:outline-none
               ${
-                timeRange === 'Last 30 days'
+                timeRange === 30
                   ? `ring-1 ring-inset ring-th-primary text-th-primary`
                   : `text-th-fgd-1 opacity-50 hover:opacity-100`
               }
             `}
-              disabled={timeRange === 'Last 30 days'}
+              disabled={timeRange === 30}
               onClick={() => handleFilterByDate(30)}
             >
               30D
@@ -84,25 +92,25 @@ export default function Leaderboard() {
             <button
               className={`bg-th-bkg-3 px-2 py-1 ml-2 rounded-md cursor-pointer default-transition font-normal focus:outline-none
               ${
-                timeRange === 'All Time'
+                !timeRange
                   ? `ring-1 ring-inset ring-th-primary text-th-primary`
                   : `text-th-fgd-1 opacity-50 hover:opacity-100`
               }
             `}
-              disabled={timeRange === 'All Time'}
-              onClick={() => handleFilterByDate('all')}
+              disabled={!timeRange}
+              onClick={() => handleFilterByDate()}
             >
               All
             </button>
           </div>
         </div>
         <div className="p-6 rounded-lg bg-th-bkg-2">
-          {selectedMarginAccount && selectedAccountRank ? (
+          {selectedMarginAccount && accountPnl && accountPnl.rank ? (
             <>
-              <div className="flex items-center justify-between pb-4">
-                <div>
-                  <div className="text-th-fgd-1 text-lg">Your Ranking</div>
-                  <div className="text-th-fgd-3 text-xs">{timeRange}</div>
+              <div className="pb-4">
+                <div className="text-th-fgd-1 text-lg">Your Ranking</div>
+                <div className="text-th-fgd-3 text-xs">
+                  {timeRange ? `Last ${timeRange} days` : 'All Time'}
                 </div>
               </div>
               <div className="grid grid-flow-col grid-cols-1 grid-rows-2 sm:grid-cols-2 sm:grid-rows-1 gap-4 pb-10">
@@ -115,14 +123,20 @@ export default function Leaderboard() {
                   <>
                     <div className="bg-th-bkg-3 p-3 rounded-md">
                       <div className="pb-0.5 text-xs text-th-fgd-3">Rank</div>
-                      <div className="text-lg text-th-fgd-1">
-                        #{selectedAccountRank.rank}
+                      <div className="flex items-center">
+                        <HashtagIcon className="flex-shrink-0 h-5 w-5 text-th-primary" />
+                        <div className="text-lg text-th-fgd-1">
+                          {accountPnl.rank}
+                        </div>
                       </div>
                     </div>
                     <div className="bg-th-bkg-3 p-3 rounded-md">
                       <div className="pb-0.5 text-xs text-th-fgd-3">PNL</div>
-                      <div className="text-lg text-th-fgd-1">
-                        {usdFormatter.format(selectedAccountRank.pnl)}
+                      <div className="flex items-center">
+                        <ChartBarIcon className="flex-shrink-0 h-5 w-5 mr-2 text-th-primary" />
+                        <div className="text-lg text-th-fgd-1">
+                          {usdFormatter.format(accountPnl.pnl)}
+                        </div>
                       </div>
                     </div>
                   </>
@@ -130,12 +144,12 @@ export default function Leaderboard() {
               </div>
             </>
           ) : null}
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="pb-0.5 text-th-fgd-1 text-lg">
-                Top 100 Accounts by PNL
-              </div>
-              <div className="text-th-fgd-3 text-xs">{timeRange}</div>
+          <div className="pb-2 md:pb-0">
+            <div className="pb-0.5 text-th-fgd-1 text-lg">
+              Top 100 Accounts by PNL
+            </div>
+            <div className="text-th-fgd-3 text-xs">
+              {timeRange ? `Last ${timeRange} days` : 'All Time'}
             </div>
           </div>
           {loading ? (
@@ -147,7 +161,17 @@ export default function Leaderboard() {
               <div className="animate-pulse bg-th-bkg-3 h-10 mb-2 rounded-md w-full" />
             </div>
           ) : (
-            <LeaderboardTable />
+            <>
+              <LeaderboardTable />
+              {pnlLeaderboard.length < 100 ? (
+                <LinkButton
+                  className="flex h-10 items-center justify-center mt-1 w-full"
+                  onClick={() => handleShowMore()}
+                >
+                  Show More
+                </LinkButton>
+              ) : null}
+            </>
           )}
         </div>
       </PageBodyContainer>

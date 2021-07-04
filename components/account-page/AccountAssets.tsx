@@ -147,7 +147,7 @@ export default function AccountAssets() {
                       scope="col"
                       className={`px-6 py-3 text-left font-normal`}
                     >
-                      Available
+                      Deposits
                     </Th>
                     <Th
                       scope="col"

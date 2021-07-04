@@ -57,6 +57,13 @@ interface AccountInfoList {
   [key: string]: AccountInfo<Buffer>
 }
 
+interface AccountPnl {
+  margin_account: string
+  owner: string
+  pnl: number
+  rank: number
+}
+
 interface MangoStore extends State {
   notifications: Array<{
     type: string
@@ -121,9 +128,10 @@ interface MangoStore extends State {
   tradeHistory: any[]
   pnlHistory: any[]
   pnlLeaderboard: any[]
+  accountPnl: AccountPnl
   set: (x: any) => void
   actions: {
-    [key: string]: () => void
+    [key: string]: (...args: any[]) => void
   }
 }
 
@@ -181,6 +189,7 @@ const useMangoStore = create<MangoStore>((set, get) => ({
   tradeHistory: [],
   pnlHistory: [],
   pnlLeaderboard: [],
+  accountPnl: null,
   set: (fn) => set(produce(fn)),
   actions: {
     async fetchWalletBalances() {
@@ -449,18 +458,64 @@ const useMangoStore = create<MangoStore>((set, get) => ({
         state.pnlHistory = results
       })
     },
-    async fetchPnlLeaderboard(start?: string) {
+    async fetchPnlLeaderboard(offset = 0, start?: number) {
       const baseUrl =
         'https://mango-transaction-log.herokuapp.com/stats/pnl_leaderboard'
 
-      const url = start ? `${baseUrl}?start_date=${start}` : baseUrl
+      const startAt = start
+        ? new Date(Date.now() - start * 24 * 60 * 60 * 1000).toLocaleDateString(
+            'en-ZA'
+          )
+        : null
+
+      const url = startAt
+        ? `${baseUrl}?start_date=${startAt}&limit=25&offset=${offset}`
+        : `${baseUrl}?limit=25&offset=${offset}`
 
       const response = await fetch(url)
       const parsedResponse = await response.json()
       const results = parsedResponse ? parsedResponse : []
 
+      const currentLeaderboard = get().pnlLeaderboard
+
+      if (currentLeaderboard.length > 0 && offset > 0) {
+        const updatedLeaderboard = currentLeaderboard.concat(results)
+        set((state) => {
+          state.pnlLeaderboard = updatedLeaderboard
+        })
+      } else {
+        set((state) => {
+          state.pnlLeaderboard = results
+        })
+      }
+    },
+    async fetchPnlByAccount(marginAccount = null, start?: number) {
+      const selectedMarginAccount =
+        marginAccount || get().selectedMarginAccount.current
+      const set = get().set
+
+      if (!selectedMarginAccount) return
+
+      const startAt = start
+        ? new Date(Date.now() - start * 24 * 60 * 60 * 1000).toLocaleDateString(
+            'en-ZA'
+          )
+        : null
+
+      const baseUrl =
+        'https://mango-transaction-log.herokuapp.com/stats/pnl_leaderboard_rank'
+
+      const url = startAt
+        ? `${baseUrl}/${selectedMarginAccount.publicKey.toString()}?start_date=${startAt}`
+        : `${baseUrl}/${selectedMarginAccount.publicKey.toString()}`
+
+      const response = await fetch(url)
+      const parsedResponse =
+        response.status === 200 ? await response.json() : null
+      const results = parsedResponse ? parsedResponse : null
+
       set((state) => {
-        state.pnlLeaderboard = results
+        state.accountPnl = results
       })
     },
   },

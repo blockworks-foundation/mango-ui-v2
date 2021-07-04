@@ -1,14 +1,16 @@
 import { Table, Thead, Tbody, Tr, Th, Td } from 'react-super-responsive-table'
+import { ExternalLinkIcon } from '@heroicons/react/outline'
+import { usdFormatter } from '../utils'
 import { AwardIcon, TrophyIcon } from './icons'
 import useMangoStore from '../stores/useMangoStore'
 
 const LeaderboardTable = () => {
-  const pnlData = useMangoStore((s) => s.pnlLeaderboard)
+  const pnlLeaderboard = useMangoStore((s) => s.pnlLeaderboard)
   return (
     <div className={`flex flex-col py-4`}>
       <div className={`-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8`}>
         <div className={`align-middle inline-block min-w-full sm:px-6 lg:px-8`}>
-          {pnlData.length > 0 ? (
+          {pnlLeaderboard.length > 0 ? (
             <div className={`shadow overflow-hidden border-b border-th-bkg-2`}>
               <Table className={`min-w-full divide-y divide-th-bkg-2`}>
                 <Thead>
@@ -34,7 +36,7 @@ const LeaderboardTable = () => {
                   </Tr>
                 </Thead>
                 <Tbody>
-                  {pnlData.map((acc, index) => (
+                  {pnlLeaderboard.map((acc, index) => (
                     <Tr
                       key={acc.margin_account}
                       className={`border-b border-th-bkg-3
@@ -64,10 +66,20 @@ const LeaderboardTable = () => {
                       <Td
                         className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
                       >
-                        $
-                        {acc.pnl.toLocaleString(undefined, {
-                          maximumFractionDigits: 2,
-                        })}
+                        {usdFormatter.format(acc.pnl)}
+                      </Td>
+                      <Td
+                        className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
+                      >
+                        <a
+                          className="default-transition flex items-center md:justify-end text-th-fgd-2"
+                          href={`https://app.step.finance/#/watch/${acc.owner}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <span>View</span>
+                          <ExternalLinkIcon className={`h-4 w-4 ml-1.5`} />
+                        </a>
                       </Td>
                     </Tr>
                   ))}
