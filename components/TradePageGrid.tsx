@@ -76,22 +76,28 @@ const TradePageGrid = () => {
     GRID_LAYOUT_KEY,
     defaultLayouts
   )
+  const [orderbookDepth, setOrderbookDepth] = useState(8)
 
   const onLayoutChange = (layouts) => {
     if (layouts) {
       setSavedLayouts(layouts)
+      adjustOrderBook(layouts)
     }
+  }
+
+  const onBreakpointChange = (newBreakpoint : string) => {
+    adjustOrderBook(savedLayouts || defaultLayouts, newBreakpoint)
   }
 
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
   if (!mounted) return null
 
-  const adjustOrderBook = (layouts) => {
-    const breakpoint = Responsive.utils.getBreakpointFromWidth(breakpoints, (window.innerWidth - 63))
-    const orderbookLayout = layouts[breakpoint].find(obj => {return obj.i === 'orderbook'})
+  const adjustOrderBook = (layouts, breakpoint? : string) => {
+    const currentBreakpoint = breakpoint ? breakpoint : Responsive.utils.getBreakpointFromWidth(breakpoints, (window.innerWidth - 63))
+    const orderbookLayout = layouts[currentBreakpoint].find(obj => {return obj.i === 'orderbook'})
     const orderBookDepth = Math.round((orderbookLayout.h * .891) - 7.2)
-    return orderBookDepth > 0 ? orderBookDepth : 1
+    setOrderbookDepth(orderBookDepth > 0 ? orderBookDepth : 1)
   }
 
   return (
@@ -103,6 +109,7 @@ const TradePageGrid = () => {
       rowHeight={15}
       isDraggable={!uiLocked}
       isResizable={!uiLocked}
+      onBreakpointChange={(newBreakpoint) => onBreakpointChange(newBreakpoint)}
       onLayoutChange={(layout, layouts) => onLayoutChange(layouts)}
     >
       <div key="tvChart">
@@ -112,7 +119,7 @@ const TradePageGrid = () => {
       </div>
       <div key="orderbook">
         <Orderbook 
-          depth={adjustOrderBook(savedLayouts || defaultLayouts)}
+          depth={orderbookDepth}
         />
       </div>
       <div key="tradeForm">
