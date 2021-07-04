@@ -152,6 +152,9 @@ export default function LiquidationCalculator() {
     dV && bV
       ? (equity = getScenarioAssets(dV) - getScenarioLiability(bV))
       : (equity = 0)
+    if(equity < 0) {
+      equity = 0
+    }
     return equity.toFixed(2)
   }
 
@@ -180,6 +183,9 @@ export default function LiquidationCalculator() {
     dV && bV
       ? (leverage = getScenarioLiability(bV) / getScenarioEquity(dV, bV))
       : (leverage = 0)
+    if (leverage < 0 || leverage > 999) {
+      leverage = 0
+    }
     return leverage.toFixed(2)
   }
 
