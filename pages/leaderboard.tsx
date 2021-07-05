@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { AreaChart, Area, XAxis, YAxis } from 'recharts'
 import { ChartBarIcon, HashtagIcon } from '@heroicons/react/outline'
 import useMangoStore from '../stores/useMangoStore'
 import { usdFormatter } from '../utils'
@@ -13,6 +14,7 @@ export default function Leaderboard() {
   const [offsetResults, setOffsetResults] = useState(0)
   const actions = useMangoStore((s) => s.actions)
   const accountPnl = useMangoStore((s) => s.accountPnl)
+  const pnlHistory = useMangoStore((s) => s.pnlHistory)
   const pnlLeaderboard = useMangoStore((s) => s.pnlLeaderboard)
   const selectedMarginAccount = useMangoStore(
     (s) => s.selectedMarginAccount.current
@@ -23,7 +25,10 @@ export default function Leaderboard() {
   }, [])
 
   useEffect(() => {
-    actions.fetchPnlByAccount(null, timeRange)
+    if (selectedMarginAccount) {
+      actions.fetchPnlByAccount(null, timeRange)
+      actions.fetchPnlHistory()
+    }
   }, [selectedMarginAccount])
 
   const handleShowMore = async () => {
@@ -52,6 +57,16 @@ export default function Leaderboard() {
       setOffsetResults(0)
       setTimeRange(null)
     }
+  }
+
+  const formatPnlHistoryData = (data) => {
+    const startFrom = timeRange
+      ? new Date(Date.now() - timeRange * 24 * 60 * 60 * 1000).getTime()
+      : null
+
+    return startFrom
+      ? data.filter((d) => new Date(d.date).getTime() > startFrom)
+      : data
   }
 
   return (
@@ -107,9 +122,9 @@ export default function Leaderboard() {
         <div className="p-6 rounded-lg bg-th-bkg-2">
           {selectedMarginAccount && accountPnl && accountPnl.rank ? (
             <>
-              <div className="pb-4">
+              <div className="flex items-center justify-between pb-4">
                 <div className="text-th-fgd-1 text-lg">Your Ranking</div>
-                <div className="text-th-fgd-3 text-xs">
+                <div className="text-th-fgd-3">
                   {timeRange ? `Last ${timeRange} days` : 'All Time'}
                 </div>
               </div>
@@ -121,7 +136,7 @@ export default function Leaderboard() {
                   </>
                 ) : (
                   <>
-                    <div className="bg-th-bkg-3 p-3 rounded-md">
+                    <div className="bg-th-bkg-3 p-4 rounded-md">
                       <div className="pb-0.5 text-xs text-th-fgd-3">Rank</div>
                       <div className="flex items-center">
                         <HashtagIcon className="flex-shrink-0 h-5 w-5 text-th-primary" />
@@ -130,7 +145,7 @@ export default function Leaderboard() {
                         </div>
                       </div>
                     </div>
-                    <div className="bg-th-bkg-3 p-3 rounded-md">
+                    <div className="bg-th-bkg-3 p-4 relative rounded-md">
                       <div className="pb-0.5 text-xs text-th-fgd-3">PNL</div>
                       <div className="flex items-center">
                         <ChartBarIcon className="flex-shrink-0 h-5 w-5 mr-2 text-th-primary" />
@@ -138,17 +153,43 @@ export default function Leaderboard() {
                           {usdFormatter.format(accountPnl.pnl)}
                         </div>
                       </div>
+                      <div className="absolute right-4 top-4">
+                        {loading && !pnlHistory ? (
+                          <div className="animate-pulse bg-th-fgd-4 h-12 opacity-10 rounded-md w-32" />
+                        ) : (
+                          <AreaChart
+                            width={128}
+                            height={48}
+                            data={
+                              pnlHistory
+                                ? formatPnlHistoryData(pnlHistory)
+                                : null
+                            }
+                          >
+                            <Area
+                              isAnimationActive={false}
+                              type="monotone"
+                              dataKey="cumulative_pnl"
+                              stroke="#FF9C24"
+                              fill="#FF9C24"
+                              fillOpacity={0.1}
+                            />
+                            <XAxis dataKey="date" hide />
+                            <YAxis dataKey="cumulative_pnl" hide />
+                          </AreaChart>
+                        )}
+                      </div>
                     </div>
                   </>
                 )}
               </div>
             </>
           ) : null}
-          <div className="pb-2 md:pb-0">
+          <div className="flex items-center justify-between pb-2 md:pb-0">
             <div className="pb-0.5 text-th-fgd-1 text-lg">
               Top 100 Accounts by PNL
             </div>
-            <div className="text-th-fgd-3 text-xs">
+            <div className="text-th-fgd-3">
               {timeRange ? `Last ${timeRange} days` : 'All Time'}
             </div>
           </div>
@@ -162,10 +203,10 @@ export default function Leaderboard() {
             </div>
           ) : (
             <>
-              <LeaderboardTable />
+              <LeaderboardTable formatPnlHistoryData={formatPnlHistoryData} />
               {pnlLeaderboard.length < 100 ? (
                 <LinkButton
-                  className="flex h-10 items-center justify-center mt-1 w-full"
+                  className="flex h-10 items-center justify-center mt-1 text-th-primary w-full"
                   onClick={() => handleShowMore()}
                 >
                   Show More

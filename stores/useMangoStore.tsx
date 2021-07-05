@@ -443,16 +443,17 @@ const useMangoStore = create<MangoStore>((set, get) => ({
     },
     async fetchPnlHistory(marginAccount = null) {
       const selectedMarginAccount =
-        marginAccount || get().selectedMarginAccount.current
+        marginAccount ||
+        get().selectedMarginAccount.current.publicKey.toString()
       const set = get().set
 
       if (!selectedMarginAccount) return
 
       const response = await fetch(
-        `https://mango-transaction-log.herokuapp.com/stats/pnl_history/${selectedMarginAccount.publicKey.toString()}`
+        `https://mango-transaction-log.herokuapp.com/stats/pnl_history/${selectedMarginAccount}`
       )
       const parsedResponse = await response.json()
-      const results = parsedResponse ? parsedResponse : []
+      const results = parsedResponse.length ? parsedResponse.reverse() : []
 
       set((state) => {
         state.pnlHistory = results
