@@ -66,6 +66,7 @@ const StyledFloatingElement = styled(FloatingElement)`
   animation: ${css`
     ${fadeIn} 1s linear
   `};
+  overflow: hidden;
 `
 
 const getCumulativeOrderbookSide = (
@@ -116,15 +117,12 @@ export default function Orderbook({ depth = 8 }) {
         index < depth ? total + size : total
       const totalSize = bids.reduce(sum, 0) + asks.reduce(sum, 0)
 
-      const bidsToDisplay = getCumulativeOrderbookSide(
-        bids,
-        totalSize,
-        depth,
-        false
-      )
+      const bidsToDisplay = defaultLayout
+      ? getCumulativeOrderbookSide(bids, totalSize, depth , false)
+      : getCumulativeOrderbookSide(bids, totalSize, depth/2, false)
       const asksToDisplay = defaultLayout
         ? getCumulativeOrderbookSide(asks, totalSize, depth, false)
-        : getCumulativeOrderbookSide(asks, totalSize, depth, true)
+        : getCumulativeOrderbookSide(asks, totalSize, (depth+1)/2, true)
 
       currentOrderbookData.current = {
         bids: orderbook?.bids,
@@ -134,7 +132,7 @@ export default function Orderbook({ depth = 8 }) {
         const bid = bidsToDisplay[0].price
         const ask = defaultLayout
           ? asksToDisplay[0].price
-          : asksToDisplay[7].price
+          : asksToDisplay[asksToDisplay.length -1].price
         const spread = ask - bid
         const spreadPercentage = (spread / ask) * 100
 
@@ -169,7 +167,7 @@ export default function Orderbook({ depth = 8 }) {
         <FlipCardInner flip={defaultLayout}>
           {defaultLayout ? (
             <FlipCardFront>
-              <StyledFloatingElement>
+              <StyledFloatingElement >
                 <div className="flex items-center justify-between pb-2.5">
                   <div className="w-8 h-8" />
                   <ElementTitle noMarignBottom>Orderbook</ElementTitle>
