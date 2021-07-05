@@ -272,7 +272,7 @@ export default function TradeForm() {
     submitting
 
   return (
-    <FloatingElement>
+    <FloatingElement showConnect>
       <div>
         <div className={`flex mb-4 text-base text-th-fgd-4`}>
           <button
@@ -398,23 +398,19 @@ export default function TradeForm() {
               </Button>
             )
           ) : (
-            <>
-              <Button disabled className="flex-grow">
-                Connect Wallet
-              </Button>
-              {/* <div className="flex justify-between border border-th-fgd-4 rounded-md w-full">
-                <Button
-                  onClick={() => wallet.connect()}
-                  className={`rounded-r-none flex flex-grow items-center justify-center border-none`}
-                >
-                  <WalletIcon className="fill-current h-4 w-4 mr-2" />
-                  Connect Wallet
-                </Button>
-                <div className="relative h-full">
-                  <WalletSelect />
-                </div>
-              </div> */}
-            </>
+            <Button
+              disabled={disabledTradeButton}
+              onClick={onSubmit}
+              className={`${
+                !disabledTradeButton && 'border-th-red hover:border-th-red-dark'
+              } text-th-red hover:text-th-fgd-1 hover:bg-th-red-dark flex-grow`}
+            >
+              {`${
+                baseSize > 0
+                  ? 'Sell ' + baseSize
+                  : 'Set SELL bid >= ' + market?.minOrderSize
+              } ${baseCurrency}`}
+            </Button>
           )
         ) : (
           <Button disabled className="flex-grow">
