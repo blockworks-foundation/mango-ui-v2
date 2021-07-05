@@ -114,13 +114,6 @@ interface MangoStore extends State {
   }
   settings: {
     uiLocked: boolean
-    orderbookDepth: { 
-      xl: number; 
-      lg: number; 
-      md: number; 
-      sm: number; 
-      xs: number
-    }
   }
   depositHistory: any[]
   liquidationHistory: any[]
@@ -179,13 +172,6 @@ const useMangoStore = create<MangoStore>((set, get) => ({
   wallet: INITIAL_STATE.WALLET,
   settings: {
     uiLocked: true,
-    orderbookDepth: {
-      xl: 8,
-      lg: 8, 
-      md: 8, 
-      sm: 8, 
-      xs: 8
-    },
   },
   depositHistory: [],
   liquidationHistory: [],

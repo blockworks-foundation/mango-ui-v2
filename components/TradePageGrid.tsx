@@ -71,18 +71,12 @@ export const GRID_LAYOUT_KEY = 'mangoSavedLayouts-2.2'
 const breakpoints = { xl: 1600, lg: 1200, md: 1110, sm: 768, xs: 0 }
 
 const TradePageGrid = () => {
-  const set = useMangoStore((s) => s.set)
-  const { uiLocked, orderbookDepth } = useMangoStore((s) => s.settings)
-  // const { uiLocked } = useMangoStore((s) => s.settings)
+  const { uiLocked } = useMangoStore((s) => s.settings)
   const [savedLayouts, setSavedLayouts] = useLocalStorageState(
     GRID_LAYOUT_KEY,
     defaultLayouts
   )
-  // const [orderbookDepth, setOrderbookDepth] = useLocalStorageState(
-  //   'depth',
-  //   { xl: 8, lg: 8, md: 8, sm: 8, xs: 8 }
-  // )
-  
+
   const getCurrentBreakpoint = () => {
     return Responsive.utils.getBreakpointFromWidth(breakpoints, (window.innerWidth - 63))
   }
@@ -90,27 +84,31 @@ const TradePageGrid = () => {
   const onLayoutChange = (layouts) => {
     if (layouts) {
       setSavedLayouts(layouts)
-      adjustOrderBook(layouts)
     }
   }
 
   const onBreakpointChange = (newBreakpoint : string) => {
-    adjustOrderBook(savedLayouts || defaultLayouts, newBreakpoint)
-  }
-  
-  const adjustOrderBook = (layouts, breakpoint? : string) => {
-    const currentBreakpoint = breakpoint ? breakpoint : getCurrentBreakpoint()
-    const orderbookLayout = layouts[currentBreakpoint].find(obj => {return obj.i === 'orderbook'})
-    const depth = Math.round((orderbookLayout.h * .891) - 7.2)
-    // setOrderbookDepth({[currentBreakpoint]: depth > 0 ? depth : 1})
-    debugger;
-    set((state) => {
-      state.settings.orderbookDepth[currentBreakpoint] = depth > 0 ? depth : 1
-    })
+    setCurrentBreakpoint(newBreakpoint)
   }
 
+  const [orderbookDepth, setOrderbookDepth] = useState(8)
+  const [currentBreakpoint, setCurrentBreakpoint] = useState(null)
   const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
+  useEffect(() => {
+    setMounted(true)
+
+    const adjustOrderBook = (layouts, breakpoint? : string | null) => {
+      const bp = breakpoint ? breakpoint : getCurrentBreakpoint()
+      const orderbookLayout = layouts[bp].find(obj => {return obj.i === 'orderbook'})
+      let depth = (orderbookLayout.h * .891) - 7.2
+      depth = _.round(_.max([1, depth]))
+      setOrderbookDepth(depth)
+    }
+
+    adjustOrderBook(savedLayouts, currentBreakpoint)
+  }
+  , [currentBreakpoint, savedLayouts]
+  )
   if (!mounted) return null
 
   return (
@@ -132,7 +130,7 @@ const TradePageGrid = () => {
       </div>
       <div key="orderbook">
         <Orderbook 
-          depth={orderbookDepth[getCurrentBreakpoint()]}
+          depth={orderbookDepth}
         />
       </div>
       <div key="tradeForm">
