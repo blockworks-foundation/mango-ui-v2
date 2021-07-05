@@ -1,5 +1,6 @@
 import dynamic from 'next/dynamic'
 import { Responsive, WidthProvider } from 'react-grid-layout'
+import { round, max } from 'lodash'
 
 const TVChartContainer = dynamic(
   () => import('../components/TradingView/index'),
@@ -101,7 +102,7 @@ const TradePageGrid = () => {
       const bp = breakpoint ? breakpoint : getCurrentBreakpoint()
       const orderbookLayout = layouts[bp].find(obj => {return obj.i === 'orderbook'})
       let depth = (orderbookLayout.h * .891) - 7.2
-      depth = _.round(_.max([1, depth]))
+      depth = round(max([1, depth]))
       setOrderbookDepth(depth)
     }
 
