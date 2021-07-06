@@ -29,6 +29,7 @@ import {
   NUM_TOKENS,
 } from '@blockworks-foundation/mango-client/lib/layout'
 import {
+  makeAddMarginAccountInfoInstruction,
   makeBorrowInstruction,
   makeSettleBorrowInstruction,
   makeSettleFundsInstruction,
@@ -1512,5 +1513,32 @@ export async function settleAllTrades(
     wallet,
     [],
     'Settle All Trades'
+  )
+}
+
+export async function addMarginAccountInfo(
+  connection: Connection,
+  programId: PublicKey,
+  mangoGroup: MangoGroup,
+  marginAccount: MarginAccount,
+  wallet: Wallet,
+  info: string
+) {
+  const transaction = new Transaction()
+  const instruction = makeAddMarginAccountInfoInstruction(
+    programId,
+    mangoGroup.publicKey,
+    marginAccount.publicKey,
+    wallet.publicKey,
+    info
+  )
+  transaction.add(instruction)
+
+  return await packageAndSend(
+    transaction,
+    connection,
+    wallet,
+    [],
+    'Add MarginAccount Info'
   )
 }

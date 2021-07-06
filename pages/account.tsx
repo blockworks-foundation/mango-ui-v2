@@ -19,9 +19,7 @@ import AccountsModal from '../components/AccountsModal'
 import EmptyState from '../components/EmptyState'
 import Button from '../components/Button'
 import AccountNameModal from '../components/AccountNameModal'
-import Modal from '../components/Modal'
-import { ElementTitle } from '../components/styles'
-import useLocalStorageState from '../hooks/useLocalStorageState'
+import { MarginAccount } from '@blockworks-foundation/mango-client'
 
 const TABS = [
   'Assets',
@@ -32,18 +30,27 @@ const TABS = [
   'History',
 ]
 
+export function getMarginInfoString(marginAccount: MarginAccount) {
+  return marginAccount?.info
+    ? String.fromCharCode(...marginAccount?.info).replaceAll(
+        String.fromCharCode(0),
+        ''
+      )
+    : ''
+}
+
 export default function Account() {
   const [activeTab, setActiveTab] = useState(TABS[0])
   const [showAccountsModal, setShowAccountsModal] = useState(false)
   const [showNameModal, setShowNameModal] = useState(false)
   const [isCopied, setIsCopied] = useState(false)
-  const [accountName, setAccountName] = useState('')
   const accountMarginInfo = useMarginInfo()
   const connected = useMangoStore((s) => s.wallet.connected)
   const selectedMarginAccount = useMangoStore(
     (s) => s.selectedMarginAccount.current
   )
-  const [accountNames] = useLocalStorageState('accountNames')
+  const marginInfoString = getMarginInfoString(selectedMarginAccount)
+  const [accountName, setAccountName] = useState(marginInfoString)
 
   const handleTabChange = (tabName) => {
     setActiveTab(tabName)
@@ -56,17 +63,13 @@ export default function Account() {
   }, [])
 
   useEffect(() => {
-    if (accountNames && selectedMarginAccount) {
-      const hasName = accountNames.find(
-        (acc) => acc.publicKey === selectedMarginAccount.publicKey.toString()
-      )
-      if (hasName) {
-        setAccountName(hasName.name)
-      } else {
-        setAccountName('')
-      }
+    if (selectedMarginAccount) {
+      const marginInfoString = getMarginInfoString(selectedMarginAccount)
+      setAccountName(marginInfoString)
+    } else {
+      setAccountName('')
     }
-  }, [accountNames, selectedMarginAccount])
+  }, [selectedMarginAccount])
 
   useEffect(() => {
     if (isCopied) {

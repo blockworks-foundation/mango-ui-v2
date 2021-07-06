@@ -1,6 +1,5 @@
 import { FunctionComponent, useState } from 'react'
 import useMangoStore from '../stores/useMangoStore'
-import useLocalStorageState from '../hooks/useLocalStorageState'
 import {
   ExclamationCircleIcon,
   InformationCircleIcon,
@@ -10,6 +9,10 @@ import Button from './Button'
 import Modal from './Modal'
 import { ElementTitle } from './styles'
 import Tooltip from './Tooltip'
+import useConnection from '../hooks/useConnection'
+import { PublicKey } from '@solana/web3.js'
+import { addMarginAccountInfo } from '../utils/mango'
+import { notify } from '../utils/notifications'
 
 interface AccountNameModalProps {
   accountName?: string
@@ -24,30 +27,36 @@ const AccountNameModal: FunctionComponent<AccountNameModalProps> = ({
 }) => {
   const [name, setName] = useState(accountName || '')
   const [invalidNameMessage, setInvalidNameMessage] = useState('')
+  const wallet = useMangoStore.getState().wallet.current
+  const selectedMangoGroup = useMangoStore((s) => s.selectedMangoGroup.current)
   const selectedMarginAccount = useMangoStore(
     (s) => s.selectedMarginAccount.current
   )
-  const [accountNames, setAccountNames] = useLocalStorageState('accountNames')
+  const actions = useMangoStore((s) => s.actions)
+  const { connection, programId } = useConnection()
 
-  const submitName = () => {
-    const nameAccount = {
-      publicKey: selectedMarginAccount.publicKey.toString(),
-      name: name,
-    }
-    if (accountNames) {
-      const hasName = accountNames.find(
-        (acc) => acc.publicKey === selectedMarginAccount.publicKey.toString()
-      )
-      if (!hasName) {
-        accountNames.push(nameAccount)
-      } else {
-        hasName.name = name
-      }
-      setAccountNames(accountNames)
-    } else {
-      setAccountNames([nameAccount])
-    }
-    onClose()
+  const submitName = async () => {
+    addMarginAccountInfo(
+      connection,
+      new PublicKey(programId),
+      selectedMangoGroup,
+      selectedMarginAccount,
+      wallet,
+      name
+    )
+      .then(() => {
+        actions.fetchMarginAccounts()
+        onClose()
+      })
+      .catch((err) => {
+        console.warn('Error setting account name:', err)
+        notify({
+          message: 'Could not set account name',
+          description: `${err}`,
+          txid: err.txid,
+          type: 'error',
+        })
+      })
   }
 
   const validateNameInput = () => {
@@ -71,7 +80,7 @@ const AccountNameModal: FunctionComponent<AccountNameModalProps> = ({
       <Modal.Header>
         <div className="flex items-center">
           <ElementTitle noMarignBottom>Name your Account</ElementTitle>
-          <Tooltip content="Account names are stored locally in your browser. If you clear your browser cache they will be lost. We'll be storing them on-chain soon.">
+          <Tooltip content="Account names are stored on-chain">
             <InformationCircleIcon className="h-5 w-5 ml-2 text-th-primary" />
           </Tooltip>
         </div>
