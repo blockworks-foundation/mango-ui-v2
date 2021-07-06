@@ -1,7 +1,6 @@
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useMemo, useState, useEffect } from 'react'
 import useMangoStore from '../stores/useMangoStore'
 import usePrevious from '../hooks/usePrevious'
-import useInterval from '../hooks/useInterval'
 import ChartApi from '../utils/chartDataConnector'
 import UiLock from './UiLock'
 import ManualRefresh from './ManualRefresh'
@@ -16,8 +15,11 @@ const MarketHeader = () => {
 
   const [ohlcv, setOhlcv] = useState(null)
   const [loading, setLoading] = useState(false)
-  const change = ohlcv ? ((ohlcv.c[0] - ohlcv.o[0]) / ohlcv.o[0]) * 100 : '--'
-  const volume = ohlcv ? ohlcv.v[0] : '--'
+  const change =
+    ohlcv && ohlcv.c && ohlcv.c.length
+      ? ((ohlcv.c[0] - ohlcv.o[0]) / ohlcv.o[0]) * 100
+      : '--'
+  const volume = ohlcv && ohlcv.v && ohlcv.v.length ? ohlcv.v[0] : '--'
 
   const fetchOhlcv = useCallback(async () => {
     if (!selectedMarketName) return
@@ -55,9 +57,9 @@ const MarketHeader = () => {
     }
   }, [selectedMarketName])
 
-  useInterval(async () => {
+  useEffect(() => {
     fetchOhlcv()
-  }, 5000)
+  }, [fetchOhlcv])
 
   useMemo(() => {
     if (previousMarketName !== selectedMarketName) {
