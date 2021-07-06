@@ -12,7 +12,6 @@ import AccountSelect from './AccountSelect'
 import { ElementTitle } from './styles'
 import useMangoStore from '../stores/useMangoStore'
 import useMarketList from '../hooks/useMarketList'
-import useLocalStorageState from '../hooks/useLocalStorageState'
 import {
   getSymbolForTokenMintAddress,
   DECIMALS,
@@ -55,7 +54,6 @@ const NewAccount: FunctionComponent<NewAccountProps> = ({
     [symbols, walletAccounts]
   )
   const [selectedAccount, setSelectedAccount] = useState(depositAccounts[0])
-  const [accountNames, setAccountNames] = useLocalStorageState('accountNames')
 
   const symbol = getSymbolForTokenMintAddress(
     selectedAccount?.account?.mint.toString()
@@ -106,16 +104,6 @@ const NewAccount: FunctionComponent<NewAccountProps> = ({
         actions.fetchWalletBalances()
         actions.fetchMarginAccounts()
         setSubmitting(false)
-        if (name) {
-          accountNames
-            ? setAccountNames([
-                ...accountNames,
-                { publicKey: _response[0].publicKey.toString(), name: name },
-              ])
-            : setAccountNames([
-                { publicKey: _response[0].publicKey.toString(), name: name },
-              ])
-        }
         onAccountCreation(_response[0].publicKey)
       })
       .catch((err) => {
@@ -191,7 +179,7 @@ const NewAccount: FunctionComponent<NewAccountProps> = ({
         <>
           <div className="flex items-center justify-center text-th-fgd-3 pb-4 pt-2">
             Create a nickname for your account
-            <Tooltip content="Account names are stored locally in your browser. If you clear your browser cache they will be lost. We'll be storing them on-chain soon.">
+            <Tooltip content="Account names are stored publicly on-chain.">
               <InformationCircleIcon className="h-5 w-5 ml-2 text-th-primary" />
             </Tooltip>
           </div>

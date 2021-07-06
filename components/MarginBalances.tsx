@@ -6,7 +6,6 @@ import FloatingElement from './FloatingElement'
 import { ElementTitle } from './styles'
 import useMangoStore from '../stores/useMangoStore'
 import useMarketList from '../hooks/useMarketList'
-import useLocalStorageState from '../hooks/useLocalStorageState'
 import {
   abbreviateAddress,
   floorToDecimal,
@@ -34,7 +33,6 @@ export default function MarginBalances() {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false)
   const [showBorrowModal, setShowBorrowModal] = useState(false)
   const [showAccountsModal, setShowAccountsModal] = useState(false)
-  const [accountNames] = useLocalStorageState('accountNames')
 
   const handleCloseDeposit = useCallback(() => {
     setShowDepositModal(false)
@@ -51,13 +49,6 @@ export default function MarginBalances() {
   const handleCloseAccounts = useCallback(() => {
     setShowAccountsModal(false)
   }, [])
-
-  const accountName =
-    accountNames && selectedMarginAccount
-      ? accountNames.find(
-          (acc) => acc.publicKey === selectedMarginAccount.publicKey.toString()
-        )
-      : ''
 
   return (
     <>
