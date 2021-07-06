@@ -52,7 +52,7 @@ export default function MarginBalances() {
 
   return (
     <>
-      <FloatingElement>
+      <FloatingElement showConnect>
         <div className="flex justify-between pb-5">
           <div className="w-8 h-8" />
           <div className="flex flex-col items-center">
