@@ -60,8 +60,8 @@ const AccountNameModal: FunctionComponent<AccountNameModalProps> = ({
   }
 
   const validateNameInput = () => {
-    if (name.length >= 25) {
-      setInvalidNameMessage('Account name nust be less than 25 characters')
+    if (name.length >= 33) {
+      setInvalidNameMessage('Account name must be 32 characters or less')
     }
     if (name.length === 0) {
       setInvalidNameMessage('Enter an account name')
@@ -80,11 +80,14 @@ const AccountNameModal: FunctionComponent<AccountNameModalProps> = ({
       <Modal.Header>
         <div className="flex items-center">
           <ElementTitle noMarignBottom>Name your Account</ElementTitle>
-          <Tooltip content="Account names are stored on-chain">
-            <InformationCircleIcon className="h-5 w-5 ml-2 text-th-primary" />
-          </Tooltip>
         </div>
       </Modal.Header>
+      <div className="flex items-center justify-center text-th-fgd-3 pb-4">
+        Edit the public nickname for your account
+        <Tooltip content="Account names are stored on-chain">
+          <InformationCircleIcon className="h-5 w-5 ml-2 text-th-primary" />
+        </Tooltip>
+      </div>
       <div className="pb-2 text-th-fgd-1">Account Name</div>
       <Input
         type="text"
@@ -103,7 +106,7 @@ const AccountNameModal: FunctionComponent<AccountNameModalProps> = ({
       ) : null}
       <Button
         onClick={() => submitName()}
-        disabled={null}
+        disabled={name.length >= 33}
         className="mt-4 w-full"
       >
         Save Name

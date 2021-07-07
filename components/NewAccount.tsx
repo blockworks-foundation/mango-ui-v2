@@ -178,8 +178,8 @@ const NewAccount: FunctionComponent<NewAccountProps> = ({
       {showNewAccountName ? (
         <>
           <div className="flex items-center justify-center text-th-fgd-3 pb-4 pt-2">
-            Create a nickname for your account
-            <Tooltip content="Account names are stored publicly on-chain.">
+            Create a public nickname for your account
+            <Tooltip content="Account names are stored on-chain">
               <InformationCircleIcon className="h-5 w-5 ml-2 text-th-primary" />
             </Tooltip>
           </div>

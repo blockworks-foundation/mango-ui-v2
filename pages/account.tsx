@@ -36,7 +36,7 @@ export function getMarginInfoString(marginAccount: MarginAccount) {
         String.fromCharCode(0),
         ''
       )
-    : ''
+    : 'Account'
 }
 
 export default function Account() {

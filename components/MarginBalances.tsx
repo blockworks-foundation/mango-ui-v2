@@ -17,6 +17,7 @@ import BorrowModal from './BorrowModal'
 import Button from './Button'
 import Tooltip from './Tooltip'
 import AccountsModal from './AccountsModal'
+import { getMarginInfoString } from '../pages/account'
 
 export default function MarginBalances() {
   const selectedMangoGroup = useMangoStore((s) => s.selectedMangoGroup.current)
@@ -57,7 +58,7 @@ export default function MarginBalances() {
           <div className="w-8 h-8" />
           <div className="flex flex-col items-center">
             <ElementTitle noMarignBottom>
-              {accountName ? accountName.name : 'Account'}
+              {getMarginInfoString(selectedMarginAccount)}
             </ElementTitle>
             {selectedMarginAccount ? (
               <Link href={'/account'}>
