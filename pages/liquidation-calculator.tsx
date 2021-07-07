@@ -96,27 +96,29 @@ export default function LiquidationCalculator() {
   }
 
   const updateScenarioValue = (assetName, field, val) => {
-    const updatedRowData = assetBars.rowData.map((asset) => {
-      if (asset.assetName == assetName) {
-        let updatedNet: number
-        switch (field) {
-          case 'deposit':
-            updatedNet = (val - asset.borrow) * asset.price
-            break
-          case 'borrow':
-            updatedNet = (asset.deposit - val) * asset.price
-            break
-          case 'price':
-            updatedNet = (asset.deposit - asset.borrow) * val
-            break
+    if (!Number.isNaN(val)) {
+      const updatedRowData = assetBars.rowData.map((asset) => {
+        if (asset.assetName == assetName) {
+          let updatedNet: number
+          switch (field) {
+            case 'deposit':
+              updatedNet = (Math.abs(val) - asset.borrow) * asset.price
+              break
+            case 'borrow':
+              updatedNet = (asset.deposit - Math.abs(val)) * asset.price
+              break
+            case 'price':
+              updatedNet = (asset.deposit - asset.borrow) * Math.abs(val)
+              break
+          }
+          return { ...asset, [field]: val, net: updatedNet }
+        } else {
+          return asset
         }
-        return { ...asset, [field]: val, net: updatedNet }
-      } else {
-        return asset
-      }
-    })
-    const updatedScenarioData = updateScenario(updatedRowData)
-    setAssetBars(updatedScenarioData)
+      })
+      const updatedScenarioData = updateScenario(updatedRowData)
+      setAssetBars(updatedScenarioData)
+    }
   }
 
   const resetScenarioColumn = (column) => {
@@ -168,8 +170,13 @@ export default function LiquidationCalculator() {
           assetBars.rowData.reduce(
             (a, b) =>
               b.priceDisabled
-                ? a + (b.borrow || 0) * b.price
-                : a + ((b.borrow || 0) * b.price * sliderPercentage * 2) / 100,
+                ? a + (Math.abs(b.borrow) || 0) * Math.abs(b.price)
+                : a +
+                  ((Math.abs(b.borrow) || 0) *
+                    Math.abs(b.price) *
+                    sliderPercentage *
+                    2) /
+                    100,
             0
           ),
           2
@@ -181,8 +188,13 @@ export default function LiquidationCalculator() {
           assetBars.rowData.reduce(
             (a, b) =>
               b.priceDisabled
-                ? a + (b.deposit || 0) * b.price
-                : a + ((b.deposit || 0) * b.price * sliderPercentage * 2) / 100,
+                ? a + (Math.abs(b.deposit) || 0) * Math.abs(b.price)
+                : a +
+                  ((Math.abs(b.deposit) || 0) *
+                    Math.abs(b.price) *
+                    sliderPercentage *
+                    2) /
+                    100,
             0
           ),
           2
