@@ -59,6 +59,7 @@ interface AccountInfoList {
 
 interface AccountPnl {
   margin_account: string
+  name: string
   owner: string
   pnl: number
   rank: number

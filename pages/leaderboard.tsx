@@ -122,8 +122,20 @@ export default function Leaderboard() {
         <div className="p-6 rounded-lg bg-th-bkg-2">
           {selectedMarginAccount && accountPnl && accountPnl.rank ? (
             <>
-              <div className="flex items-center justify-between pb-4">
-                <div className="text-th-fgd-1 text-lg">Your Ranking</div>
+              <div className="flex items-end justify-between pb-6">
+                <div>
+                  <div className="pb-0.5 text-th-fgd-1 text-lg">
+                    Your Ranking
+                  </div>
+                  <div className="text-th-fgd-3">
+                    {accountPnl.name
+                      ? accountPnl.name
+                      : `${accountPnl.margin_account.slice(
+                          0,
+                          5
+                        )}...${accountPnl.margin_account.slice(-5)}`}
+                  </div>
+                </div>
                 <div className="text-th-fgd-3">
                   {timeRange ? `Last ${timeRange} days` : 'All Time'}
                 </div>

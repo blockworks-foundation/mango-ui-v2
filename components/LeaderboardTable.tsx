@@ -82,9 +82,12 @@ const LeaderboardTable = ({ formatPnlHistoryData }) => {
                       <Td
                         className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
                       >
-                        {acc.margin_account.slice(0, 5) +
-                          '...' +
-                          acc.margin_account.slice(-5)}
+                        {acc.name
+                          ? acc.name
+                          : `${acc.margin_account.slice(
+                              0,
+                              5
+                            )}...${acc.margin_account.slice(-5)}`}
                       </Td>
                       <Td
                         className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
