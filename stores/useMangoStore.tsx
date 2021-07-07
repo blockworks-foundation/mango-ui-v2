@@ -17,12 +17,6 @@ import { notify } from '../utils/notifications'
 
 export const ENDPOINTS: EndpointInfo[] = [
   {
-    name: 'mainnet-beta',
-    url: 'https://mango.rpcpool.com/',
-    websocket: 'https://mango.rpcpool.com/',
-    custom: false,
-  },
-  {
     name: 'devnet',
     url: 'https://api.devnet.solana.com',
     websocket: 'https://api.devnet.solana.com',
@@ -30,10 +24,10 @@ export const ENDPOINTS: EndpointInfo[] = [
   },
 ]
 
-type ClusterType = 'mainnet-beta' | 'devnet'
+type ClusterType = 'devnet'
 
 const CLUSTER =
-  (process.env.NEXT_PUBLIC_CLUSTER as ClusterType) || 'mainnet-beta'
+  (process.env.NEXT_PUBLIC_CLUSTER as ClusterType) || 'devnet'
 const ENDPOINT = ENDPOINTS.find((e) => e.name === CLUSTER)
 const DEFAULT_CONNECTION = new Connection(ENDPOINT.url, 'recent')
 const WEBSOCKET_CONNECTION = new Connection(ENDPOINT.websocket, 'recent')

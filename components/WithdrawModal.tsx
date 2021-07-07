@@ -5,7 +5,6 @@ import { ElementTitle } from './styles'
 import useMangoStore from '../stores/useMangoStore'
 import useMarketList from '../hooks/useMarketList'
 import {
-  DECIMALS,
   floorToDecimal,
   tokenPrecision,
   displayDepositsForMarginAccount,

@@ -34,6 +34,38 @@ const StyledSlider = styled(Slider)<StyledSliderProps>`
   ${({ disabled }) => disabled && 'background-color: transparent'}
 `
 
+// const getAccountStatusColor = (
+//     collateralRatio: number,
+//     isRisk?: boolean,
+//     isStatus?: boolean
+//   ) => {
+//     if (collateralRatio < 1.25) {
+//       return isRisk ? (
+//         <div className="text-th-red">High</div>
+//       ) : isStatus ? (
+//         'bg-th-red'
+//       ) : (
+//         'border-th-red text-th-red'
+//       )
+//     } else if (collateralRatio > 1.25 && collateralRatio < 1.5) {
+//       return isRisk ? (
+//         <div className="text-th-orange">Moderate</div>
+//       ) : isStatus ? (
+//         'bg-th-orange'
+//       ) : (
+//         'border-th-orange text-th-orange'
+//       )
+//     } else {
+//       return isRisk ? (
+//         <div className="text-th-green">Low</div>
+//       ) : isStatus ? (
+//         'bg-th-green'
+//       ) : (
+//         'border-th-green text-th-green'
+//       )
+//     }
+//   }
+
 const StyledSliderButtonWrapper = styled.div`
   ${tw`absolute left-0 top-5 w-full`}
 `
@@ -53,18 +85,22 @@ const StyledSliderButton = styled.button<StyledSliderButtonProps>`
   text-align: center;
   left: 0%;
   :nth-of-type(2) {
-    left: 23%;
-    transform: translateX(-23%);
+    left: 19%;
+    transform: translateX(-19%);
   }
   :nth-of-type(3) {
-    left: 50%;
-    transform: translateX(-50%);
+    left: 39%;
+    transform: translateX(-39%);
   }
   :nth-of-type(4) {
-    left: 76%;
-    transform: translateX(-76%);
+    left: 60%;
+    transform: translateX(-60%);
   }
   :nth-of-type(5) {
+    left: 80%;
+    transform: translateX(-80%);
+  }
+  :nth-of-type(6) {
     left: 100%;
     transform: translateX(-100%);
   }
@@ -84,8 +120,8 @@ type SliderProps = {
   max?: number
   maxButtonTransition?: boolean
 }
-
-const AmountSlider: FunctionComponent<SliderProps> = ({
+//TODO maybe I can just make this an extension on the normal slider tsx?
+const LeverageSlider: FunctionComponent<SliderProps> = ({
   onChange,
   onAfterChange,
   step,
@@ -135,31 +171,39 @@ const AmountSlider: FunctionComponent<SliderProps> = ({
           styleValue={0}
           sliderValue={value}
         >
-          0%
+          0x
         </StyledSliderButton>
         <StyledSliderButton
           disabled={disabled}
-          onClick={() => handleSliderButtonClick(25)}
-          styleValue={25}
+          onClick={() => handleSliderButtonClick(20)}
+          styleValue={20}
           sliderValue={value}
         >
-          25%
+          1x
         </StyledSliderButton>
         <StyledSliderButton
           disabled={disabled}
-          onClick={() => handleSliderButtonClick(50)}
-          styleValue={50}
+          onClick={() => handleSliderButtonClick(40)}
+          styleValue={40}
           sliderValue={value}
         >
-          50%
+          2x
         </StyledSliderButton>
         <StyledSliderButton
           disabled={disabled}
-          onClick={() => handleSliderButtonClick(75)}
-          styleValue={75}
+          onClick={() => handleSliderButtonClick(60)}
+          styleValue={60}
           sliderValue={value}
         >
-          75%
+          3x
+        </StyledSliderButton>
+        <StyledSliderButton
+          disabled={disabled}
+          onClick={() => handleSliderButtonClick(80)}
+          styleValue={80}
+          sliderValue={value}
+        >
+          4x
         </StyledSliderButton>
         <StyledSliderButton
           disabled={disabled}
@@ -167,11 +211,24 @@ const AmountSlider: FunctionComponent<SliderProps> = ({
           styleValue={100}
           sliderValue={value}
         >
-          100%
+          5x
         </StyledSliderButton>
       </StyledSliderButtonWrapper>
+      {/* Ignore the Tooltip for now */}
+      {/* <Tooltip content="Projected Leverage" className="py-1">
+        <span
+          className={`${getAccountStatusColor( // collateral ratio
+            1
+          )} bg-th-bkg-1 border flex font-semibold h-10 items-center justify-center ml-2 rounded text-th-fgd-1 w-14`}
+        >
+          {simulation.leverage < 5
+            ? simulation.leverage.toFixed(2)
+            : '>5'}
+          x
+        </span>
+      </Tooltip> */}
     </div>
   )
 }
 
-export default AmountSlider
+export default LeverageSlider

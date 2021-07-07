@@ -43,6 +43,7 @@ export function useBalances(): Balances[] {
     let nativeQuoteFree = 0
     let nativeBaseLocked = 0
     let nativeQuoteLocked = 0
+    let nativeQuoteUnsettled = 0
     if (openOrders) {
       nativeBaseFree = openOrders.baseTokenFree.toNumber()
       nativeQuoteFree = openOrders.quoteTokenFree
@@ -52,6 +53,9 @@ export function useBalances(): Balances[] {
         .sub(openOrders.baseTokenFree)
         .toNumber()
       nativeQuoteLocked = openOrders.quoteTokenTotal
+        .sub(openOrders.quoteTokenFree)
+        .toNumber()
+      nativeQuoteUnsettled = openOrders.quoteTokenTotal
         .sub(openOrders.quoteTokenFree)
         .toNumber()
     }
