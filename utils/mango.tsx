@@ -232,7 +232,8 @@ export async function initMarginAccountAndDeposit(
   wallet: Wallet,
   token: PublicKey,
   tokenAcc: PublicKey,
-  quantity: number
+  quantity: number,
+  accountName: string
 ): Promise<Array<any>> {
   const transaction = new Transaction()
   const signers = []
@@ -284,9 +285,18 @@ export async function initMarginAccountAndDeposit(
     programId,
   })
 
+  const setNameInstruction = makeAddMarginAccountInfoInstruction(
+    programId,
+    mangoGroup.publicKey,
+    accInstr.account.publicKey,
+    wallet.publicKey,
+    accountName
+  )
+
   // Add all instructions to one atomic transaction
   transaction.add(accInstr.instruction)
   transaction.add(initMarginAccountInstruction)
+  transaction.add(setNameInstruction)
 
   const tokenIndex = mangoGroup.getTokenIndex(token)
   const nativeQuantity = uiToNative(

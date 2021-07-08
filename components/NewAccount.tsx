@@ -97,7 +97,8 @@ const NewAccount: FunctionComponent<NewAccountProps> = ({
       wallet,
       selectedAccount.account.mint,
       selectedAccount.publicKey,
-      Number(inputAmount)
+      Number(inputAmount),
+      name
     )
       .then(async (_response: Array<any>) => {
         await sleep(1000)
@@ -150,8 +151,8 @@ const NewAccount: FunctionComponent<NewAccountProps> = ({
   }
 
   const validateNameInput = () => {
-    if (name.length >= 25) {
-      setInvalidNameMessage('Account name nust be less than 25 characters')
+    if (name.length >= 33) {
+      setInvalidNameMessage('Account name must be 32 characters or less')
     }
     if (name.length === 0) {
       setInvalidNameMessage('Enter an account name')
@@ -195,8 +196,15 @@ const NewAccount: FunctionComponent<NewAccountProps> = ({
             onBlur={validateNameInput}
             onChange={(e) => onChangeNameInput(e.target.value)}
           />
+          {invalidNameMessage ? (
+            <div className="flex items-center pt-1.5 text-th-red">
+              <ExclamationCircleIcon className="h-4 w-4 mr-1.5" />
+              {invalidNameMessage}
+            </div>
+          ) : null}
           <Button
             onClick={() => setShowNewAccountName(false)}
+            disabled={name.length >= 33}
             className="mt-4 w-full"
           >
             Next
