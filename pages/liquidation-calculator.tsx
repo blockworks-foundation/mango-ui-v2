@@ -34,59 +34,78 @@ export default function LiquidationCalculator() {
     (s) => s.selectedMarginAccount.current
   )
 
-  const [loading, setLoading] = useState(true)
   const [assetBars, setAssetBars] = useState<ScenarioDetailCalculator>()
   const [sliderPercentage, setSliderPercentage] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [editing, toggleEditing] = useState(false)
+  const [pricesLastLength, setPricesLastLength] = useState(0)
+  const [connectedStatus, setconnectedStatus] = useState(false)
 
   useEffect(() => {
-    if (connected) {
-      if (loading) {
-        setSliderPercentage(50)
-        initilizeScenario()
-        setLoading(false)
-      }
-    } else {
-      setSliderPercentage(50)
+    if (prices.length > pricesLastLength) {
       setLoading(true)
+      setSliderPercentage(50)
+      initilizeScenario()
+      setPricesLastLength(prices.length)
     }
-  }, [connected, loading])
+    if (connected != connectedStatus) {
+      setLoading(true)
+      setSliderPercentage(50)
+      initilizeScenario()
+      setconnectedStatus(connected)
+    }
+  }, [connected, prices])
 
   const initilizeScenario = () => {
     setSliderPercentage(50)
-    const assetBarData = Object.entries(symbols).map(([assetName], i) => {
-      return {
-        price: prices[i],
-        assetName: assetName,
-        deposit: selectedMarginAccount
-          ? floorToDecimal(
-              selectedMarginAccount.getUiDeposit(selectedMangoGroup, i),
-              tokenPrecision[assetName]
-            )
-          : 0,
-        borrow: selectedMarginAccount
-          ? ceilToDecimal(
-              selectedMarginAccount.getUiBorrow(selectedMangoGroup, i),
-              tokenPrecision[assetName]
-            )
-          : 0,
-        net: selectedMarginAccount
-          ? (floorToDecimal(
-              selectedMarginAccount.getUiDeposit(selectedMangoGroup, i),
-              tokenPrecision[assetName]
-            ) -
-              ceilToDecimal(
-                selectedMarginAccount.getUiBorrow(selectedMangoGroup, i),
-                tokenPrecision[assetName]
-              )) *
-            prices[i]
-          : 0,
-        precision: tokenPrecision[assetName],
-        priceDisabled: assetName === 'USDC' ? true : false,
-      }
-    })
+    let assetBarData
+    connected && selectedMarginAccount && prices.length > 0
+      ? (assetBarData = Object.entries(symbols).map(([assetName], i) => {
+          return {
+            price: prices[i],
+            assetName: assetName,
+            deposit: selectedMarginAccount
+              ? floorToDecimal(
+                  selectedMarginAccount.getUiDeposit(selectedMangoGroup, i),
+                  tokenPrecision[assetName]
+                )
+              : 0,
+            borrow: selectedMarginAccount
+              ? ceilToDecimal(
+                  selectedMarginAccount.getUiBorrow(selectedMangoGroup, i),
+                  tokenPrecision[assetName]
+                )
+              : 0,
+            net: selectedMarginAccount
+              ? (floorToDecimal(
+                  selectedMarginAccount.getUiDeposit(selectedMangoGroup, i),
+                  tokenPrecision[assetName]
+                ) -
+                  ceilToDecimal(
+                    selectedMarginAccount.getUiBorrow(selectedMangoGroup, i),
+                    tokenPrecision[assetName]
+                  )) *
+                prices[i]
+              : 0,
+            precision: tokenPrecision[assetName],
+            priceDisabled: assetName === 'USDC' ? true : false,
+          }
+        }))
+      : (assetBarData = Object.entries(symbols).map(([assetName], i) => {
+          return {
+            price: prices[i],
+            assetName: assetName,
+            deposit: 0,
+            borrow: 0,
+            net: 0,
+            precision: tokenPrecision[assetName],
+            priceDisabled: assetName === 'USDC' ? true : false,
+          }
+        }))
 
     const initScenarioData = updateScenario(assetBarData)
     setAssetBars(initScenarioData)
+    setLoading(false)
   }
 
   const updateScenario = (rowData: AssetBar[]) => {
@@ -127,20 +146,24 @@ export default function LiquidationCalculator() {
       let resetNet: number
       switch (column) {
         case 'deposit':
-          resetValue = selectedMarginAccount
-            ? floorToDecimal(
-                selectedMarginAccount.getUiDeposit(selectedMangoGroup, i),
-                tokenPrecision[asset.assetName]
-              )
+          resetValue = connected
+            ? selectedMarginAccount
+              ? floorToDecimal(
+                  selectedMarginAccount.getUiDeposit(selectedMangoGroup, i),
+                  tokenPrecision[asset.assetName]
+                )
+              : 0
             : 0
           resetNet = (resetValue - asset.borrow) * prices[i]
           break
         case 'borrow':
-          resetValue = selectedMarginAccount
-            ? ceilToDecimal(
-                selectedMarginAccount.getUiBorrow(selectedMangoGroup, i),
-                tokenPrecision[asset.assetName]
-              )
+          resetValue = connected
+            ? selectedMarginAccount
+              ? ceilToDecimal(
+                  selectedMarginAccount.getUiBorrow(selectedMangoGroup, i),
+                  tokenPrecision[asset.assetName]
+                )
+              : 0
             : 0
           resetNet = (asset.deposit - resetValue) * prices[i]
           break
@@ -162,7 +185,7 @@ export default function LiquidationCalculator() {
   }
 
   function getScenarioDetails() {
-    if (connected && assetBars && !loading) {
+    if (assetBars) {
       const scenarioHashMap = new Map()
       scenarioHashMap.set(
         'liabilities',
@@ -236,7 +259,7 @@ export default function LiquidationCalculator() {
       )
       scenarioHashMap.set(
         'maintCollateralRatio',
-        floorToDecimal(selectedMangoGroup.maintCollRatio * 100, 0)
+        connected ? (selectedMangoGroup.maintCollRatio * 100).toFixed(0) : 110
       )
       scenarioHashMap.set(
         'percentToLiquidation',
@@ -275,7 +298,7 @@ export default function LiquidationCalculator() {
             Liquidation Calculator
           </h1>
         </div>
-        {connected && assetBars && !loading ? (
+        {!loading && assetBars && prices.length > 0 ? (
           <div className="rounded-lg bg-th-bkg-2">
             <div className="grid grid-cols-12">
               <div className="col-span-9 p-4">
@@ -296,7 +319,7 @@ export default function LiquidationCalculator() {
                           value={sliderPercentage}
                         />
                       </div>
-                      <div className="pl-4 text-th-fgd-1 text-xs w-12">
+                      <div className="pl-4 text-th-fgd-1 text-xs w-14">
                         {`${sliderPercentage * 2}%`}
                       </div>
                     </div>
@@ -419,23 +442,49 @@ export default function LiquidationCalculator() {
                               <Td
                                 className={`px-3 py-2 whitespace-nowrap text-sm text-th-fgd-1`}
                               >
-                                <Input
-                                  type="number"
-                                  value={
-                                    asset.priceDisabled
-                                      ? asset.price
-                                      : (asset.price * sliderPercentage * 2) /
-                                        100
-                                  }
-                                  onChange={(e) =>
-                                    updateScenarioValue(
-                                      asset.assetName,
-                                      'price',
-                                      e.target.value
-                                    )
-                                  }
-                                  disabled={asset.priceDisabled}
-                                />
+                                {editing ? (
+                                  <Input
+                                    type="number"
+                                    onChange={(e) =>
+                                      updateScenarioValue(
+                                        asset.assetName,
+                                        'price',
+                                        e.target.value
+                                      )
+                                    }
+                                    value={
+                                      asset.priceDisabled
+                                        ? asset.price
+                                        : (asset.price * sliderPercentage * 2) /
+                                          100
+                                    }
+                                    onBlur={() => {
+                                      toggleEditing(false)
+                                    }}
+                                    disabled={asset.priceDisabled}
+                                  />
+                                ) : (
+                                  <Input
+                                    type="number"
+                                    onFocus={() => {
+                                      toggleEditing(true)
+                                      setSliderPercentage(50)
+                                    }}
+                                    readyOnly={true}
+                                    onChange={() => null}
+                                    value={
+                                      asset.priceDisabled
+                                        ? (asset.price || 0).toFixed(2)
+                                        : (
+                                            (asset.price *
+                                              sliderPercentage *
+                                              2) /
+                                              100 || 0
+                                          ).toFixed(2)
+                                    }
+                                    disabled={asset.priceDisabled}
+                                  />
+                                )}
                               </Td>
                               <Td
                                 className={`px-3 py-2 whitespace-nowrap text-sm text-th-fgd-1`}
@@ -444,8 +493,20 @@ export default function LiquidationCalculator() {
                                   type="text"
                                   value={
                                     asset.priceDisabled
-                                      ? asset.net
-                                      : (asset.net * sliderPercentage * 2) / 100
+                                      ? asset.net.toLocaleString(
+                                          navigator.language,
+                                          {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2,
+                                          }
+                                        )
+                                      : (
+                                          (asset.net * sliderPercentage * 2) /
+                                          100
+                                        ).toLocaleString(navigator.language, {
+                                          minimumFractionDigits: 2,
+                                          maximumFractionDigits: 2,
+                                        })
                                   }
                                   onChange={null}
                                   disabled
@@ -459,7 +520,7 @@ export default function LiquidationCalculator() {
                   </div>
                 </div>
               </div>
-              {connected && assetBars && !loading ? (
+              {!loading && assetBars && prices.length > 0 ? (
                 <div className="bg-th-bkg-3 col-span-3 p-4 rounded-r-lg">
                   <div className="pb-4 text-th-fgd-1 text-lg">
                     Scenario Details
@@ -467,19 +528,37 @@ export default function LiquidationCalculator() {
                   <div className="flex items-center justify-between pb-3">
                     <div className="text-th-fgd-3">Equity</div>
                     <div className="font-bold">
-                      ${scenarioDetails.get('equity')}
+                      $
+                      {scenarioDetails
+                        .get('equity')
+                        .toLocaleString(navigator.language, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
                     </div>
                   </div>
                   <div className="flex items-center justify-between pb-3">
                     <div className="text-th-fgd-3">Assets</div>
                     <div className="font-bold">
-                      ${scenarioDetails.get('assets')}
+                      $
+                      {scenarioDetails
+                        .get('assets')
+                        .toLocaleString(navigator.language, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
                     </div>
                   </div>
                   <div className="flex items-center justify-between pb-3">
                     <div className="text-th-fgd-3">Liabilities</div>
                     <div className="font-bold">
-                      ${scenarioDetails.get('liabilities')}
+                      $
+                      {scenarioDetails
+                        .get('liabilities')
+                        .toLocaleString(navigator.language, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
                     </div>
                   </div>
                   {scenarioDetails.get('liabilities') === 0 ? (
@@ -552,7 +631,7 @@ export default function LiquidationCalculator() {
           </div>
         ) : (
           <div className="rounded-lg bg-th-bkg-2">
-            Please connect a wallet to use this feature
+            Retrieving prices for liquidation calculator...
           </div>
         )}
       </PageBodyContainer>
