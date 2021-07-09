@@ -29,6 +29,7 @@ import {
   NUM_TOKENS,
 } from '@blockworks-foundation/mango-client/lib/layout'
 import {
+  makeAddMarginAccountInfoInstruction,
   makeBorrowInstruction,
   makeSettleBorrowInstruction,
   makeSettleFundsInstruction,
@@ -231,7 +232,8 @@ export async function initMarginAccountAndDeposit(
   wallet: Wallet,
   token: PublicKey,
   tokenAcc: PublicKey,
-  quantity: number
+  quantity: number,
+  accountName: string
 ): Promise<Array<any>> {
   const transaction = new Transaction()
   const signers = []
@@ -283,9 +285,18 @@ export async function initMarginAccountAndDeposit(
     programId,
   })
 
+  const setNameInstruction = makeAddMarginAccountInfoInstruction(
+    programId,
+    mangoGroup.publicKey,
+    accInstr.account.publicKey,
+    wallet.publicKey,
+    accountName
+  )
+
   // Add all instructions to one atomic transaction
   transaction.add(accInstr.instruction)
   transaction.add(initMarginAccountInstruction)
+  transaction.add(setNameInstruction)
 
   const tokenIndex = mangoGroup.getTokenIndex(token)
   const nativeQuantity = uiToNative(
@@ -1512,5 +1523,32 @@ export async function settleAllTrades(
     wallet,
     [],
     'Settle All Trades'
+  )
+}
+
+export async function addMarginAccountInfo(
+  connection: Connection,
+  programId: PublicKey,
+  mangoGroup: MangoGroup,
+  marginAccount: MarginAccount,
+  wallet: Wallet,
+  info: string
+) {
+  const transaction = new Transaction()
+  const instruction = makeAddMarginAccountInfoInstruction(
+    programId,
+    mangoGroup.publicKey,
+    marginAccount.publicKey,
+    wallet.publicKey,
+    info
+  )
+  transaction.add(instruction)
+
+  return await packageAndSend(
+    transaction,
+    connection,
+    wallet,
+    [],
+    'Add MarginAccount Info'
   )
 }

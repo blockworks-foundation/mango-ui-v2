@@ -2,7 +2,7 @@ import React, { FunctionComponent } from 'react'
 import styled from '@emotion/styled'
 import { LinkIcon } from '@heroicons/react/outline'
 import useMangoStore from '../stores/useMangoStore'
-import { MoveIcon, WalletIcon } from './icons'
+import { MoveIcon } from './icons'
 import EmptyState from './EmptyState'
 
 const StyledDragWrapperContent = styled.div`

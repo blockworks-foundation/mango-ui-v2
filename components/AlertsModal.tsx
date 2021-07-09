@@ -76,7 +76,7 @@ const AlertsModal: FunctionComponent<AlertsModalProps> = ({
     if (isCopied) {
       const timer = setTimeout(() => {
         setIsCopied(false)
-      }, 2000)
+      }, 1500)
       return () => clearTimeout(timer)
     }
   }, [isCopied])

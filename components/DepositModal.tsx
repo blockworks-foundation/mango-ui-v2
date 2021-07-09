@@ -158,7 +158,8 @@ const DepositModal = ({ isOpen, onClose }) => {
         wallet,
         selectedAccount.account.mint,
         selectedAccount.publicKey,
-        Number(inputAmount)
+        Number(inputAmount),
+        'Account'
       )
         .then(async (_response: Array<any>) => {
           await sleep(1000)
