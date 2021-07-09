@@ -1,5 +1,7 @@
-import { RefreshIcon } from '@heroicons/react/outline'
+import { ChevronUpIcon, RefreshIcon } from '@heroicons/react/outline'
 import { Table, Thead, Tbody, Tr, Th, Td } from 'react-super-responsive-table'
+import { Disclosure } from '@headlessui/react'
+import styled from '@emotion/styled'
 import useMangoStore from '../stores/useMangoStore'
 import useMarketList from '../hooks/useMarketList'
 import PageBodyContainer from '../components/PageBodyContainer'
@@ -9,7 +11,16 @@ import Input from '../components/Input'
 import Slider from '../components/Slider'
 import { useState, useEffect } from 'react'
 import Tooltip from '../components/Tooltip'
-import { floorToDecimal, ceilToDecimal, tokenPrecision } from '../utils/index'
+import {
+  floorToDecimal,
+  ceilToDecimal,
+  tokenPrecision,
+  usdFormatter,
+} from '../utils/index'
+
+const StyledJokeWrapper = styled.div`
+  width: calc(100% - 2rem);
+`
 
 interface AssetBar {
   price: number
@@ -293,36 +304,24 @@ export default function LiquidationCalculator() {
     <div className={`bg-th-bkg-1 text-th-fgd-1 transition-all`}>
       <TopBar />
       <PageBodyContainer>
-        <div className="flex flex-col sm:flex-row sm:justify-between pt-8 pb-3 sm:pb-6 md:pt-10">
-          <h1 className={`text-th-fgd-1 text-2xl font-semibold`}>
-            Liquidation Calculator
+        <div className="flex flex-col pt-8 pb-3 sm:pb-6 md:pt-10">
+          <h1 className={`mb-2 text-th-fgd-1 text-2xl font-semibold`}>
+            Risk Calculator
           </h1>
+          <p className="mb-0">
+            Keep your collateral ratio above 110% to avoid being hunted down by
+            liquidators
+          </p>
         </div>
         {!loading && assetBars && prices.length > 0 ? (
           <div className="rounded-lg bg-th-bkg-2">
             <div className="grid grid-cols-12">
-              <div className="col-span-9 p-4">
-                <div className="flex items-start justify-between pb-8 px-3">
-                  <div className="text-th-fgd-1 text-lg">Scenario Balances</div>
-                  <div className="flex">
-                    <div className="bg-th-bkg-1 border border-th-fgd-4 flex items-center px-3 h-8 rounded">
-                      <div className="pr-5 text-th-fgd-3 text-xs">
-                        Edit All Prices
-                      </div>
-                      <div className="-mt-1.5 w-32">
-                        <Slider
-                          hideButtons
-                          onChange={(e) => {
-                            onChangeSlider(e)
-                          }}
-                          step={0.5}
-                          value={sliderPercentage}
-                        />
-                      </div>
-                      <div className="pl-4 text-th-fgd-1 text-xs w-14">
-                        {`${sliderPercentage * 2}%`}
-                      </div>
-                    </div>
+              <div className="col-span-12 md:col-span-8 p-4">
+                <div className="flex justify-between pb-2 lg:pb-3 px-0 lg:px-3">
+                  <div className="pb-4 lg:pb-0 text-th-fgd-1 text-lg">
+                    Scenario Balances
+                  </div>
+                  <div className="flex justify-between lg:justify-start">
                     <Button
                       className={`text-xs flex items-center justify-center sm:ml-3 pt-0 pb-0 h-8 pl-3 pr-3 rounded`}
                       onClick={() => initilizeScenario()}
@@ -332,6 +331,24 @@ export default function LiquidationCalculator() {
                         Reset
                       </div>
                     </Button>
+                  </div>
+                </div>
+                <div className="bg-th-bkg-1 border border-th-fgd-4 flex items-center mb-6 lg:mx-3 px-3 h-8 rounded">
+                  <div className="pr-5 text-th-fgd-3 text-xs whitespace-nowrap">
+                    Edit All Prices
+                  </div>
+                  <div className="-mt-1.5 w-full">
+                    <Slider
+                      hideButtons
+                      onChange={(e) => {
+                        onChangeSlider(e)
+                      }}
+                      step={0.5}
+                      value={sliderPercentage}
+                    />
+                  </div>
+                  <div className="pl-4 text-th-fgd-1 text-xs w-12">
+                    {`${sliderPercentage * 2 - 100}%`}
                   </div>
                 </div>
                 <div className={`flex flex-col pb-2`}>
@@ -344,16 +361,16 @@ export default function LiquidationCalculator() {
                           <Tr className="text-th-fgd-3 text-xs">
                             <Th
                               scope="col"
-                              className={`px-3 py-1 text-left font-normal`}
+                              className={`px-1 lg:px-3 py-1 text-left font-normal`}
                             >
                               Asset
                             </Th>
                             <Th
                               scope="col"
-                              className={`px-3 py-1 text-left font-normal`}
+                              className={`px-1 lg:px-3 py-1 text-left font-normal`}
                             >
-                              <div className="flex justify-between">
-                                Deposits
+                              <div className="flex justify-start md:justify-between">
+                                <div className="pr-2">Deposits</div>
                                 <LinkButton
                                   onClick={() => resetScenarioColumn('deposit')}
                                 >
@@ -363,10 +380,10 @@ export default function LiquidationCalculator() {
                             </Th>
                             <Th
                               scope="col"
-                              className={`px-3 py-1 text-left font-normal`}
+                              className={`px-1 lg:px-3 py-1 text-left font-normal`}
                             >
-                              <div className="flex justify-between">
-                                Borrows
+                              <div className="flex justify-start md:justify-between">
+                                <div className="pr-2">Borrows</div>
                                 <LinkButton
                                   onClick={() => resetScenarioColumn('borrow')}
                                 >
@@ -374,9 +391,12 @@ export default function LiquidationCalculator() {
                                 </LinkButton>
                               </div>
                             </Th>
-                            <Th scope="col" className={`px-3 py-1 font-normal`}>
-                              <div className="flex justify-between">
-                                Price ($)
+                            <Th
+                              scope="col"
+                              className={`px-1 lg:px-3 py-1 font-normal`}
+                            >
+                              <div className="flex justify-start md:justify-between">
+                                <div className="pr-2">Price</div>
                                 <LinkButton
                                   onClick={() => resetScenarioColumn('price')}
                                 >
@@ -386,17 +406,26 @@ export default function LiquidationCalculator() {
                             </Th>
                             <Th
                               scope="col"
-                              className={`px-3 py-1 text-left font-normal`}
+                              className={`px-1 lg:px-3 py-1 text-left font-normal`}
                             >
-                              Collateral Weight ($)
+                              Collateral Weight
                             </Th>
                           </Tr>
                         </Thead>
                         <Tbody>
                           {assetBars.rowData.map((asset, i) => (
-                            <Tr key={`${i}`}>
+                            <Tr
+                              className={`
+                            ${
+                              i % 2 === 0
+                                ? `bg-th-bkg-3 md:bg-th-bkg-2`
+                                : `bg-th-bkg-2`
+                            }
+                          `}
+                              key={`${i}`}
+                            >
                               <Td
-                                className={`px-3 py-2 whitespace-nowrap text-sm text-th-fgd-1`}
+                                className={`px-3 py-2 whitespace-nowrap text-sm text-th-fgd-1 w-24`}
                               >
                                 <div className="flex items-center">
                                   <img
@@ -410,7 +439,7 @@ export default function LiquidationCalculator() {
                                 </div>
                               </Td>
                               <Td
-                                className={`px-3 py-2 whitespace-nowrap text-sm text-th-fgd-1`}
+                                className={`px-1 lg:px-3 py-2 text-sm text-th-fgd-1`}
                               >
                                 <Input
                                   type="number"
@@ -425,7 +454,7 @@ export default function LiquidationCalculator() {
                                 />
                               </Td>
                               <Td
-                                className={`px-3 py-2 whitespace-nowrap text-sm text-th-fgd-1`}
+                                className={`px-1 lg:px-3 py-2 text-sm text-th-fgd-1`}
                               >
                                 <Input
                                   type="number"
@@ -440,7 +469,7 @@ export default function LiquidationCalculator() {
                                 />
                               </Td>
                               <Td
-                                className={`px-3 py-2 whitespace-nowrap text-sm text-th-fgd-1`}
+                                className={`px-1 lg:px-3 py-2 whitespace-nowrap text-sm text-th-fgd-1`}
                               >
                                 {editing ? (
                                   <Input
@@ -487,7 +516,7 @@ export default function LiquidationCalculator() {
                                 )}
                               </Td>
                               <Td
-                                className={`px-3 py-2 whitespace-nowrap text-sm text-th-fgd-1`}
+                                className={`px-1 lg:px-3 py-2 whitespace-nowrap text-sm text-th-fgd-1`}
                               >
                                 <Input
                                   type="text"
@@ -521,51 +550,198 @@ export default function LiquidationCalculator() {
                 </div>
               </div>
               {!loading && assetBars && prices.length > 0 ? (
-                <div className="bg-th-bkg-3 col-span-3 p-4 rounded-r-lg">
+                <div className="bg-th-bkg-3 col-span-4 hidden md:block p-4 relative rounded-r-lg">
                   <div className="pb-4 text-th-fgd-1 text-lg">
                     Scenario Details
                   </div>
+                  <StyledJokeWrapper className="absolute bottom-0">
+                    {scenarioDetails.get('liabilities') === 0 ? (
+                      <div className="border border-th-green flex flex-col items-center mb-6 p-3 rounded text-center text-th-fgd-1">
+                        <div className="pb-0.5 text-th-fgd-1">
+                          0 Borrows = 0 Risk
+                        </div>
+                        <div className="text-th-fgd-3 text-xs">
+                          Come on, live a little...
+                        </div>
+                      </div>
+                    ) : null}
+                    {scenarioDetails.get('riskRanking') === 'Low' &&
+                    scenarioDetails.get('collateralRatio') !== 0 ? (
+                      <div className="border border-th-green flex flex-col items-center mb-6 p-3 rounded text-center text-th-fgd-1">
+                        <div className="pb-0.5 text-th-fgd-1">Looking good</div>
+                        <div className="text-th-fgd-3 text-xs">
+                          Sun is shining, the weather is sweet, yeah
+                        </div>
+                      </div>
+                    ) : null}
+                    {scenarioDetails.get('riskRanking') === 'Moderate' ? (
+                      <div className="border border-th-orange flex flex-col items-center mb-6 p-3 rounded text-center text-th-fgd-1">
+                        <div className="pb-0.5 text-th-fgd-1">
+                          Liquidator activity is increasing
+                        </div>
+                        <div className="text-th-fgd-3 text-xs">
+                          It might be time to re-think your positions
+                        </div>
+                      </div>
+                    ) : null}
+                    {scenarioDetails.get('riskRanking') === 'High' &&
+                    scenarioDetails.get('collateralRatio') >
+                      scenarioDetails.get('maintCollateralRatio') ? (
+                      <div className="border border-th-red flex flex-col items-center mb-6 p-3 rounded text-center text-th-fgd-1">
+                        <div className="pb-0.5 text-th-fgd-1">
+                          Liquidators are closing in
+                        </div>
+                        <div className="text-th-fgd-3 text-xs">
+                          Hit &apos;em with everthing you&apos;ve got...
+                        </div>
+                      </div>
+                    ) : null}
+                    {scenarioDetails.get('collateralRatio') <=
+                      scenarioDetails.get('maintCollateralRatio') &&
+                    scenarioDetails.get('collateralRatio') !== 0 ? (
+                      <div className="bg-th-red border border-th-red flex flex-col items-center mb-6 p-3 rounded text-center text-th-fgd-1">
+                        <div className="pb-0.5 text-th-fgd-1">Liquidated!</div>
+                        <div className="text-th-fgd-1 text-xs">
+                          Insert coin to continue...
+                        </div>
+                      </div>
+                    ) : null}
+                  </StyledJokeWrapper>
                   <div className="flex items-center justify-between pb-3">
-                    <div className="text-th-fgd-3">Equity</div>
+                    <div className="text-th-fgd-3">Account Value</div>
                     <div className="font-bold">
-                      $
-                      {scenarioDetails
-                        .get('equity')
-                        .toLocaleString(navigator.language, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
+                      {usdFormatter.format(scenarioDetails.get('equity'))}
                     </div>
                   </div>
                   <div className="flex items-center justify-between pb-3">
-                    <div className="text-th-fgd-3">Assets</div>
+                    <div className="text-th-fgd-3">Account Risk</div>
+                    {
+                      <div
+                        className={`font-bold ${
+                          scenarioDetails.get('riskRanking') === 'High'
+                            ? 'text-th-red'
+                            : scenarioDetails.get('riskRanking') === 'Moderate'
+                            ? 'text-th-orange'
+                            : 'text-th-green'
+                        }`}
+                      >
+                        {scenarioDetails.get('collateralRatio') <=
+                          scenarioDetails.get('maintCollateralRatio') &&
+                        scenarioDetails.get('collateralRatio') !== 0
+                          ? 'Liquidated'
+                          : scenarioDetails.get('riskRanking')}
+                      </div>
+                    }
+                  </div>
+                  <div className="flex items-center justify-between pb-3">
+                    <div className="text-th-fgd-3">Deposit Value</div>
                     <div className="font-bold">
-                      $
-                      {scenarioDetails
-                        .get('assets')
-                        .toLocaleString(navigator.language, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
+                      {usdFormatter.format(scenarioDetails.get('assets'))}
                     </div>
                   </div>
                   <div className="flex items-center justify-between pb-3">
-                    <div className="text-th-fgd-3">Liabilities</div>
+                    <div className="text-th-fgd-3">Borrow Value</div>
                     <div className="font-bold">
-                      $
-                      {scenarioDetails
-                        .get('liabilities')
-                        .toLocaleString(navigator.language, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
+                      {usdFormatter.format(scenarioDetails.get('liabilities'))}
                     </div>
                   </div>
-                  {scenarioDetails.get('liabilities') === 0 ? (
-                    <div className="flex items-center justify-center text-th-green pb-3">
-                      Account Safe: No Liabilities
+
+                  <div>
+                    <div className="flex items-center justify-between pb-3">
+                      <div className="text-th-fgd-3">Collateral Ratio</div>
+                      <div className="font-bold">
+                        {scenarioDetails.get('collateralRatio')}%
+                      </div>
                     </div>
-                  ) : (
+                    {scenarioDetails.get('liabilities') === 0 ||
+                    (scenarioDetails.get('collateralRatio') <=
+                      scenarioDetails.get('maintCollateralRatio') &&
+                      scenarioDetails.get('collateralRatio') !== 0) ? null : (
+                      <>
+                        <div className="flex items-center justify-between pb-3">
+                          <div className="text-th-fgd-3">Leverage</div>
+                          <div className="font-bold">
+                            {scenarioDetails.get('leverage')}x
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between pb-3">
+                          <Tooltip content="The percentage change in total asset value which would result in the liquidation of your account.">
+                            <div className="text-th-fgd-3">
+                              Price Change Buffer
+                            </div>
+                          </Tooltip>
+                          <div className="font-bold">
+                            {scenarioDetails.get('percentToLiquidation')}%
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        ) : (
+          <div className="animate-pulse bg-th-bkg-3 h-64 rounded-lg w-full" />
+        )}
+      </PageBodyContainer>
+      {!loading && assetBars && prices.length > 0 ? (
+        <div className="bg-th-bkg-3 bottom-0 md:hidden sticky w-full">
+          <Disclosure>
+            {({ open }) => (
+              <>
+                <Disclosure.Button className="bg-th-bkg-3 default-transition flex items-center justify-between p-3 w-full hover:bg-th-bkg-1 focus:outline-none">
+                  Scenario Details
+                  <ChevronUpIcon
+                    className={`default-transition h-4 text-th-fgd-1 w-4 ${
+                      open ? 'transform rotate-180' : 'transform rotate-360'
+                    }`}
+                  />
+                </Disclosure.Button>
+                <Disclosure.Panel className="p-3">
+                  <div className="text-th-fgd-1">
+                    <div className="flex items-center justify-between pb-3">
+                      <div className="text-th-fgd-3">Account Value</div>
+                      <div className="font-bold">
+                        {usdFormatter.format(scenarioDetails.get('equity'))}
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between pb-3">
+                      <div className="text-th-fgd-3">Account Risk</div>
+                      {
+                        <div
+                          className={`font-bold ${
+                            scenarioDetails.get('riskRanking') === 'High'
+                              ? 'text-th-red'
+                              : scenarioDetails.get('riskRanking') ===
+                                'Moderate'
+                              ? 'text-th-orange'
+                              : 'text-th-green'
+                          }`}
+                        >
+                          {scenarioDetails.get('collateralRatio') <=
+                            scenarioDetails.get('maintCollateralRatio') &&
+                          scenarioDetails.get('collateralRatio') !== 0
+                            ? 'Liquidated'
+                            : scenarioDetails.get('riskRanking')}
+                        </div>
+                      }
+                    </div>
+                    <div className="flex items-center justify-between pb-3">
+                      <div className="text-th-fgd-3">Deposit Value</div>
+                      <div className="font-bold">
+                        {usdFormatter.format(scenarioDetails.get('assets'))}
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between pb-3">
+                      <div className="text-th-fgd-3">Borrow Value</div>
+                      <div className="font-bold">
+                        {usdFormatter.format(
+                          scenarioDetails.get('liabilities')
+                        )}
+                      </div>
+                    </div>
+
                     <div>
                       <div className="flex items-center justify-between pb-3">
                         <div className="text-th-fgd-3">Collateral Ratio</div>
@@ -573,21 +749,11 @@ export default function LiquidationCalculator() {
                           {scenarioDetails.get('collateralRatio')}%
                         </div>
                       </div>
-                      <div className="flex items-center justify-between pb-3">
-                        <Tooltip content="The collateral ratio you must maintain to not get liquidated">
-                          <div className="text-th-fgd-3">MCR Required</div>
-                        </Tooltip>
-                        <div className="font-bold">
-                          {scenarioDetails.get('maintCollateralRatio')}%
-                        </div>
-                      </div>
-                      {scenarioDetails.get('collateralRatio') <=
-                      scenarioDetails.get('maintCollateralRatio') ? (
-                        <div className="flex items-center justify-center text-th-red pb-3">
-                          Account Liquidated
-                        </div>
-                      ) : (
-                        <div>
+                      {scenarioDetails.get('liabilities') === 0 ||
+                      (scenarioDetails.get('collateralRatio') <=
+                        scenarioDetails.get('maintCollateralRatio') &&
+                        scenarioDetails.get('collateralRatio') !== 0) ? null : (
+                        <>
                           <div className="flex items-center justify-between pb-3">
                             <div className="text-th-fgd-3">Leverage</div>
                             <div className="font-bold">
@@ -595,46 +761,25 @@ export default function LiquidationCalculator() {
                             </div>
                           </div>
                           <div className="flex items-center justify-between pb-3">
-                            <div className="text-th-fgd-3">Risk</div>
-                            {
-                              <div
-                                className={`font-bold ${
-                                  scenarioDetails.get('riskRanking') === 'High'
-                                    ? 'text-th-red'
-                                    : scenarioDetails.get('riskRanking') ===
-                                      'Moderate'
-                                    ? 'text-th-orange'
-                                    : 'text-th-green'
-                                }`}
-                              >
-                                {scenarioDetails.get('riskRanking')}
-                              </div>
-                            }
-                          </div>
-                          <div className="flex items-center justify-between pb-3">
-                            <Tooltip content="The percentage move in total asset value which would result in the liquidation of your account.">
+                            <Tooltip content="The percentage change in total asset value which would result in the liquidation of your account.">
                               <div className="text-th-fgd-3">
-                                Price Move To Liquidate
+                                Price Change Buffer
                               </div>
                             </Tooltip>
                             <div className="font-bold">
                               {scenarioDetails.get('percentToLiquidation')}%
                             </div>
                           </div>
-                        </div>
+                        </>
                       )}
                     </div>
-                  )}
-                </div>
-              ) : null}
-            </div>
-          </div>
-        ) : (
-          <div className="rounded-lg bg-th-bkg-2">
-            Retrieving prices for liquidation calculator...
-          </div>
-        )}
-      </PageBodyContainer>
+                  </div>
+                </Disclosure.Panel>
+              </>
+            )}
+          </Disclosure>
+        </div>
+      ) : null}
     </div>
   )
 }

@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from 'react'
+import { useRouter } from 'next/router'
 import { nativeToUi } from '@blockworks-foundation/mango-client/lib/utils'
 import { groupBy } from '../utils'
 import useTradeHistory from '../hooks/useTradeHistory'
@@ -55,6 +56,7 @@ const calculatePNL = (tradeHistory, prices, mangoGroup) => {
 export default function MarginInfo() {
   const connection = useMangoStore((s) => s.connection.current)
   const connected = useMangoStore((s) => s.wallet.connected)
+  const router = useRouter()
   const selectedMarginAccount = useMangoStore(
     (s) => s.selectedMarginAccount.current
   )
@@ -172,13 +174,21 @@ export default function MarginInfo() {
               </div>
             ))
           : null}
-        <Button
-          className="mt-4 w-full"
-          disabled={!connected}
-          onClick={() => setOpenAlertModal(true)}
-        >
-          Create Liquidation Alert
-        </Button>
+        <div className={`flex justify-center items-center mt-4`}>
+          <Button
+            onClick={() => setOpenAlertModal(true)}
+            className="w-1/2"
+            disabled={!connected}
+          >
+            Create Alert
+          </Button>
+          <Button
+            onClick={() => router.push('/risk-calculator')}
+            className="ml-4 w-1/2 whitespace-nowrap"
+          >
+            Risk Calculator
+          </Button>
+        </div>
         {openAlertModal ? (
           <AlertsModal
             isOpen={openAlertModal}
