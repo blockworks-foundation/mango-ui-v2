@@ -147,7 +147,8 @@ const AccountsModal: FunctionComponent<AccountsModalProps> = ({
                                 <CurrencyDollarIcon className="h-5 w-5 mr-2.5" />
                                 <div>
                                   <div className="pb-0.5">
-                                    {marginAccounts[i] && marginAccounts[i].info
+                                    {marginAccounts[i] &&
+                                    getMarginInfoString(marginAccounts[i])
                                       ? getMarginInfoString(marginAccounts[i])
                                       : abbreviateAddress(account.publicKey)}
                                   </div>

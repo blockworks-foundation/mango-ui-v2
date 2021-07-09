@@ -58,7 +58,9 @@ export default function MarginBalances() {
           <div className="w-8 h-8" />
           <div className="flex flex-col items-center">
             <ElementTitle noMarignBottom>
-              {getMarginInfoString(selectedMarginAccount)}
+              {getMarginInfoString(selectedMarginAccount)
+                ? getMarginInfoString(selectedMarginAccount)
+                : 'Account'}
             </ElementTitle>
             {selectedMarginAccount ? (
               <Link href={'/account'}>
