@@ -11,12 +11,7 @@ import Input from '../components/Input'
 import Slider from '../components/Slider'
 import { useState, useEffect } from 'react'
 import Tooltip from '../components/Tooltip'
-import {
-  floorToDecimal,
-  ceilToDecimal,
-  tokenPrecision,
-  usdFormatter,
-} from '../utils/index'
+import { floorToDecimal, tokenPrecision, usdFormatter } from '../utils/index'
 
 const StyledJokeWrapper = styled.div`
   width: calc(100% - 2rem);
@@ -51,6 +46,7 @@ export default function LiquidationCalculator() {
   const [editing, toggleEditing] = useState(false)
   const [pricesLastLength, setPricesLastLength] = useState(0)
   const [connectedStatus, setconnectedStatus] = useState(false)
+  const [currentMarginAccount, setCurrentMarginAccount] = useState(null)
 
   useEffect(() => {
     if (prices.length > pricesLastLength) {
@@ -65,7 +61,13 @@ export default function LiquidationCalculator() {
       initilizeScenario()
       setconnectedStatus(connected)
     }
-  }, [connected, prices])
+    if (connected && currentMarginAccount != selectedMarginAccount) {
+      setLoading(true)
+      setSliderPercentage(50)
+      initilizeScenario()
+      setCurrentMarginAccount(selectedMarginAccount)
+    }
+  }, [connected, prices, selectedMarginAccount])
 
   const initilizeScenario = () => {
     setSliderPercentage(50)
@@ -82,7 +84,7 @@ export default function LiquidationCalculator() {
                 )
               : 0,
             borrow: selectedMarginAccount
-              ? ceilToDecimal(
+              ? floorToDecimal(
                   selectedMarginAccount.getUiBorrow(selectedMangoGroup, i),
                   tokenPrecision[assetName]
                 )
@@ -92,7 +94,7 @@ export default function LiquidationCalculator() {
                   selectedMarginAccount.getUiDeposit(selectedMangoGroup, i),
                   tokenPrecision[assetName]
                 ) -
-                  ceilToDecimal(
+                  floorToDecimal(
                     selectedMarginAccount.getUiBorrow(selectedMangoGroup, i),
                     tokenPrecision[assetName]
                   )) *
@@ -170,7 +172,7 @@ export default function LiquidationCalculator() {
         case 'borrow':
           resetValue = connected
             ? selectedMarginAccount
-              ? ceilToDecimal(
+              ? floorToDecimal(
                   selectedMarginAccount.getUiBorrow(selectedMangoGroup, i),
                   tokenPrecision[asset.assetName]
                 )
@@ -200,7 +202,7 @@ export default function LiquidationCalculator() {
       const scenarioHashMap = new Map()
       scenarioHashMap.set(
         'liabilities',
-        ceilToDecimal(
+        floorToDecimal(
           assetBars.rowData.reduce(
             (a, b) =>
               b.priceDisabled
@@ -245,7 +247,7 @@ export default function LiquidationCalculator() {
         'leverage',
         scenarioHashMap.get('liabilities') == 0
           ? 0.0
-          : ceilToDecimal(
+          : floorToDecimal(
               scenarioHashMap.get('liabilities') /
                 scenarioHashMap.get('equity'),
               2
