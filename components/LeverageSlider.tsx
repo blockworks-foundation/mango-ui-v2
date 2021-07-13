@@ -12,10 +12,10 @@ type StyledSliderProps = {
 
 const StyledSlider = styled(Slider)<StyledSliderProps>`
   .rc-slider-rail {
-    ${tw`bg-th-bkg-3 h-2.5 rounded-full`}
+    ${tw`bg-th-green h-2.5 rounded-full`}
   }
   .rc-slider-track {
-    ${tw`bg-th-primary h-2.5 rounded-full ring-1 ring-th-primary ring-inset`}
+    ${tw`bg-th-red h-2.5 rounded-full`}
     ${({ enableTransition }) =>
       enableTransition && tw`transition-all duration-500`}
   }
@@ -66,8 +66,9 @@ const StyledSlider = styled(Slider)<StyledSliderProps>`
 //     }
 //   }
 
+
 const StyledSliderButtonWrapper = styled.div`
-  ${tw`absolute left-0 top-5 w-full`}
+  ${tw`absolute top-5 w-11/12`}
 `
 
 type StyledSliderButtonProps = {
@@ -85,22 +86,42 @@ const StyledSliderButton = styled.button<StyledSliderButtonProps>`
   text-align: center;
   left: 0%;
   :nth-of-type(2) {
+    left: 9%;
+    transform: translateX(-9%);
+  }
+  :nth-of-type(3) {
     left: 19%;
     transform: translateX(-19%);
   }
-  :nth-of-type(3) {
-    left: 39%;
-    transform: translateX(-39%);
-  }
   :nth-of-type(4) {
-    left: 60%;
-    transform: translateX(-60%);
+    left: 30%;
+    transform: translateX(-30%);
   }
   :nth-of-type(5) {
+    left: 40%;
+    transform: translateX(-40%);
+  }
+  :nth-of-type(6) {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  :nth-of-type(7) {
+    left: 61%;
+    transform: translateX(-61%);
+  }
+  :nth-of-type(8) {
+    left: 71%;
+    transform: translateX(-71%);
+  }
+  :nth-of-type(9) {
     left: 80%;
     transform: translateX(-80%);
   }
-  :nth-of-type(6) {
+  :nth-of-type(10) {
+    left: 90%;
+    transform: translateX(-90%);
+  }
+  :nth-of-type(11) {
     left: 100%;
     transform: translateX(-100%);
   }
@@ -117,6 +138,7 @@ type SliderProps = {
   step: number
   value: number
   disabled?: boolean
+  min?: number
   max?: number
   maxButtonTransition?: boolean
 }
@@ -127,6 +149,7 @@ const LeverageSlider: FunctionComponent<SliderProps> = ({
   step,
   value,
   disabled,
+  min,
   max,
   maxButtonTransition,
 }) => {
@@ -154,79 +177,125 @@ const LeverageSlider: FunctionComponent<SliderProps> = ({
 
   return (
     <div className="relative">
-      <StyledSlider
-        min={0}
-        max={max}
-        value={value || 0}
-        onChange={onChange}
-        onAfterChange={onAfterChange}
-        step={step}
-        enableTransition={enableTransition}
-        disabled={disabled}
-      />
-      <StyledSliderButtonWrapper>
-        <StyledSliderButton
+      <div className={`transform -rotate-90 text-xs absolute top-2 -left-3`}>
+        Short
+      </div>
+      <div className={`transform rotate-90 text-xs absolute top-2 -right-3 whitespace-pre`}> Long</div>
+      <div className={`w-11/12 m-auto mt-6`}>
+        <StyledSlider
+          min={-100}
+          max={max}
+          value={value || 0}
+          onChange={onChange}
+          onAfterChange={onAfterChange}
+          step={step}
+          enableTransition={enableTransition}
           disabled={disabled}
-          onClick={() => handleSliderButtonClick(0)}
-          styleValue={0}
-          sliderValue={value}
-        >
-          0x
-        </StyledSliderButton>
-        <StyledSliderButton
-          disabled={disabled}
-          onClick={() => handleSliderButtonClick(20)}
-          styleValue={20}
-          sliderValue={value}
-        >
-          1x
-        </StyledSliderButton>
-        <StyledSliderButton
-          disabled={disabled}
-          onClick={() => handleSliderButtonClick(40)}
-          styleValue={40}
-          sliderValue={value}
-        >
-          2x
-        </StyledSliderButton>
-        <StyledSliderButton
-          disabled={disabled}
-          onClick={() => handleSliderButtonClick(60)}
-          styleValue={60}
-          sliderValue={value}
-        >
-          3x
-        </StyledSliderButton>
-        <StyledSliderButton
-          disabled={disabled}
-          onClick={() => handleSliderButtonClick(80)}
-          styleValue={80}
-          sliderValue={value}
-        >
-          4x
-        </StyledSliderButton>
-        <StyledSliderButton
-          disabled={disabled}
-          onClick={() => handleSliderButtonClick(100)}
-          styleValue={100}
-          sliderValue={value}
-        >
-          5x
-        </StyledSliderButton>
-      </StyledSliderButtonWrapper>
-      {/* Ignore the Tooltip for now */}
-      {/* <Tooltip content="Projected Leverage" className="py-1">
-        <span
-          className={`${getAccountStatusColor( // collateral ratio
-            1
-          )} bg-th-bkg-1 border flex font-semibold h-10 items-center justify-center ml-2 rounded text-th-fgd-1 w-14`}
-        >
-          {simulation.leverage < 5
-            ? simulation.leverage.toFixed(2)
-            : '>5'}
-          x
-        </span>
-      </Tooltip> */}
+        />
+        <StyledSliderButtonWrapper>
+          <StyledSliderButton
+            disabled={disabled}
+            onClick={() => handleSliderButtonClick(-100)}
+            styleValue={-100}
+            sliderValue={value}
+          >
+            5x
+          </StyledSliderButton>
+          <StyledSliderButton
+            disabled={disabled}
+            onClick={() => handleSliderButtonClick(-80)}
+            styleValue={-80}
+            sliderValue={value}
+          >
+            4x
+          </StyledSliderButton>
+          <StyledSliderButton
+            disabled={disabled}
+            onClick={() => handleSliderButtonClick(-60)}
+            styleValue={-60}
+            sliderValue={value}
+          >
+            3x
+          </StyledSliderButton>
+          <StyledSliderButton
+            disabled={disabled}
+            onClick={() => handleSliderButtonClick(-40)}
+            styleValue={-40}
+            sliderValue={value}
+          >
+            2x
+          </StyledSliderButton>
+          <StyledSliderButton
+            disabled={disabled}
+            onClick={() => handleSliderButtonClick(-20)}
+            styleValue={-20}
+            sliderValue={value}
+          >
+            1x
+          </StyledSliderButton>
+          <StyledSliderButton
+            disabled={disabled}
+            onClick={() => handleSliderButtonClick(0)}
+            styleValue={0}
+            sliderValue={value}
+          >
+            0x
+          </StyledSliderButton>
+          <StyledSliderButton
+            disabled={disabled}
+            onClick={() => handleSliderButtonClick(20)}
+            styleValue={20}
+            sliderValue={value}
+          >
+            1x
+          </StyledSliderButton>
+          <StyledSliderButton
+            disabled={disabled}
+            onClick={() => handleSliderButtonClick(40)}
+            styleValue={40}
+            sliderValue={value}
+          >
+            2x
+          </StyledSliderButton>
+          <StyledSliderButton
+            disabled={disabled}
+            onClick={() => handleSliderButtonClick(60)}
+            styleValue={60}
+            sliderValue={value}
+          >
+            3x
+          </StyledSliderButton>
+          <StyledSliderButton
+            disabled={disabled}
+            onClick={() => handleSliderButtonClick(80)}
+            styleValue={80}
+            sliderValue={value}
+          >
+            4x
+          </StyledSliderButton>
+          <StyledSliderButton
+            disabled={disabled}
+            onClick={() => handleSliderButtonClick(100)}
+            styleValue={100}
+            sliderValue={value}
+          >
+            5x
+          </StyledSliderButton>
+        </StyledSliderButtonWrapper>
+        {/* Ignore the Tooltip for now */}
+        {/* <Tooltip content="Projected Leverage" className="py-1">
+          <span
+            className={`${getAccountStatusColor( // collateral ratio
+              1
+            )} bg-th-bkg-1 border flex font-semibold h-10 items-center justify-center ml-2 rounded text-th-fgd-1 w-14`}
+          >
+            {simulation.leverage < 5
+              ? simulation.leverage.toFixed(2)
+              : '>5'}
+            x
+          </span>
+        </Tooltip> */}
+        </div>
     </div>
   )
 }

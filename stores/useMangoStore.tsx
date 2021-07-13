@@ -1,4 +1,5 @@
 import create, { State } from 'zustand'
+import { devtools } from 'zustand/middleware'
 import produce from 'immer'
 import { Market } from '@project-serum/serum'
 import {
@@ -119,7 +120,7 @@ interface MangoStore extends State {
   }
 }
 
-const useMangoStore = create<MangoStore>((set, get) => ({
+const useMangoStore = create<MangoStore>(devtools((set, get) => ({
   notifications: [],
   accountInfos: {},
   connection: {
@@ -423,6 +424,6 @@ const useMangoStore = create<MangoStore>((set, get) => ({
       })
     },
   },
-}))
+})))
 
 export default useMangoStore
