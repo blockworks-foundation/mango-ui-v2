@@ -115,6 +115,7 @@ interface MangoStore extends State {
   settings: {
     uiLocked: boolean
   }
+  activityFeed: any[]
   depositHistory: any[]
   liquidationHistory: any[]
   withdrawalHistory: any[]
@@ -173,6 +174,7 @@ const useMangoStore = create<MangoStore>((set, get) => ({
   settings: {
     uiLocked: true,
   },
+  activityFeed: [],
   depositHistory: [],
   liquidationHistory: [],
   withdrawalHistory: [],
@@ -375,6 +377,23 @@ const useMangoStore = create<MangoStore>((set, get) => ({
       )
       set((state) => {
         state.tradeHistory = results
+      })
+    },
+    async fetchActivityFeed(marginAccount = null) {
+      const selectedMarginAccount =
+        marginAccount || get().selectedMarginAccount.current
+      const set = get().set
+
+      if (!selectedMarginAccount) return
+
+      const response = await fetch(
+        `https://mango-transaction-log.herokuapp.com/stats/activity_feed/FucJ8CAfqSVuPr2zGhDxjyxkYvb5Qd1Maqqbc5JrPbYb`
+      )
+      const parsedResponse = await response.json()
+      const results = parsedResponse ? parsedResponse : []
+
+      set((state) => {
+        state.activityFeed = results
       })
     },
     async fetchDepositHistory(marginAccount = null) {
