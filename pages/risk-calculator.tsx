@@ -594,7 +594,7 @@ export default function LiquidationCalculator() {
                           Liquidators are closing in
                         </div>
                         <div className="text-th-fgd-3 text-xs">
-                          Hit &apos;em with everthing you&apos;ve got...
+                          Hit &apos;em with everything you&apos;ve got...
                         </div>
                       </div>
                     ) : null}
