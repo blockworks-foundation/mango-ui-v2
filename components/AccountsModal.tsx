@@ -1,11 +1,7 @@
 import React, { FunctionComponent, useEffect, useState } from 'react'
 import { RadioGroup } from '@headlessui/react'
 import { CheckCircleIcon } from '@heroicons/react/solid'
-import {
-  ChevronLeftIcon,
-  CurrencyDollarIcon,
-  PlusCircleIcon,
-} from '@heroicons/react/outline'
+import { CurrencyDollarIcon, PlusCircleIcon } from '@heroicons/react/outline'
 import useMangoStore from '../stores/useMangoStore'
 import { MarginAccount } from '@blockworks-foundation/mango-client'
 import { abbreviateAddress } from '../utils'
@@ -14,6 +10,7 @@ import Modal from './Modal'
 import { ElementTitle } from './styles'
 import Button, { LinkButton } from './Button'
 import NewAccount from './NewAccount'
+import { getMarginInfoString } from '../pages/account'
 
 interface AccountsModalProps {
   onClose: () => void
@@ -128,7 +125,7 @@ const AccountsModal: FunctionComponent<AccountsModalProps> = ({
                 Select a Margin Account
               </RadioGroup.Label>
               <div className="space-y-2">
-                {marginAccounts.map((account) => (
+                {marginAccounts.map((account, i) => (
                   <RadioGroup.Option
                     key={account.publicKey.toString()}
                     value={account}
@@ -150,11 +147,14 @@ const AccountsModal: FunctionComponent<AccountsModalProps> = ({
                                 <CurrencyDollarIcon className="h-5 w-5 mr-2.5" />
                                 <div>
                                   <div className="pb-0.5">
-                                    {abbreviateAddress(account.publicKey)}
+                                    {marginAccounts[i] &&
+                                    getMarginInfoString(marginAccounts[i])
+                                      ? getMarginInfoString(marginAccounts[i])
+                                      : abbreviateAddress(account.publicKey)}
                                   </div>
                                   {prices && selectedMangoGroup ? (
                                     <div className="text-th-fgd-3 text-xs">
-                                      {getAccountInfo(account)}
+                                      {getAccountInfo(marginAccounts[i])}
                                     </div>
                                   ) : null}
                                 </div>
@@ -178,11 +178,10 @@ const AccountsModal: FunctionComponent<AccountsModalProps> = ({
           <>
             <NewAccount onAccountCreation={handleNewAccountCreation} />
             <LinkButton
-              className="flex items-center mt-4 text-th-fgd-3"
+              className="flex items-center justify-center mt-6 text-th-fgd-2 w-full"
               onClick={() => setShowNewAccountForm(false)}
             >
-              <ChevronLeftIcon className="h-5 w-5 mr-1" />
-              Back
+              Cancel
             </LinkButton>
           </>
         )
