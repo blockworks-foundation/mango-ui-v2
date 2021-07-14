@@ -18,17 +18,20 @@ const StyledLeverageNumber = styled.div`
 const StyledLeverageArrow = styled.div`
   ${tw`relative`}
 `
-  
-const LeverageIndicator: FunctionComponent<LeverageIndicatorProps> = ({ leverage, long }) => {
+
+const LeverageIndicator: FunctionComponent<LeverageIndicatorProps> = ({
+  leverage,
+  long,
+}) => {
   const side = long === 1 ? 'long' : 'short'
-  const IndicatorPosition = `${leverage*10*long + 50}%`
+  const IndicatorPosition = `${leverage * 10 * long + 50}%`
   return (
     <div>
       <StyledLeverageIndicatorWrapper>
         <StyledLeverageNumber>
           CURRENT LEVERAGE: {leverage.toFixed(2)}x {side}
         </StyledLeverageNumber>
-        <StyledLeverageArrow style={{left: IndicatorPosition}}>
+        <StyledLeverageArrow style={{ left: IndicatorPosition }}>
           ↓
         </StyledLeverageArrow>
       </StyledLeverageIndicatorWrapper>

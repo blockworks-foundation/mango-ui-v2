@@ -66,7 +66,6 @@ const StyledSlider = styled(Slider)<StyledSliderProps>`
 //     }
 //   }
 
-
 const StyledSliderButtonWrapper = styled.div`
   ${tw`absolute top-5 w-11/12`}
 `
@@ -180,7 +179,12 @@ const LeverageSlider: FunctionComponent<SliderProps> = ({
       <div className={`transform -rotate-90 text-xs absolute top-2 -left-3`}>
         Short
       </div>
-      <div className={`transform rotate-90 text-xs absolute top-2 -right-3 whitespace-pre`}> Long</div>
+      <div
+        className={`transform rotate-90 text-xs absolute top-2 -right-3 whitespace-pre`}
+      >
+        {' '}
+        Long
+      </div>
       <div className={`w-11/12 m-auto mt-6`}>
         <StyledSlider
           min={-100}
@@ -295,7 +299,7 @@ const LeverageSlider: FunctionComponent<SliderProps> = ({
             x
           </span>
         </Tooltip> */}
-        </div>
+      </div>
     </div>
   )
 }
