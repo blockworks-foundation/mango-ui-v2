@@ -179,8 +179,6 @@ export default function TradeForm() {
   const onChangeSlider = async (leveragePct) => {
     // not yet tested with multiple assets worth of borrows/deposits
     setLeveragePct(leveragePct)
-    let setLeverage = false
-    let newQuoteSize = 0
 
     const sliderNumericLeverage = (leveragePct / 100) * 5
     setImpliedCollateralRatio(
@@ -605,7 +603,7 @@ export default function TradeForm() {
           </Button>
         )}
       </div>
-      {/* TOTO remove debug info table*/}
+      {/* TODO remove debug info table*/}
       {connected ? (
         <table>
           <th>Account</th>
