@@ -211,17 +211,17 @@ export default function TradeForm() {
           setSide('buy')
           let newQuoteSize
           if (long === 1) {
-            // already margin long & buying more
+            // already margin long & buying more CALC OK
             const difference = targetLiabilities - liabsVal + usdcDeposit
             newQuoteSize = difference
           } else {
             // currently margin short
             if (Math.sign(long) === Math.sign(sliderNumericLeverage)) {
-              // reducing short position but not crossing 0x leverage
+              // reducing short position but not crossing 0x leverage CALC OK
               const difference = liabsVal + targetLiabilities
               newQuoteSize = difference
             } else {
-              // crossing 0x leverage, cover all borrows + buy leverage * equity value
+              // crossing 0x leverage, cover all borrows + buy leverage * equity value CALC BAD
               const difference =
                 thisAssetBorrow * markPrice +
                 accountEquity * sliderNumericLeverage
@@ -245,16 +245,16 @@ export default function TradeForm() {
           setSide('sell')
           let newQuoteSize
           if (long === -1) {
-            // already short
+            // already short & selling more CALC GOOD
             const difference = Math.abs(targetLiabilities) - liabsVal
             newQuoteSize = difference
           } else {
             if (Math.sign(long) === Math.sign(sliderNumericLeverage)) {
-              // reducing long position but not crossing 0x leverage
+              // reducing long position but not crossing 0x leverage CALC OK
               const difference = liabsVal - targetLiabilities
               newQuoteSize = difference
             } else {
-              // crossing 0x leverage cover all borrows + buy leverage * equity value
+              // crossing 0x leverage cover all borrows + buy leverage * equity value CALC BAD
               const difference =
                 usdcBorrow + accountEquity * Math.abs(sliderNumericLeverage)
               newQuoteSize = difference
