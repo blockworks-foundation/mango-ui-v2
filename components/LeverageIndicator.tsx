@@ -18,10 +18,6 @@ const StyledLeverageNumber = styled.div`
 const StyledLeverageArrow = styled.div`
   ${tw`relative`}
 `
-
-type StyledLeverageIndicatorProps = {
-  leverage: number
-}
   
 const LeverageIndicator: FunctionComponent<LeverageIndicatorProps> = ({ leverage, long }) => {
   const side = long === 1 ? 'long' : 'short'
@@ -38,9 +34,6 @@ const LeverageIndicator: FunctionComponent<LeverageIndicatorProps> = ({ leverage
       </StyledLeverageIndicatorWrapper>
     </div>
   )
-          {/* <StyledLeverageIndicatorWrapper>
-          
-        </StyledLeverageIndicatorWrapper> */}
 }
 
 export default LeverageIndicator
