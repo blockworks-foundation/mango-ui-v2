@@ -11,7 +11,7 @@ import Input from '../components/Input'
 import Slider from '../components/Slider'
 import { useState, useEffect } from 'react'
 import Tooltip from '../components/Tooltip'
-import { floorToDecimal, tokenPrecision, usdFormatter } from '../utils/index'
+import { floorToDecimal, roundToDecimal, tokenPrecision, usdFormatter } from '../utils/index'
 
 const StyledJokeWrapper = styled.div`
   width: calc(100% - 2rem);
@@ -151,6 +151,19 @@ export default function LiquidationCalculator() {
       const updatedScenarioData = updateScenario(updatedRowData)
       setAssetBars(updatedScenarioData)
     }
+  }
+
+  const updatePriceValues = (assetName, assetPrice) => {
+    const updatedRowData = assetBars.rowData.map((asset) => {
+      let val
+      asset.assetName === assetName
+       ? val = assetPrice
+       : val = asset.priceDisabled ? Math.abs(asset.price) : ((Math.abs(asset.price) * sliderPercentage * 2) / 100)
+      let updatedNet = (asset.deposit - asset.borrow) * Math.abs(val)
+      return { ...asset, ['price']: val, net: updatedNet }
+    })
+    const updatedScenarioData = updateScenario(updatedRowData)
+    setAssetBars(updatedScenarioData)
   }
 
   const resetScenarioColumn = (column) => {
@@ -349,7 +362,7 @@ export default function LiquidationCalculator() {
                       value={sliderPercentage}
                     />
                   </div>
-                  <div className="pl-4 text-th-fgd-1 text-xs w-12">
+                  <div className="pl-4 text-th-fgd-1 text-xs w-16">
                     {`${sliderPercentage * 2 - 100}%`}
                   </div>
                 </div>
@@ -476,18 +489,22 @@ export default function LiquidationCalculator() {
                                 {editing ? (
                                   <Input
                                     type="number"
-                                    onChange={(e) =>
-                                      updateScenarioValue(
+                                    onChange={(e) => {
+                                      updatePriceValues(
                                         asset.assetName,
-                                        'price',
                                         e.target.value
                                       )
-                                    }
+                                      setSliderPercentage(50)
+                                    }}
                                     value={
                                       asset.priceDisabled
-                                        ? asset.price
-                                        : (asset.price * sliderPercentage * 2) /
-                                          100
+                                        ? (asset.price || 0).toFixed(2)
+                                        : (
+                                            roundToDecimal((asset.price *
+                                              sliderPercentage *
+                                              2) /
+                                              100, 2)
+                                          )
                                     }
                                     onBlur={() => {
                                       toggleEditing(false)
@@ -499,7 +516,6 @@ export default function LiquidationCalculator() {
                                     type="number"
                                     onFocus={() => {
                                       toggleEditing(true)
-                                      setSliderPercentage(50)
                                     }}
                                     readyOnly={true}
                                     onChange={() => null}
@@ -507,11 +523,11 @@ export default function LiquidationCalculator() {
                                       asset.priceDisabled
                                         ? (asset.price || 0).toFixed(2)
                                         : (
-                                            (asset.price *
+                                          roundToDecimal((asset.price *
                                               sliderPercentage *
                                               2) /
-                                              100 || 0
-                                          ).toFixed(2)
+                                              100
+                                          , 2)).toFixed(2)
                                     }
                                     disabled={asset.priceDisabled}
                                   />
