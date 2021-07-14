@@ -99,7 +99,7 @@ export default function TradeForm() {
   const numericLeverage = 1 / Math.max(0, collateralRatio - 1)
   const long = thisAssetBorrow > thisAssetDeposit ? -1 : 1
 
-  const [leveragePct, setLeveragePct] = useState((numericLeverage / 5) * 100)
+  const [leveragePct, setLeveragePct] = useState(0)
   const [targetLiabilities, setTargetLiabilities] = useState(0) // TODO remove
   const [targetNumericLeverage, setTargetNumericLeverage] = useState(0) // TODO remove
 
@@ -133,10 +133,10 @@ export default function TradeForm() {
       const numericLeverage = 1 / Math.max(0, collateralRatio - 1)
       const updatedLeveragePct = (numericLeverage / 5) * 100
 
-      setLeveragePct(updatedLeveragePct)
+      setLeveragePct(updatedLeveragePct * long)
       debugger;
     }
-  }, [connected])
+  }, [connected, long])
 
   const setSide = (side) =>
     set((s) => {
