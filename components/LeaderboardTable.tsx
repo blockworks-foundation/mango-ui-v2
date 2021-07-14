@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Table, Thead, Tbody, Tr, Th, Td } from 'react-super-responsive-table'
-import { AreaChart, Area, XAxis, YAxis } from 'recharts'
+import { AreaChart, Area, ReferenceLine, XAxis, YAxis } from 'recharts'
 import { ExternalLinkIcon } from '@heroicons/react/outline'
 import { usdFormatter } from '../utils'
 import { AwardIcon, TrophyIcon } from './icons'
 import useMangoStore from '../stores/useMangoStore'
 
-const LeaderboardTable = ({ formatPnlHistoryData }) => {
+const LeaderboardTable = () => {
   const [pnlHistory, setPnlHistory] = useState([])
   const [loading, setLoading] = useState(false)
   const pnlLeaderboard = useMangoStore((s) => s.pnlLeaderboard)
@@ -28,6 +28,12 @@ const LeaderboardTable = ({ formatPnlHistoryData }) => {
     }
     getPnlHistory()
   }, [pnlLeaderboard])
+
+  const formatPnlHistoryData = (data) => {
+    const startFrom = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).getTime()
+
+    return data.filter((d) => new Date(d.date).getTime() > startFrom)
+  }
 
   return (
     <div className={`flex flex-col py-4`}>
@@ -56,6 +62,27 @@ const LeaderboardTable = ({ formatPnlHistoryData }) => {
                     >
                       PNL
                     </Th>
+                    <Th
+                      scope="col"
+                      className={`px-6 py-3 text-right font-normal`}
+                    >
+                      PNL / Time
+                    </Th>
+                    <Th
+                      scope="col"
+                      className={`px-6 py-3 text-right font-normal`}
+                    >
+                      <div className="flex items-center justify-start md:justify-end">
+                        <span>View on Step</span>
+                        <img
+                          alt=""
+                          width="20"
+                          height="20"
+                          src="/assets/icons/step.png"
+                          className={`ml-1`}
+                        />
+                      </div>
+                    </Th>
                   </Tr>
                 </Thead>
                 <Tbody>
@@ -80,7 +107,7 @@ const LeaderboardTable = ({ formatPnlHistoryData }) => {
                         </div>
                       </Td>
                       <Td
-                        className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
+                        className={`px-6 py-3 whitespace-nowrap text-left text-sm text-th-fgd-1`}
                       >
                         {acc.name
                           ? acc.name
@@ -92,7 +119,7 @@ const LeaderboardTable = ({ formatPnlHistoryData }) => {
                       <Td
                         className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
                       >
-                        <div className="flex md:justify-end ">
+                        <div className="flex md:justify-end">
                           {usdFormatter.format(acc.pnl)}
                         </div>
                       </Td>
@@ -100,17 +127,23 @@ const LeaderboardTable = ({ formatPnlHistoryData }) => {
                         className={`flex justify-end px-6 py-3 whitespace-nowrap`}
                       >
                         {loading && !pnlHistory[index] ? (
-                          <div className="animate-pulse bg-th-fgd-4 h-12 opacity-10 rounded-md w-32" />
+                          <div className="animate-pulse bg-th-fgd-4 h-14 opacity-10 rounded-md w-44" />
                         ) : (
                           <AreaChart
-                            width={128}
-                            height={48}
+                            width={180}
+                            height={56}
                             data={
                               pnlHistory[index]
                                 ? formatPnlHistoryData(pnlHistory[index])
                                 : null
                             }
                           >
+                            <ReferenceLine
+                              y={0}
+                              stroke="#FF9C24"
+                              strokeDasharray="3 3"
+                              strokeOpacity={0.6}
+                            />
                             <Area
                               isAnimationActive={false}
                               type="monotone"
@@ -133,6 +166,7 @@ const LeaderboardTable = ({ formatPnlHistoryData }) => {
                           target="_blank"
                           rel="noopener noreferrer"
                         >
+                          <span>View</span>
                           <ExternalLinkIcon className={`h-4 w-4 ml-1.5`} />
                         </a>
                       </Td>
