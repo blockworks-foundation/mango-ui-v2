@@ -159,7 +159,7 @@ export default function LiquidationCalculator() {
       asset.assetName === assetName
        ? val = assetPrice
        : val = asset.priceDisabled ? Math.abs(asset.price) : ((Math.abs(asset.price) * sliderPercentage * 2) / 100)
-      let updatedNet = (asset.deposit - asset.borrow) * Math.abs(val)
+      const updatedNet = (asset.deposit - asset.borrow) * Math.abs(val)
       return { ...asset, ['price']: val, net: updatedNet }
     })
     const updatedScenarioData = updateScenario(updatedRowData)
@@ -270,7 +270,7 @@ export default function LiquidationCalculator() {
         'collateralRatio',
         scenarioHashMap.get('liabilities') == 0
           ? 0
-          : floorToDecimal(
+          : 
               scenarioHashMap.get('assets') /
                 scenarioHashMap.get('liabilities') >
                 9.99
@@ -279,9 +279,7 @@ export default function LiquidationCalculator() {
                 ? 0
                 : (scenarioHashMap.get('assets') /
                     scenarioHashMap.get('liabilities')) *
-                  100,
-              0
-            )
+                  100
       )
       scenarioHashMap.set(
         'maintCollateralRatio',
@@ -616,7 +614,7 @@ export default function LiquidationCalculator() {
                     ) : null}
                     {scenarioDetails.get('collateralRatio') <=
                       scenarioDetails.get('maintCollateralRatio') &&
-                    scenarioDetails.get('collateralRatio') !== 0 ? (
+                    ((scenarioDetails.get('collateralRatio') !== 0  || scenarioDetails.get('leverage') < 0 )  || scenarioDetails.get('leverage') < 0 ) ? (
                       <div className="bg-th-red border border-th-red flex flex-col items-center mb-6 p-3 rounded text-center text-th-fgd-1">
                         <div className="pb-0.5 text-th-fgd-1">Liquidated!</div>
                         <div className="text-th-fgd-1 text-xs">
@@ -645,7 +643,7 @@ export default function LiquidationCalculator() {
                       >
                         {scenarioDetails.get('collateralRatio') <=
                           scenarioDetails.get('maintCollateralRatio') &&
-                        scenarioDetails.get('collateralRatio') !== 0
+                        (scenarioDetails.get('collateralRatio') !== 0  || scenarioDetails.get('leverage') < 0 )
                           ? 'Liquidated'
                           : scenarioDetails.get('riskRanking')}
                       </div>
@@ -668,13 +666,13 @@ export default function LiquidationCalculator() {
                     <div className="flex items-center justify-between pb-3">
                       <div className="text-th-fgd-3">Collateral Ratio</div>
                       <div className="font-bold">
-                        {scenarioDetails.get('collateralRatio')}%
+                        {scenarioDetails.get('collateralRatio').toFixed(0)}%
                       </div>
                     </div>
                     {scenarioDetails.get('liabilities') === 0 ||
                     (scenarioDetails.get('collateralRatio') <=
                       scenarioDetails.get('maintCollateralRatio') &&
-                      scenarioDetails.get('collateralRatio') !== 0) ? null : (
+                      (scenarioDetails.get('collateralRatio') !== 0  || scenarioDetails.get('leverage') < 0 )) ? null : (
                       <>
                         <div className="flex items-center justify-between pb-3">
                           <div className="text-th-fgd-3">Leverage</div>
@@ -739,7 +737,7 @@ export default function LiquidationCalculator() {
                         >
                           {scenarioDetails.get('collateralRatio') <=
                             scenarioDetails.get('maintCollateralRatio') &&
-                          scenarioDetails.get('collateralRatio') !== 0
+                          (scenarioDetails.get('collateralRatio') !== 0  || scenarioDetails.get('leverage') < 0 )
                             ? 'Liquidated'
                             : scenarioDetails.get('riskRanking')}
                         </div>
@@ -770,7 +768,7 @@ export default function LiquidationCalculator() {
                       {scenarioDetails.get('liabilities') === 0 ||
                       (scenarioDetails.get('collateralRatio') <=
                         scenarioDetails.get('maintCollateralRatio') &&
-                        scenarioDetails.get('collateralRatio') !== 0) ? null : (
+                        (scenarioDetails.get('collateralRatio') !== 0  || scenarioDetails.get('leverage') < 0 )) ? null : (
                         <>
                           <div className="flex items-center justify-between pb-3">
                             <div className="text-th-fgd-3">Leverage</div>
