@@ -15,15 +15,13 @@ const StyledSlider = styled(Slider)<StyledSliderProps>`
     ${tw`bg-th-green h-2.5 rounded-full`}
   }
   .rc-slider-track {
-    ${tw`bg-th-red h-2.5 rounded-full`}
-    ${({ enableTransition }) =>
-      enableTransition && tw`transition-all duration-500`}
+    ${tw`bg-th-red h-2.5 rounded-none opacity-0`}
   }
   .rc-slider-step {
     ${tw`hidden`}
   }
   .rc-slider-handle {
-    ${tw`border-4 border-th-primary h-4 w-4`}
+    ${tw`border-4 border-th-primary h-4 w-4 z-10`}
     background: #fff;
     box-shadow: 0px 0px 8px 0px rgba(0, 0, 0, 0.1);
     margin-top: -3px;
@@ -140,6 +138,8 @@ type SliderProps = {
   min?: number
   max?: number
   maxButtonTransition?: boolean
+  leverage?: number
+  long?: number
 }
 //TODO maybe I can just make this an extension on the normal slider tsx?
 const LeverageSlider: FunctionComponent<SliderProps> = ({
@@ -151,8 +151,11 @@ const LeverageSlider: FunctionComponent<SliderProps> = ({
   min,
   max,
   maxButtonTransition,
+  leverage,
+  long,
 }) => {
   const [enableTransition, setEnableTransition] = useState(false)
+  const redBarStyle = { width: `${leverage * long * 10 + 50}%` }
 
   useEffect(() => {
     if (maxButtonTransition) {
@@ -195,7 +198,12 @@ const LeverageSlider: FunctionComponent<SliderProps> = ({
           step={step}
           enableTransition={enableTransition}
           disabled={disabled}
-        />
+        >
+          <div
+            className={`relative w-1/2 h-2.5 bg-th-red rounded-l-lg`}
+            style={redBarStyle}
+          ></div>
+        </StyledSlider>
         <StyledSliderButtonWrapper>
           <StyledSliderButton
             disabled={disabled}

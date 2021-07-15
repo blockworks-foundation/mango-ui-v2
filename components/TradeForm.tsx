@@ -17,7 +17,6 @@ import TradeType from './TradeType'
 import Input from './Input'
 import Switch from './Switch'
 import LeverageSlider from './LeverageSlider'
-import LeverageIndicator from './LeverageIndicator'
 
 const StyledRightInput = styled(Input)`
   border-left: 1px solid transparent;
@@ -181,107 +180,81 @@ export default function TradeForm() {
 
   const onChangeSlider = async (leveragePct) => {
     // not yet tested with multiple assets worth of borrows/deposits
-    setLeveragePct(leveragePct)
-
+    let newQuoteSize
+    let currentLongVal
+    let currentShortVal
+    let targetPosition
+    let difference
     const sliderNumericLeverage = (leveragePct / 100) * 5
+    const targetLiabilities = accountEquity * sliderNumericLeverage
+
+    setLeveragePct(leveragePct)
+    setTargetNumericLeverage(sliderNumericLeverage)
+    setTargetLiabilities(targetLiabilities)
     setImpliedCollateralRatio(
       (1 / sliderNumericLeverage) * Math.sign(leveragePct) + 1
-    ) // says infinity math.min(100, x)??
-    setTargetNumericLeverage(sliderNumericLeverage)
-    const targetLiabilities = accountEquity * sliderNumericLeverage
-    setTargetLiabilities(targetLiabilities)
+    )
 
     if (tradeType === 'Market') {
-      if (leveragePct === 0) {
-        if (sliderNumericLeverage > numericLeverage * long) {
-          // close margin short position
-          setSide('buy')
-          setBaseSize(floorToDecimal(thisAssetBorrow, sizeDecimalCount))
-          onSetBaseSize(thisAssetBorrow)
-          debugger
+      if (sliderNumericLeverage > numericLeverage * long) {
+        // side == 'buy'
+        setSide('buy')
+        if (long === 1) {
+          // already margin long & buying more
+          currentLongVal = usdcBorrow
+          targetPosition = maxLiabilitiesUSD * (leveragePct / 100)
+          difference = targetPosition - currentLongVal
+          // const difference = targetLiabilities - liabsVal + usdcDeposit
+          newQuoteSize = difference
         } else {
-          //side == 'sell'    close margin long position
-          setSide('sell')
-          // setQuoteSize(floorToDecimal(usdcBorrow, 2))
-          onSetQuoteSize(usdcBorrow)
-          debugger
+          // currently margin short
+          if (leveragePct === 0 || Math.sign(long) === Math.sign(leveragePct)) {
+            // reducing short position but not crossing 0x leverage
+            currentShortVal = thisAssetBorrow * markPrice
+            targetPosition = maxLiabilitiesUSD * (leveragePct / -100)
+            difference = currentShortVal - targetPosition
+            newQuoteSize = difference
+          } else {
+            // crossing 0x leverage, cover all borrows + buy leverage * equity value
+            currentShortVal = thisAssetBorrow * markPrice
+            targetPosition = maxLiabilitiesUSD * (leveragePct / 100)
+            difference = targetPosition + currentShortVal
+            newQuoteSize = difference
+            debugger
+          }
         }
+
+        onSetQuoteSize(newQuoteSize)
+        debugger
       } else {
-        // leveragePct !== 0
-        if (sliderNumericLeverage > numericLeverage * long) {
-          // side == 'buy'
-          setSide('buy')
-          let newQuoteSize
-          if (long === 1) {
-            // already margin long & buying more
-            
-            // const difference = targetLiabilities - liabsVal + usdcDeposit
-            newQuoteSize = difference
-          } else {
-            // currently margin short
-            if (Math.sign(long) === Math.sign(leveragePct)) {
-              // reducing short position but not crossing 0x leverage CALC OK
-              const target = maxLiabilitiesUSD * (leveragePct / -100)
-              const difference = liabsVal - target
-              newQuoteSize = difference
-            } else {
-              // crossing 0x leverage, cover all borrows + buy leverage * equity value CALC BAD
-              const currentShortVal = thisAssetBorrow * markPrice
-              const target = maxLiabilitiesUSD * (leveragePct / 100)
-              const difference = target + currentShortVal
-              newQuoteSize = difference
-              debugger
-            }
-          }
-          // setBaseSize(floorToDecimal(newBaseSize, sizeDecimalCount))
-          // onSetBaseSize(newBaseSize)
-          //lvg goes up if we are opening a borrow, down if we are covering a short -> how do i determine between these 2?
-          // newQuoteSize = Math.max((assetsVal - (impliedCollateralRatio * liabsVal))/ (impliedCollateralRatio - 1),0) // this makes sense if the leverage is goin up only
-          // if (newQuoteSize > 0) {
-          //   setLeverage = true;
-          // }
-
-          // setQuoteSize(floorToDecimal(newQuoteSize, 2)) 
-          // IMO USD values should always display with 2 decimal places, rather than the 4 that sizeDecimalCount gives
-          onSetQuoteSize(newQuoteSize)
-          debugger
+        // side == 'sell'
+        setSide('sell')
+        if (long === -1) {
+          // already short & selling more
+          currentShortVal = thisAssetBorrow * markPrice
+          targetPosition = maxLiabilitiesUSD * (leveragePct / -100)
+          difference = targetPosition - currentShortVal
+          // const difference = Math.abs(targetLiabilities) - liabsVal
+          newQuoteSize = difference
         } else {
-          // side == 'sell'
-          setSide('sell')
-          let newQuoteSize
-          if (long === -1) {
-            // already short & selling more CALC GOOD
-            const target = maxLiabilitiesUSD * (leveragePct / -100)
-            const difference = target - liabsVal
-            // const difference = Math.abs(targetLiabilities) - liabsVal
+          if (leveragePct === 0 || Math.sign(long) === Math.sign(leveragePct)) {
+            // reducing long position but not crossing 0x leverage
+            currentLongVal = usdcBorrow
+            targetPosition = maxLiabilitiesUSD * (leveragePct / 100)
+            difference = currentLongVal - targetPosition
             newQuoteSize = difference
+            debugger
           } else {
-            if (Math.sign(long) === Math.sign(leveragePct)) {
-              // reducing long position but not crossing 0x leverage CALC OK
-              const target = maxLiabilitiesUSD * (leveragePct / 100)
-              const difference = liabsVal - target
-              newQuoteSize = difference
-            } else {
-              // crossing 0x leverage cover all borrows + buy leverage * equity value CALC BAD
-              const currentLongVal = thisAssetBorrow * markPrice
-              const target = maxLiabilitiesUSD * (leveragePct / -100)
-              const difference = target + currentLongVal
-              newQuoteSize = difference
-              debugger
-            }
+            // crossing 0x leverage cover all borrows + buy leverage * equity value
+            currentLongVal = usdcBorrow
+            targetPosition = maxLiabilitiesUSD * (leveragePct / -100)
+            difference = targetPosition + currentLongVal
+            newQuoteSize = difference
+            debugger
           }
-          // setBaseSize(floorToDecimal(newBaseSize, sizeDecimalCount))
-          // onSetBaseSize(newBaseSize)
-          //lvg goes down if we are covering a borrow, up if we are opening a short
-          // newQuoteSize = Math.min((assetsVal - (impliedCollateralRatio * liabsVal))/ (impliedCollateralRatio - 1),0) // this makes sense if the leverage is goin down only
-          // if (newQuoteSize < 0) {
-          //   setLeverage = true;
-          // }
-
-          // setQuoteSize(floorToDecimal(newQuoteSize, 2))
-          onSetQuoteSize(newQuoteSize)
-          debugger
         }
+        onSetQuoteSize(newQuoteSize)
+        debugger
       }
     }
   }
@@ -553,12 +526,13 @@ export default function TradeForm() {
         ) : null}
       </div>
       <div>
-        <LeverageIndicator leverage={numericLeverage} long={long} />
         <LeverageSlider
           value={leveragePct}
           onChange={(v) => onChangeSlider(v)}
           step={1}
           maxButtonTransition={maxButtonTransition}
+          leverage={numericLeverage}
+          long={long}
         />
       </div>
       <div className={`flex pt-6`}>
