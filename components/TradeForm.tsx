@@ -100,6 +100,7 @@ export default function TradeForm() {
   const long = thisAssetBorrow > thisAssetDeposit ? -1 : 1
 
   const [leveragePct, setLeveragePct] = useState(0)
+  const [maxLiabilitiesUSD, setMaxLiabilitiesUSD] = useState(0)
   const [targetLiabilities, setTargetLiabilities] = useState(0) // TODO remove
   const [targetNumericLeverage, setTargetNumericLeverage] = useState(0) // TODO remove
 
@@ -120,6 +121,8 @@ export default function TradeForm() {
       setUsdcDeposit(USDCD)
       const AE = selectedMarginAccount?.computeValue(selectedMangoGroup, prices)
       setAccountEquity(AE)
+      const ML = AE * 5
+      setMaxLiabilitiesUSD(ML)
 
       debugger
     }
@@ -189,18 +192,17 @@ export default function TradeForm() {
     setTargetLiabilities(targetLiabilities)
 
     if (tradeType === 'Market') {
-      // this part seems oversimplified and probably wont work right if the account has multiple assets' deposits and borows
       if (leveragePct === 0) {
         if (sliderNumericLeverage > numericLeverage * long) {
           // close margin short position
           setSide('buy')
-          setQuoteSize(floorToDecimal(thisAssetBorrow, 2))
+          setBaseSize(floorToDecimal(thisAssetBorrow, sizeDecimalCount))
           onSetBaseSize(thisAssetBorrow)
           debugger
         } else {
           //side == 'sell'    close margin long position
           setSide('sell')
-          setQuoteSize(floorToDecimal(usdcBorrow, 2))
+          // setQuoteSize(floorToDecimal(usdcBorrow, 2))
           onSetQuoteSize(usdcBorrow)
           debugger
         }
@@ -211,20 +213,22 @@ export default function TradeForm() {
           setSide('buy')
           let newQuoteSize
           if (long === 1) {
-            // already margin long & buying more CALC OK
-            const difference = targetLiabilities - liabsVal + usdcDeposit
+            // already margin long & buying more
+            
+            // const difference = targetLiabilities - liabsVal + usdcDeposit
             newQuoteSize = difference
           } else {
             // currently margin short
-            if (Math.sign(long) === Math.sign(sliderNumericLeverage)) {
+            if (Math.sign(long) === Math.sign(leveragePct)) {
               // reducing short position but not crossing 0x leverage CALC OK
-              const difference = liabsVal + targetLiabilities
+              const target = maxLiabilitiesUSD * (leveragePct / -100)
+              const difference = liabsVal - target
               newQuoteSize = difference
             } else {
               // crossing 0x leverage, cover all borrows + buy leverage * equity value CALC BAD
-              const difference =
-                thisAssetBorrow * markPrice +
-                accountEquity * sliderNumericLeverage
+              const currentShortVal = thisAssetBorrow * markPrice
+              const target = maxLiabilitiesUSD * (leveragePct / 100)
+              const difference = target + currentShortVal
               newQuoteSize = difference
               debugger
             }
@@ -237,7 +241,8 @@ export default function TradeForm() {
           //   setLeverage = true;
           // }
 
-          setQuoteSize(floorToDecimal(newQuoteSize, 2)) // IMO USD values should always display with 2 decimal places, rather than the 4 that sizeDecimalCount gives
+          // setQuoteSize(floorToDecimal(newQuoteSize, 2)) 
+          // IMO USD values should always display with 2 decimal places, rather than the 4 that sizeDecimalCount gives
           onSetQuoteSize(newQuoteSize)
           debugger
         } else {
@@ -246,17 +251,21 @@ export default function TradeForm() {
           let newQuoteSize
           if (long === -1) {
             // already short & selling more CALC GOOD
-            const difference = Math.abs(targetLiabilities) - liabsVal
+            const target = maxLiabilitiesUSD * (leveragePct / -100)
+            const difference = target - liabsVal
+            // const difference = Math.abs(targetLiabilities) - liabsVal
             newQuoteSize = difference
           } else {
-            if (Math.sign(long) === Math.sign(sliderNumericLeverage)) {
+            if (Math.sign(long) === Math.sign(leveragePct)) {
               // reducing long position but not crossing 0x leverage CALC OK
-              const difference = liabsVal - targetLiabilities
+              const target = maxLiabilitiesUSD * (leveragePct / 100)
+              const difference = liabsVal - target
               newQuoteSize = difference
             } else {
               // crossing 0x leverage cover all borrows + buy leverage * equity value CALC BAD
-              const difference =
-                usdcBorrow + accountEquity * Math.abs(sliderNumericLeverage)
+              const currentLongVal = thisAssetBorrow * markPrice
+              const target = maxLiabilitiesUSD * (leveragePct / -100)
+              const difference = target + currentLongVal
               newQuoteSize = difference
               debugger
             }
@@ -269,7 +278,7 @@ export default function TradeForm() {
           //   setLeverage = true;
           // }
 
-          setQuoteSize(floorToDecimal(newQuoteSize, 2))
+          // setQuoteSize(floorToDecimal(newQuoteSize, 2))
           onSetQuoteSize(newQuoteSize)
           debugger
         }
@@ -636,6 +645,10 @@ export default function TradeForm() {
             <td>{numericLeverage?.toFixed(2) || 'none'}</td>
             <td>collateralRatio</td>
             <td>{collateralRatio?.toFixed(2) || 'none'}</td>
+          </tr>
+          <tr>
+            <td>maxLiabilitiesUSD</td>
+            <td>{maxLiabilitiesUSD?.toFixed(2) || 'none'}</td>
           </tr>
           <th>Trade Form</th>
           <tr>
