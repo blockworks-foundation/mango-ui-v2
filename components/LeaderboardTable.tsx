@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Table, Thead, Tbody, Tr, Th, Td } from 'react-super-responsive-table'
-import { AreaChart, Area, ReferenceLine, XAxis, YAxis } from 'recharts'
+import { AreaChart, Area, ReferenceLine, XAxis, YAxis, Tooltip } from 'recharts'
 import { ExternalLinkIcon } from '@heroicons/react/outline'
 import { usdFormatter } from '../utils'
 import { AwardIcon, TrophyIcon } from './icons'
@@ -11,6 +11,14 @@ const LeaderboardTable = () => {
   const [loading, setLoading] = useState(false)
   const pnlLeaderboard = useMangoStore((s) => s.pnlLeaderboard)
 
+  /* API Returns:
+   * [ {  cumulative_pnl: -3.687498
+          date: "2021-06-10"
+          margin_account: "J8XtwLVyZjeH1PG1Nnk9cWbLn3zEemS1rCbn4x6AjtXM"
+          name: ""
+          owner: "APLKzSqJQw79q4U4ipBWnLdqkVzijSPNpDCNKwL8mW3B"
+      }, ... ]
+   */
   useEffect(() => {
     const getPnlHistory = async () => {
       setLoading(true)
@@ -30,9 +38,18 @@ const LeaderboardTable = () => {
   }, [pnlLeaderboard])
 
   const formatPnlHistoryData = (data) => {
+    // TODO fill up from left with { cumulative_pnl: 0 } to maximum length (30 datapoints)
     const startFrom = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).getTime()
 
     return data.filter((d) => new Date(d.date).getTime() > startFrom)
+  }
+
+  const calculate30DPnL = (data) => {
+    console.log(data)
+    const hist = formatPnlHistoryData(data)
+    return hist.length >= 2
+      ? hist[hist.length - 1].cumulative_pnl - hist[0].cumulative_pnl
+      : 0
   }
 
   return (
@@ -60,7 +77,19 @@ const LeaderboardTable = () => {
                       scope="col"
                       className={`px-6 py-3 text-right font-normal`}
                     >
-                      PNL
+                      PNL over 30
+                    </Th>
+                    <Th
+                      scope="col"
+                      className={`px-6 py-3 text-right font-normal`}
+                    >
+                      PNL from ACC
+                    </Th>
+                    <Th
+                      scope="col"
+                      className={`px-6 py-3 text-right font-normal`}
+                    >
+                      PNL right now
                     </Th>
                     <Th
                       scope="col"
@@ -116,11 +145,35 @@ const LeaderboardTable = () => {
                               5
                             )}...${acc.margin_account.slice(-5)}`}
                       </Td>
+
+                      <Td
+                        className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
+                      >
+                        <div className="flex md:justify-end">
+                          {pnlHistory[index]
+                            ? usdFormatter.format(
+                                calculate30DPnL(pnlHistory[index])
+                              )
+                            : 'N/A'}
+                        </div>
+                      </Td>
                       <Td
                         className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
                       >
                         <div className="flex md:justify-end">
                           {usdFormatter.format(acc.pnl)}
+                        </div>
+                      </Td>
+                      <Td
+                        className={`px-6 py-3 whitespace-nowrap text-sm text-th-fgd-1`}
+                      >
+                        <div className="flex md:justify-end">
+                          {pnlHistory[index]
+                            ? usdFormatter.format(
+                                pnlHistory[index][pnlHistory[index].length - 1]
+                                  .cumulative_pnl
+                              )
+                            : 'N/A'}{' '}
                         </div>
                       </Td>
                       <Td
@@ -147,6 +200,7 @@ const LeaderboardTable = () => {
                             <Area
                               isAnimationActive={false}
                               type="monotone"
+                              // baseLine={0}
                               dataKey="cumulative_pnl"
                               stroke="#FF9C24"
                               fill="#FF9C24"
@@ -154,6 +208,7 @@ const LeaderboardTable = () => {
                             />
                             <XAxis dataKey="date" hide />
                             <YAxis dataKey="cumulative_pnl" hide />
+                            <Tooltip />
                           </AreaChart>
                         )}
                       </Td>
