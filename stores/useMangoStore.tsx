@@ -10,10 +10,14 @@ import {
 } from '@blockworks-foundation/mango-client'
 import { SRM_DECIMALS } from '@project-serum/serum/lib/token-instructions'
 import { AccountInfo, Connection, PublicKey } from '@solana/web3.js'
+import dayjs from 'dayjs'
 import { EndpointInfo, WalletAdapter } from '../@types/types'
 import { getWalletTokenInfo } from '../utils/tokens'
 import { isDefined } from '../utils/index'
 import { notify } from '../utils/notifications'
+
+const utc = require('dayjs/plugin/utc')
+dayjs.extend(utc)
 
 export const ENDPOINTS: EndpointInfo[] = [
   {
@@ -465,9 +469,7 @@ const useMangoStore = create<MangoStore>((set, get) => ({
         'https://mango-transaction-log.herokuapp.com/stats/pnl_leaderboard'
 
       const startAt = start
-        ? new Date(Date.now() - start * 24 * 60 * 60 * 1000).toLocaleDateString(
-            'en-ZA'
-          )
+        ? dayjs().utc().subtract(start, 'day').format('YYYY-MM-DD')
         : null
 
       const url = startAt

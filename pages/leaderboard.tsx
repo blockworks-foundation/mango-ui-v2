@@ -11,12 +11,12 @@ export default function Leaderboard() {
   const pnlLeaderboard = useMangoStore((s) => s.pnlLeaderboard)
 
   useEffect(() => {
-    actions.fetchPnlLeaderboard(offsetResults, 30)
+    actions.fetchPnlLeaderboard(offsetResults, 29)
   }, [])
 
   const handleShowMore = async () => {
     const offset = offsetResults + 25
-    await actions.fetchPnlLeaderboard(offset, 30)
+    await actions.fetchPnlLeaderboard(offset, 29)
     setOffsetResults(offset)
   }
 
