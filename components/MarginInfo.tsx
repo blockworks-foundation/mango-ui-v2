@@ -105,7 +105,10 @@ export default function MarginInfo() {
         let liquidationPrice: number;
         if (selectedAssetDeposit > selectedAssetBorrow) { // marginAccount is long the selected asset, so price changes only affect Assets
           const fixedAssetsVal = assetsVal - (selectedAssetDeposit * selectedAssetPrice)
-          liquidationPrice = Math.max((1.1 * liabsVal) - fixedAssetsVal, 0) / selectedAssetDeposit
+          liquidationPrice = ((1.1 * liabsVal) - fixedAssetsVal) / selectedAssetDeposit
+          if (liquidationPrice < 0)  {
+            liquidationPrice = NaN
+          }
         } else { // marginAccount is short the selected asset, so price changes only affect Liabilites
           const fixedLiabsVal = liabsVal - (selectedAssetBorrow * selectedAssetPrice)
           liquidationPrice = ((assetsVal / 1.1) - fixedLiabsVal) / selectedAssetBorrow 
@@ -173,7 +176,7 @@ export default function MarginInfo() {
         ])
       })
     }
-  }, [selectedMarginAccount, selectedMangoGroup, tradeHistoryLength])
+  }, [selectedMarginAccount, selectedMangoGroup, tradeHistoryLength, selectedMarketName])
 
   return (
     <FloatingElement showConnect>
