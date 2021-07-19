@@ -121,28 +121,28 @@ export function useBalances(): Balances[] {
     ]
     balances.push(marketPair)
   }
-
-  const baseBalances = balances.map((b) => b[0])
-  const quoteBalances = balances.map((b) => b[1])
-  const quoteMeta = quoteBalances[0]
-  const quoteInOrders = sumBy(quoteBalances, 'orders')
-  const unsettled = sumBy(quoteBalances, 'unsettled')
-  const net =
-    quoteMeta.marginDeposits + unsettled - quoteMeta.borrows - quoteInOrders
-  const quoteCurrencyIndex = Object.entries(symbols).findIndex(
-    (x) => x[0] === quoteMeta.coin
-  )
-
-  return baseBalances.concat([
-    {
-      market: null,
-      key: `${quoteMeta.coin}${quoteMeta.coin}`,
-      coin: quoteMeta.coin,
-      marginDeposits: quoteMeta.marginDeposits,
-      borrows: quoteMeta.borrows,
-      orders: quoteInOrders,
-      unsettled,
-      net: floorToDecimal(net, mangoGroup.mintDecimals[quoteCurrencyIndex]),
-    },
-  ])
+  if (balances.length > 0) {
+    const baseBalances = balances.map((b) => b[0])
+    const quoteBalances = balances.map((b) => b[1])
+    const quoteMeta = quoteBalances[0]
+    const quoteInOrders = sumBy(quoteBalances, 'orders')
+    const unsettled = sumBy(quoteBalances, 'unsettled')
+    const net =
+      quoteMeta.marginDeposits + unsettled - quoteMeta.borrows - quoteInOrders
+    const quoteCurrencyIndex = Object.entries(symbols).findIndex(
+      (x) => x[0] === quoteMeta.coin
+    )
+    return baseBalances.concat([
+      {
+        market: null,
+        key: `${quoteMeta.coin}${quoteMeta.coin}`,
+        coin: quoteMeta.coin,
+        marginDeposits: quoteMeta.marginDeposits,
+        borrows: quoteMeta.borrows,
+        orders: quoteInOrders,
+        unsettled,
+        net: floorToDecimal(net, mangoGroup.mintDecimals[quoteCurrencyIndex]),
+      },
+    ])
+  }
 }

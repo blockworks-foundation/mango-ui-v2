@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from 'react'
+import { useRouter } from 'next/router'
 import { nativeToUi } from '@blockworks-foundation/mango-client/lib/utils'
 import { groupBy } from '../utils'
 import useTradeHistory from '../hooks/useTradeHistory'
@@ -7,20 +8,22 @@ import FloatingElement from './FloatingElement'
 import Tooltip from './Tooltip'
 import Button from './Button'
 import AlertsModal from './AlertsModal'
+import useMarketList from '../hooks/useMarketList'
+
+
+const assetIndex = {
+  'BTC/USDC': 0,
+  'ETH/USDC': 1,
+  'SOL/USDC': 2,
+  'SRM/USDC': 3,
+  USDC: 4,
+}
 
 const calculatePNL = (tradeHistory, prices, mangoGroup) => {
   if (!tradeHistory.length) return '0.00'
   const profitAndLoss = {}
   const groupedTrades = groupBy(tradeHistory, (trade) => trade.marketName)
   if (!prices.length) return '-'
-
-  const assetIndex = {
-    'BTC/USDC': 0,
-    'ETH/USDC': 1,
-    'SOL/USDC': 2,
-    'SRM/USDC': 3,
-    USDC: 4,
-  }
 
   groupedTrades.forEach((val, key) => {
     profitAndLoss[key] = val.reduce(
@@ -55,10 +58,13 @@ const calculatePNL = (tradeHistory, prices, mangoGroup) => {
 export default function MarginInfo() {
   const connection = useMangoStore((s) => s.connection.current)
   const connected = useMangoStore((s) => s.wallet.connected)
+  const router = useRouter()
   const selectedMarginAccount = useMangoStore(
     (s) => s.selectedMarginAccount.current
   )
   const selectedMangoGroup = useMangoStore((s) => s.selectedMangoGroup.current)
+  const selectedMarketName = useMangoStore((s) => s.selectedMarket.name)
+  const { symbols } = useMarketList()
   const tradeHistory = useTradeHistory()
   const tradeHistoryLength = useMemo(() => tradeHistory.length, [tradeHistory])
   const [mAccountInfo, setMAccountInfo] = useState<
@@ -74,7 +80,7 @@ export default function MarginInfo() {
   const [openAlertModal, setOpenAlertModal] = useState(false)
 
   useEffect(() => {
-    if (selectedMangoGroup) {
+    if (selectedMangoGroup && selectedMarketName) {
       selectedMangoGroup.getPrices(connection).then((prices) => {
         const accountEquity = selectedMarginAccount
           ? selectedMarginAccount.computeValue(selectedMangoGroup, prices)
@@ -91,6 +97,24 @@ export default function MarginInfo() {
         const leverage = accountEquity
           ? (1 / (collateralRatio - 1)).toFixed(2)
           : '0'
+
+        const assetNames = Object.keys(symbols)
+        const selectedAssetIndex = assetIndex[selectedMarketName]
+        const selectedAssetDeposit = selectedMarginAccount?.getUiDeposit(selectedMangoGroup, selectedAssetIndex)
+        const selectedAssetBorrow = selectedMarginAccount?.getUiBorrow(selectedMangoGroup, selectedAssetIndex)
+        const selectedAssetPrice = prices[selectedAssetIndex]
+
+        let liquidationPrice: number;
+        if (selectedAssetDeposit > selectedAssetBorrow) { // marginAccount is long the selected asset, so price changes only affect Assets
+          const fixedAssetsVal = assetsVal - (selectedAssetDeposit * selectedAssetPrice)
+          liquidationPrice = ((1.1 * liabsVal) - fixedAssetsVal) / selectedAssetDeposit
+          if (liquidationPrice < 0)  {
+            liquidationPrice = NaN
+          }
+        } else { // marginAccount is short the selected asset, so price changes only affect Liabilites
+          const fixedLiabsVal = liabsVal - (selectedAssetBorrow * selectedAssetPrice)
+          liquidationPrice = ((assetsVal / 1.1) - fixedLiabsVal) / selectedAssetBorrow 
+        }
 
         setMAccountInfo([
           {
@@ -138,10 +162,23 @@ export default function MarginInfo() {
             currency: '',
             desc: 'Keep your collateral ratio above 110% to avoid liquidation and above 120% to open new margin positions',
           },
+          {
+            label: 'Estimated Liquidation Price',
+            value:
+              isFinite(liquidationPrice) ? 
+              liquidationPrice.toFixed(2)
+              : 'N/A',
+            unit: '',
+            currency:
+              isFinite(liquidationPrice) ? 
+              '$'
+              : '',
+            desc: `Estimated ${assetNames[selectedAssetIndex]} price that will cause liquidation. Calculated with the assumption that all other asset prices are constant`,
+          },
         ])
       })
     }
-  }, [selectedMarginAccount, selectedMangoGroup, tradeHistoryLength])
+  }, [selectedMarginAccount, selectedMangoGroup, tradeHistoryLength, selectedMarketName])
 
   return (
     <FloatingElement showConnect>
@@ -163,13 +200,21 @@ export default function MarginInfo() {
               </div>
             ))
           : null}
-        <Button
-          className="mt-4 w-full"
-          disabled={!connected}
-          onClick={() => setOpenAlertModal(true)}
-        >
-          Create Liquidation Alert
-        </Button>
+        <div className={`flex justify-center items-center mt-4`}>
+          <Button
+            onClick={() => setOpenAlertModal(true)}
+            className="w-1/2"
+            disabled={!connected}
+          >
+            Create Alert
+          </Button>
+          <Button
+            onClick={() => router.push('/risk-calculator')}
+            className="ml-4 w-1/2 whitespace-nowrap"
+          >
+            Risk Calculator
+          </Button>
+        </div>
         {openAlertModal ? (
           <AlertsModal
             isOpen={openAlertModal}
