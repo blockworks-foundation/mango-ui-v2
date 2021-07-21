@@ -10,7 +10,6 @@ import Button from './Button'
 import AlertsModal from './AlertsModal'
 import useMarketList from '../hooks/useMarketList'
 
-
 const assetIndex = {
   'BTC/USDC': 0,
   'ETH/USDC': 1,
@@ -100,20 +99,32 @@ export default function MarginInfo() {
 
         const assetNames = Object.keys(symbols)
         const selectedAssetIndex = assetIndex[selectedMarketName]
-        const selectedAssetDeposit = selectedMarginAccount?.getUiDeposit(selectedMangoGroup, selectedAssetIndex)
-        const selectedAssetBorrow = selectedMarginAccount?.getUiBorrow(selectedMangoGroup, selectedAssetIndex)
+        const selectedAssetDeposit =
+          selectedMarginAccount?.getAssets(selectedMangoGroup)[
+            selectedAssetIndex
+          ]
+        const selectedAssetBorrow =
+          selectedMarginAccount?.getLiabs(selectedMangoGroup)[
+            selectedAssetIndex
+          ]
         const selectedAssetPrice = prices[selectedAssetIndex]
 
-        let liquidationPrice: number;
-        if (selectedAssetDeposit > selectedAssetBorrow) { // marginAccount is long the selected asset, so price changes only affect Assets
-          const fixedAssetsVal = assetsVal - (selectedAssetDeposit * selectedAssetPrice)
-          liquidationPrice = ((1.1 * liabsVal) - fixedAssetsVal) / selectedAssetDeposit
-          if (liquidationPrice < 0)  {
+        let liquidationPrice: number
+        if (selectedAssetDeposit > selectedAssetBorrow) {
+          // marginAccount is long the selected asset, so price changes only affect Assets
+          const fixedAssetsVal =
+            assetsVal - selectedAssetDeposit * selectedAssetPrice
+          liquidationPrice =
+            (1.1 * liabsVal - fixedAssetsVal) / selectedAssetDeposit
+          if (liquidationPrice < 0) {
             liquidationPrice = NaN
           }
-        } else { // marginAccount is short the selected asset, so price changes only affect Liabilites
-          const fixedLiabsVal = liabsVal - (selectedAssetBorrow * selectedAssetPrice)
-          liquidationPrice = ((assetsVal / 1.1) - fixedLiabsVal) / selectedAssetBorrow 
+        } else {
+          // marginAccount is short the selected asset, so price changes only affect Liabilites
+          const fixedLiabsVal =
+            liabsVal - selectedAssetBorrow * selectedAssetPrice
+          liquidationPrice =
+            (assetsVal / 1.1 - fixedLiabsVal) / selectedAssetBorrow
         }
 
         setMAccountInfo([
@@ -164,21 +175,22 @@ export default function MarginInfo() {
           },
           {
             label: 'Estimated Liquidation Price',
-            value:
-              isFinite(liquidationPrice) ? 
-              liquidationPrice.toFixed(2)
+            value: isFinite(liquidationPrice)
+              ? liquidationPrice.toFixed(2)
               : 'N/A',
             unit: '',
-            currency:
-              isFinite(liquidationPrice) ? 
-              '$'
-              : '',
+            currency: isFinite(liquidationPrice) ? '$' : '',
             desc: `Estimated ${assetNames[selectedAssetIndex]} price that will cause liquidation. Calculated with the assumption that all other asset prices are constant`,
           },
         ])
       })
     }
-  }, [selectedMarginAccount, selectedMangoGroup, tradeHistoryLength, selectedMarketName])
+  }, [
+    selectedMarginAccount,
+    selectedMangoGroup,
+    tradeHistoryLength,
+    selectedMarketName,
+  ])
 
   return (
     <FloatingElement showConnect>
