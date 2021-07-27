@@ -9,6 +9,9 @@ import {
 // import { useMarket } from '../../utils/markets';
 import { CHART_DATA_FEED } from '../../utils/chartDataConnector'
 import useMangoStore from '../../stores/useMangoStore'
+import { useOpenOrders } from '../../hooks/useOpenOrders'
+import { useSortableData } from '../../hooks/useSortableData'
+import { useState } from 'react'
 
 // This is a basic example of how to create a TV widget
 // You can add more feature such as storing charts in localStorage
@@ -34,6 +37,9 @@ export interface ChartContainerProps {
 const TVChartContainer = () => {
   const selectedMarketName = useMangoStore((s) => s.selectedMarket.name)
   const { theme } = useTheme()
+  const openOrders = useOpenOrders()
+  const { items } = useSortableData(openOrders)
+  const [showOrders, setShowOrders] = useState(true)
 
   // @ts-ignore
   const defaultProps: ChartContainerProps = {
@@ -140,9 +146,70 @@ const TVChartContainer = () => {
       // )
       // button.innerHTML = 'Check API'
       // })
+
+      const button = tvWidget.createButton()
+      button.setAttribute(
+        'title',
+        'Click to toggle open orders lines on the chart'
+      )
+      button.classList.add('apply-common-tooltip')
+      button.addEventListener('click', () => setShowOrders(!showOrders))
+      button.innerHTML = 'Orders'
+
+      if (openOrders != null && showOrders) {
+        items.map((order) => {
+          if (order.marketName == selectedMarketName) {
+            //Bare Minimum Line
+            // tvWidget.chart().createMultipointShape([
+            //   { //Date.now()/1000
+            //     time: 1627364751
+            //     , price: order.price
+            //   }
+            // ], {
+            //   shape: 'horizontal_line',
+            //   showInObjectsTree: false,
+            //   disableSelection: true,
+            // })
+
+            //What I Really Want Line
+            //Need to update all colors as the defaults suck
+            const orderLine = tvWidget
+              .chart()
+              .createOrderLine({ disableUndo: false })
+              .onMove(function () {
+                console.log('Order changed')
+                // Do I want this, or should I lock it
+                // Because everytime, I'd have to cancel and
+                // reset an order
+              })
+              .onCancel(function () {
+                console.log('Cancel order')
+                //I think I want this more than
+                //the move order. Maybe add a
+                //notification button, asking if user
+                //wants to cancel
+              })
+              .setText(`${order.side.toUpperCase()}`)
+              .setBodyBorderColor(order.side == 'buy' ? '#AFD803' : '#E54033')
+              .setBodyBackgroundColor('#000000')
+              .setLineLength(3)
+              .setLineColor(order.side == 'buy' ? '#AFD803' : '#E54033')
+              .setQuantity(order.size)
+              .setQuantityBorderColor(
+                order.side == 'buy' ? '#AFD803' : '#E54033'
+              )
+              .setQuantityBackgroundColor('#000000')
+              .setCancelButtonBorderColor(
+                order.side == 'buy' ? '#AFD803' : '#E54033'
+              )
+              .setCancelButtonBackgroundColor('#000000')
+            orderLine.setPrice(order.price)
+          }
+        })
+      }
     })
     //eslint-disable-next-line
-  }, [selectedMarketName, theme])
+  }, [selectedMarketName, theme, showOrders])
 
   // TODO: add market back to dep array
   // }, [market])
