@@ -12,9 +12,13 @@ import useMangoStore from '../../stores/useMangoStore'
 import { useOpenOrders } from '../../hooks/useOpenOrders'
 import { useSortableData } from '../../hooks/useSortableData'
 import { useState } from 'react'
-
-// This is a basic example of how to create a TV widget
-// You can add more feature such as storing charts in localStorage
+import { PublicKey } from '@solana/web3.js'
+import useConnection from '../../hooks/useConnection'
+import { placeAndSettle } from '../../utils/mango'
+import { cancelOrderAndSettle } from '../../utils/mango'
+import { notify } from '../../utils/notifications'
+import { IDS } from '@blockworks-foundation/mango-client'
+import useInterval from '../../hooks/useInterval'
 
 export interface ChartContainerProps {
   symbol: ChartingLibraryWidgetOptions['symbol']
@@ -39,7 +43,14 @@ const TVChartContainer = () => {
   const { theme } = useTheme()
   const openOrders = useOpenOrders()
   const { items } = useSortableData(openOrders)
-  const [showOrders, setShowOrders] = useState(true)
+
+  const { connection, cluster, programId } = useConnection()
+  const actions = useMangoStore((s) => s.actions)
+  const connected = useMangoStore((s) => s.wallet.connected)
+  const [ordersLength, setOrdersLength] = useState(0)
+  const [ordersDisplayed, setOrdersDisplayed] = useState([])
+  const selectedMarginAccount =
+    useMangoStore.getState().selectedMarginAccount.current
 
   // @ts-ignore
   const defaultProps: ChartContainerProps = {
@@ -55,6 +66,97 @@ const TVChartContainer = () => {
       'volume.volume.color.0': theme === 'Mango' ? '#E54033' : '#CC2929',
       'volume.volume.color.1': theme === 'Mango' ? '#AFD803' : '#5EBF4D',
     },
+  }
+
+  const handleCancelOrder = async (order) => {
+    const wallet = useMangoStore.getState().wallet.current
+    const selectedMangoGroup =
+      useMangoStore.getState().selectedMangoGroup.current
+
+    try {
+      if (!selectedMangoGroup || !selectedMarginAccount) return
+      await cancelOrderAndSettle(
+        connection,
+        new PublicKey(programId),
+        selectedMangoGroup,
+        selectedMarginAccount,
+        wallet,
+        order.market,
+        order
+      )
+      actions.fetchMarginAccounts()
+      setOrdersLength(ordersLength - 1)
+      return true
+    } catch (e) {
+      notify({
+        message: 'Error cancelling order',
+        description: e.message,
+        txid: e.txid,
+        type: 'error',
+      })
+      return false
+    }
+  }
+
+  const handlePlaceOrder = async (order, newPrice) => {
+    const marginAccount = useMangoStore.getState().selectedMarginAccount.current
+    const mangoGroup = useMangoStore.getState().selectedMangoGroup.current
+    const wallet = useMangoStore.getState().wallet.current
+
+    if (!mangoGroup || !marginAccount) return
+
+    try {
+      await placeAndSettle(
+        connection,
+        new PublicKey(IDS[cluster].mango_program_id),
+        mangoGroup,
+        marginAccount,
+        order.market,
+        wallet,
+        order.side,
+        newPrice,
+        order.size,
+        'postOnly'
+      )
+      actions.fetchMarginAccounts()
+      return true
+    } catch (e) {
+      notify({
+        message: 'Error placing order',
+        description: e.message,
+        txid: e.txid,
+        type: 'error',
+      })
+      return false
+    }
+  }
+
+  const handleChangeOrder = async (order, newPrice) => {
+    if (!order.price && !newPrice) {
+      notify({
+        message: 'Order and pricing information could not be retrieved',
+        type: 'error',
+      })
+      return false
+    }
+
+    try {
+      handleCancelOrder(order).then((res) => {
+        console.log('Message: ', res)
+        if (res) {
+          handlePlaceOrder(order, newPrice)
+        }
+      })
+      return true
+    } catch (e) {
+      notify({
+        message: 'Error changing order',
+        description: e.message,
+        txid: e.txid,
+        type: 'error',
+      })
+      return false
+    }
   }
 
   const tvWidgetRef = useRef<IChartingLibraryWidget | null>(null)
@@ -127,89 +229,125 @@ const TVChartContainer = () => {
       },
     }
 
+    setOrdersDisplayed([])
     const tvWidget = new widget(widgetOptions)
     tvWidgetRef.current = tvWidget
 
-    tvWidget.onChartReady(() => {
-      // tvWidget.headerReady().then(() => {
-      // const button = tvWidget.createButton()
-      // button.setAttribute('title', 'Click to show a notification popup')
-      // button.classList.add('apply-common-tooltip')
-      // button.addEventListener('click', () =>
-      //   tvWidget.showNoticeDialog({
-      //     title: 'Notification',
-      //     body: 'TradingView Charting Library API works correctly',
-      //     callback: () => {
-      //       // console.log('It works!!');
-      //     },
-      //   })
-      // )
-      // button.innerHTML = 'Check API'
-      // })
-
-      const button = tvWidget.createButton()
-      button.setAttribute(
-        'title',
-        'Click to toggle open orders lines on the chart'
-      )
-      button.classList.add('apply-common-tooltip')
-      button.addEventListener('click', () => setShowOrders(!showOrders))
-      button.innerHTML = 'Orders'
-
-      if (openOrders != null && showOrders) {
-        items.map((order) => {
-          if (order.marketName == selectedMarketName) {
-            //Bare Minimum Line
-            // tvWidget.chart().createMultipointShape([
-            //   { //Date.now()/1000
-            //     time: 1627364751
-            //     , price: order.price
-            //   }
-            // ], {
-            //   shape: 'horizontal_line',
-            //   showInObjectsTree: false,
-            //   disableSelection: true,
-            // })
-
-            //What I Really Want Line
-            //Need to update all colors as the defaults suck
-            const orderLine = tvWidget
-              .chart()
-              .createOrderLine({ disableUndo: false })
-              .onMove(function () {
-                console.log('Order changed')
-                // Do I want this, or should I lock it
-                // Because everytime, I'd have to cancel and
-                // reset an order
-              })
-              .onCancel(function () {
-                console.log('Cancel order')
-                //I think I want this more than
-                //the move order. Maybe add a
-                //notification button, asking if user
-                //wants to cancel
-              })
-              .setText(`${order.side.toUpperCase()}`)
-              .setBodyBorderColor(order.side == 'buy' ? '#AFD803' : '#E54033')
-              .setBodyBackgroundColor('#000000')
-              .setLineLength(3)
-              .setLineColor(order.side == 'buy' ? '#AFD803' : '#E54033')
-              .setQuantity(order.size)
-              .setQuantityBorderColor(
-                order.side == 'buy' ? '#AFD803' : '#E54033'
-              )
-              .setQuantityBackgroundColor('#000000')
-              .setCancelButtonBorderColor(
-                order.side == 'buy' ? '#AFD803' : '#E54033'
-              )
-              .setCancelButtonBackgroundColor('#000000')
-            orderLine.setPrice(order.price)
-          }
-        })
-      }
-    })
     //eslint-disable-next-line
-  }, [selectedMarketName, theme, showOrders])
+  }, [selectedMarketName, theme, connected])
+
+  useInterval(() => {
+    if (openOrders) {
+      setOrdersLength(openOrders.length)
+    } else {
+      setOrdersLength(0)
+    }
+  }, 250)
+
+  useEffect(() => {
+    if (ordersLength > 0 && openOrders != null) {
+      tvWidgetRef.current.onChartReady(() => {
+        if (openOrders != null) {
+          items.map((order) => {
+            if (ordersDisplayed.indexOf(order.orderId.toString()) == -1) {
+              console.log('orders: ', ordersDisplayed)
+
+              if (order.marketName == selectedMarketName) {
+                tvWidgetRef.current.chart().clearMarks()
+
+                tvWidgetRef.current
+                  .chart()
+                  .createOrderLine({ disableUndo: false })
+                  .onMove(function () {
+                    this.setPrice(this.getPrice())
+                    tvWidgetRef.current.showConfirmDialog({
+                      title: 'Change Order Price?',
+                      body: `Would you like to change your 
+                       ${order.size} ${order.marketName
+                        .split('/')[0]
+                        .toUpperCase()} ${order.side} at $${order.price} 
+                       to a
+                      ${order.size} ${order.marketName
+                        .split('/')[0]
+                        .toUpperCase()} ${order.side} at $${this.getPrice()} 
+                      (approve next 2 transactions)`,
+                      callback: (res) => {
+                        console.log('Change order: ', res)
+                        if (res) {
+                          handleChangeOrder(order, this.getPrice()).then(
+                            (result) => {
+                              if (result) {
+                                this.remove()
+                                setOrdersLength(openOrders.length)
+                              } else {
+                                this.setPrice(order.price)
+                              }
+                            }
+                          )
+                        } else {
+                          this.setPrice(order.price)
+                        }
+                      },
+                    })
+                  })
+                  .onCancel(function () {
+                    tvWidgetRef.current.showConfirmDialog({
+                      title: 'Cancel Your Order?',
+                      body: `Would you like to cancel your order for 
+                       ${order.size} ${order.marketName
+                        .split('/')[0]
+                        .toUpperCase()} ${order.side} at $${order.price}  
+                      (approve next transaction)`,
+                      callback: (res) => {
+                        if (res) {
+                          handleCancelOrder(order).then((res) => {
+                            if (res) {
+                              this.remove()
+                            }
+                          })
+                        }
+                      },
+                    })
+                  })
+                  .setText(
+                    `${order.side.toUpperCase()} ${order.marketName
+                      .split('/')[0]
+                      .toUpperCase()}`
+                  )
+                  .setBodyBorderColor(
+                    order.side == 'buy' ? '#AFD803' : '#E54033'
+                  )
+                  .setBodyBackgroundColor('#000000')
+                  .setBodyTextColor('#F2C94C')
+                  .setLineLength(3)
+                  .setLineColor(order.side == 'buy' ? '#AFD803' : '#E54033')
+                  .setQuantity(order.size)
+                  .setTooltip(`Order #: ${order.orderId}`)
+                  .setQuantityBorderColor(
+                    order.side == 'buy' ? '#AFD803' : '#E54033'
+                  )
+                  .setQuantityBackgroundColor('#000000')
+                  .setQuantityTextColor('#F2C94C')
+                  .setCancelButtonBorderColor(
+                    order.side == 'buy' ? '#AFD803' : '#E54033'
+                  )
+                  .setCancelButtonBackgroundColor('#000000')
+                  .setCancelButtonIconColor('#F2C94C')
+                  .setPrice(order.price)
+
+                //                  tvWidgetRef.current.chart().removeEntity(orderLine.entityId)
+                //                  orderLine.remove()
+              }
+              setOrdersDisplayed((currentOrders) => [
+                ...currentOrders,
+                order.orderId.toString(),
+              ])
+            }
+          })
+        }
+      })
+    }
+  }, [ordersLength])
 
   // TODO: add market back to dep array
   // }, [market])
