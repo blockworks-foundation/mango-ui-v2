@@ -11,10 +11,14 @@ import {
 } from '@blockworks-foundation/mango-client'
 import { SRM_DECIMALS } from '@project-serum/serum/lib/token-instructions'
 import { AccountInfo, Connection, PublicKey } from '@solana/web3.js'
+import dayjs from 'dayjs'
 import { EndpointInfo, WalletAdapter } from '../@types/types'
 import { getWalletTokenInfo } from '../utils/tokens'
 import { isDefined } from '../utils/index'
 import { notify } from '../utils/notifications'
+
+const utc = require('dayjs/plugin/utc')
+dayjs.extend(utc)
 
 export const ENDPOINTS: EndpointInfo[] = [
   // {
@@ -58,6 +62,14 @@ export const INITIAL_STATE = {
 // useHydrateStore hook
 interface AccountInfoList {
   [key: string]: AccountInfo<Buffer>
+}
+
+interface AccountPnl {
+  margin_account: string
+  name: string
+  owner: string
+  pnl: number
+  rank: number
 }
 
 interface MangoStore extends State {
@@ -122,9 +134,12 @@ interface MangoStore extends State {
   liquidationHistory: any[]
   withdrawalHistory: any[]
   tradeHistory: any[]
+  pnlHistory: any[]
+  pnlLeaderboard: any[]
+  accountPnl: AccountPnl
   set: (x: any) => void
   actions: {
-    [key: string]: () => void
+    [key: string]: (...args: any[]) => void
   }
 }
 
@@ -180,6 +195,9 @@ const useMangoStore = create<MangoStore>(devtools((set, get) => ({
   liquidationHistory: [],
   withdrawalHistory: [],
   tradeHistory: [],
+  pnlHistory: [],
+  pnlLeaderboard: [],
+  accountPnl: null,
   set: (fn) => set(produce(fn)),
   actions: {
     async fetchWalletBalances() {
@@ -429,6 +447,82 @@ const useMangoStore = create<MangoStore>(devtools((set, get) => ({
 
       set((state) => {
         state.withdrawalHistory = results
+      })
+    },
+    async fetchPnlHistory(marginAccount = null) {
+      const selectedMarginAccount =
+        marginAccount ||
+        get().selectedMarginAccount.current.publicKey.toString()
+      const set = get().set
+
+      if (!selectedMarginAccount) return
+
+      const response = await fetch(
+        `https://mango-transaction-log.herokuapp.com/stats/pnl_history/${selectedMarginAccount}`
+      )
+      const parsedResponse = await response.json()
+      const results = parsedResponse.length ? parsedResponse.reverse() : []
+
+      set((state) => {
+        state.pnlHistory = results
+      })
+    },
+    async fetchPnlLeaderboard(offset = 0, start?: number) {
+      const baseUrl =
+        'https://mango-transaction-log.herokuapp.com/stats/pnl_leaderboard'
+
+      const startAt = start
+        ? dayjs().utc().subtract(start, 'day').format('YYYY-MM-DD')
+        : null
+
+      const url = startAt
+        ? `${baseUrl}?start_date=${startAt}&limit=25&offset=${offset}`
+        : `${baseUrl}?limit=25&offset=${offset}`
+
+      const response = await fetch(url)
+      const parsedResponse = await response.json()
+      const results = parsedResponse ? parsedResponse : []
+
+      const currentLeaderboard = get().pnlLeaderboard
+
+      if (currentLeaderboard.length > 0 && offset > 0) {
+        const updatedLeaderboard = currentLeaderboard.concat(results)
+        set((state) => {
+          state.pnlLeaderboard = updatedLeaderboard
+        })
+      } else {
+        set((state) => {
+          state.pnlLeaderboard = results
+        })
+      }
+    },
+    async fetchPnlByAccount(marginAccount = null, start?: number) {
+      const selectedMarginAccount =
+        marginAccount || get().selectedMarginAccount.current
+      const set = get().set
+
+      if (!selectedMarginAccount) return
+
+      const startAt = start
+        ? new Date(Date.now() - start * 24 * 60 * 60 * 1000).toLocaleDateString(
+            'en-ZA'
+          )
+        : null
+
+      const baseUrl =
+        'https://mango-transaction-log.herokuapp.com/stats/pnl_leaderboard_rank'
+
+      const url = startAt
+        ? `${baseUrl}/${selectedMarginAccount.publicKey.toString()}?start_date=${startAt}`
+        : `${baseUrl}/${selectedMarginAccount.publicKey.toString()}`
+
+      const response = await fetch(url)
+      const parsedResponse =
+        response.status === 200 ? await response.json() : null
+      const results = parsedResponse ? parsedResponse : null
+
+      set((state) => {
+        state.accountPnl = results
       })
     },
   },

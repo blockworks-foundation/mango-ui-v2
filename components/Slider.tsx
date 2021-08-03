@@ -81,6 +81,7 @@ type SliderProps = {
   step: number
   value: number
   disabled?: boolean
+  hideButtons?: boolean
   max?: number
   maxButtonTransition?: boolean
 }
@@ -91,6 +92,7 @@ const AmountSlider: FunctionComponent<SliderProps> = ({
   step,
   value,
   disabled,
+  hideButtons,
   max,
   maxButtonTransition,
 }) => {
@@ -128,48 +130,50 @@ const AmountSlider: FunctionComponent<SliderProps> = ({
         enableTransition={enableTransition}
         disabled={disabled}
       />
-      <StyledSliderButtonWrapper>
-        <StyledSliderButton
-          disabled={disabled}
-          onClick={() => handleSliderButtonClick(0)}
-          styleValue={0}
-          sliderValue={value}
-        >
-          0%
-        </StyledSliderButton>
-        <StyledSliderButton
-          disabled={disabled}
-          onClick={() => handleSliderButtonClick(25)}
-          styleValue={25}
-          sliderValue={value}
-        >
-          25%
-        </StyledSliderButton>
-        <StyledSliderButton
-          disabled={disabled}
-          onClick={() => handleSliderButtonClick(50)}
-          styleValue={50}
-          sliderValue={value}
-        >
-          50%
-        </StyledSliderButton>
-        <StyledSliderButton
-          disabled={disabled}
-          onClick={() => handleSliderButtonClick(75)}
-          styleValue={75}
-          sliderValue={value}
-        >
-          75%
-        </StyledSliderButton>
-        <StyledSliderButton
-          disabled={disabled}
-          onClick={() => handleSliderButtonClick(100)}
-          styleValue={100}
-          sliderValue={value}
-        >
-          100%
-        </StyledSliderButton>
-      </StyledSliderButtonWrapper>
+      {!hideButtons ? (
+        <StyledSliderButtonWrapper>
+          <StyledSliderButton
+            disabled={disabled}
+            onClick={() => handleSliderButtonClick(0)}
+            styleValue={0}
+            sliderValue={value}
+          >
+            0%
+          </StyledSliderButton>
+          <StyledSliderButton
+            disabled={disabled}
+            onClick={() => handleSliderButtonClick(25)}
+            styleValue={25}
+            sliderValue={value}
+          >
+            25%
+          </StyledSliderButton>
+          <StyledSliderButton
+            disabled={disabled}
+            onClick={() => handleSliderButtonClick(50)}
+            styleValue={50}
+            sliderValue={value}
+          >
+            50%
+          </StyledSliderButton>
+          <StyledSliderButton
+            disabled={disabled}
+            onClick={() => handleSliderButtonClick(75)}
+            styleValue={75}
+            sliderValue={value}
+          >
+            75%
+          </StyledSliderButton>
+          <StyledSliderButton
+            disabled={disabled}
+            onClick={() => handleSliderButtonClick(100)}
+            styleValue={100}
+            sliderValue={value}
+          >
+            100%
+          </StyledSliderButton>
+        </StyledSliderButtonWrapper>
+      ) : null}
     </div>
   )
 }
