@@ -34,7 +34,7 @@ const useMangoStats = () => {
     const getLatestStats = async () => {
       const client = new MangoClient()
       const connection = new Connection(
-        IDS.cluster_urls[cluster],
+        'https://mango.rpcpool.com/',
         'singleGossip'
       )
       const assets = IDS[cluster].mango_groups?.[DEFAULT_MANGO_GROUP]?.symbols
