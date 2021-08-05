@@ -36,24 +36,27 @@ export default function TradeForm() {
     (s) => s.selectedMarginAccount.current
   )
   const selectedMangoGroup = useMangoStore((s) => s.selectedMangoGroup.current)
-  const prices = useMangoStore((s) => s.selectedMangoGroup.prices) 
+  const prices = useMangoStore((s) => s.selectedMangoGroup.prices)
   const { getTokenIndex, symbols } = useMarketList()
-  const tokenIndex = useMemo(
+  const currentTokenIndex = useMemo(
     () => getTokenIndex(symbols[baseCurrency]),
-    [baseCurrency, getTokenIndex]
-  )
-  const collateralRatio = selectedMarginAccount?.getCollateralRatio(
-    selectedMangoGroup,
-    prices
+    [baseCurrency]
   )
   const { ipAllowed } = useIpAddress()
   const [invalidInputMessage, setInvalidInputMessage] = useState('')
+  const [leverageNotification, setLeverageNotification] = useState('')
   const [postOnly, setPostOnly] = useState(false)
   const [ioc, setIoc] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [maxButtonTransition, setMaxButtonTransition] = useState(false)
+  const [thisAssetDeposit, setThisAssetDeposit] = useState(0)
+  const [usdcDeposit, setUsdcDeposit] = useState(0)
+  const [liabsVal, setLiabsVal] = useState(0)
+  const [accountEquity, setAccountEquity] = useState(0)
+  const [leveragePct, setLeveragePct] = useState(0)
   const orderBookRef = useRef(useMangoStore.getState().selectedMarket.orderBook)
   const orderbook = orderBookRef.current[0]
+
   useEffect(
     () =>
       useMangoStore.subscribe(
@@ -64,6 +67,30 @@ export default function TradeForm() {
   )
 
   useEffect(() => {
+    if (connected) {
+      const TAD = selectedMarginAccount?.getUiDeposit(
+        selectedMangoGroup,
+        currentTokenIndex
+      )
+      setThisAssetDeposit(TAD)
+      const USDCD = selectedMarginAccount?.getUiDeposit(
+        selectedMangoGroup,
+        getTokenIndex(symbols['USDC'])
+      )
+      setUsdcDeposit(USDCD)
+    }
+  }, [selectedMarginAccount, selectedMangoGroup, connected, currentTokenIndex])
+
+  useEffect(() => {
+    if (connected) {
+      const LV = selectedMarginAccount?.getLiabsVal(selectedMangoGroup, prices)
+      setLiabsVal(LV)
+      const AE = selectedMarginAccount?.computeValue(selectedMangoGroup, prices)
+      setAccountEquity(AE)
+    }
+  }, [selectedMarginAccount, selectedMangoGroup, prices, connected])
+
+  useEffect(() => {
     setBaseSize('')
     setInvalidInputMessage('')
     setPrice('')
@@ -71,89 +98,28 @@ export default function TradeForm() {
   }, [baseCurrency])
 
   useEffect(() => {
+    onSetBaseSize(baseSize)
+  }, [baseSize])
+
+  useEffect(() => {
     if (market && baseSize >= market.minOrderSize) {
       setInvalidInputMessage('')
     }
   }, [baseSize, market])
 
-  // useEffect(() => {
-  //   const usePrice = tradeType === 'Limit' ? Number(price) : markPrice
-  //   if (baseSize) {
-  //     const rawQuoteSize = Number(baseSize) * usePrice
-  //     const quoteSize = floorToDecimal(rawQuoteSize, sizeDecimalCount)
-  //     setQuoteSize(quoteSize)
-  //     debugger;
-  //   }
-  //   if (quoteSize && usePrice && !baseSize) {
-  //     const rawBaseSize = quoteSize / usePrice
-  //     const baseSize = floorToDecimal(rawBaseSize, sizeDecimalCount)
-  //     setBaseSize(baseSize)
-  //     debugger;
-  //   }
-  // }, [baseSize, markPrice, price, quoteSize, tradeType])
-
-  const [thisAssetBorrow, setThisAssetBorrow] = useState(0)
-  const [thisAssetDeposit, setThisAssetDeposit] = useState(0)
-  const [usdcBorrow, setUsdcBorrow] = useState(0)
-  const [usdcDeposit, setUsdcDeposit] = useState(0)
-  const [assetsVal, setAssetsVal] = useState(0) //TODO remove
-  const [liabsVal, setLiabsVal] = useState(0) //TODO remove
-  const [accountEquity, setAccountEquity] = useState(0) //TODO remove
-  const [impliedCollateralRatio, setImpliedCollateralRatio] = useState(0) // TODO remove
-  const numericLeverage = 1 / Math.max(0, collateralRatio - 1)
-  const long = thisAssetBorrow > thisAssetDeposit ? -1 : 1
-
-  const [leveragePct, setLeveragePct] = useState(0)
-  const [maxLiabilitiesUSD, setMaxLiabilitiesUSD] = useState(0)
-  const [targetLiabilities, setTargetLiabilities] = useState(0) // TODO remove
-  const [targetNumericLeverage, setTargetNumericLeverage] = useState(0) // TODO remove
-  const [leverageNotification, setLeverageNotification] = useState('')
-
   useEffect(() => {
-    // TODO below is all for debugging
-    if (connected) {
-      const AV = selectedMarginAccount?.getAssetsVal(selectedMangoGroup, prices)
-      setAssetsVal(AV)
-      const LV = selectedMarginAccount?.getLiabsVal(selectedMangoGroup, prices)
-      setLiabsVal(LV)
-      const TAB = selectedMarginAccount?.getUiBorrow(selectedMangoGroup, tokenIndex)
-      setThisAssetBorrow(TAB)
-      const TAD = selectedMarginAccount?.getUiDeposit(selectedMangoGroup, tokenIndex)
-      setThisAssetDeposit(TAD)
-      const USDCB = selectedMarginAccount?.getUiBorrow(selectedMangoGroup, 4)//TODO replace 4 with something that is resilient to changes in the tokenIndex object
-      setUsdcBorrow(USDCB)
-      const USDCD = selectedMarginAccount?.getUiDeposit(selectedMangoGroup, 4)
-      setUsdcDeposit(USDCD)
-      const AE = selectedMarginAccount?.computeValue(selectedMangoGroup, prices)
-      setAccountEquity(AE)
-      const ML = AE * 5
-      setMaxLiabilitiesUSD(ML)
-
-      debugger
+    if (leveragePct) {
+      const newQuoteSize = leverageQuoteCalc(leveragePct)
+      onSetQuoteSize(newQuoteSize)
+    } else {
+      onSetPrice(price)
     }
-  }, [selectedMarginAccount, selectedMangoGroup, prices, connected])
-
-  useEffect(() => {
-    if (connected) {
-      const collateralRatio = selectedMarginAccount?.getCollateralRatio(
-        selectedMangoGroup,
-        prices
-      )
-      const numericLeverage = 1 / Math.max(0, collateralRatio - 1)
-      const updatedLeveragePct = (numericLeverage / 5) * 100
-
-      setLeveragePct(updatedLeveragePct * long)
-      debugger
-    }
-  }, [connected, long])
+  }, [price, leveragePct, side])
 
   const setSide = (side) => {
     set((s) => {
       s.tradeForm.side = side
     })
-    if(leveragePct) {//TODO this lags behind 1
-      leverageQuoteCalc(leveragePct)
-    }
   }
 
   const setBaseSize = (baseSize) =>
@@ -190,109 +156,27 @@ export default function TradeForm() {
 
   const leverageQuoteCalc = (leveragePct) => {
     //get limit price or use markprice
-    const { price } = useMangoStore.getState().tradeForm
     const usePrice = Number(price) || markPrice
-    //calc current & available margin at price
-    const maxMarginUSD = accountEquity * 5;
-    const currentMargin = liabsVal;
-    const availableMargin = maxMarginUSD - currentMargin;
+    //calc current & available margin
+    const maxMarginUSD = accountEquity * 5
+    const availableMargin = maxMarginUSD - liabsVal
     // calc trade value as percent of available margin
     let maxTradeVal
-    if (side == "sell") {maxTradeVal = availableMargin + thisAssetDeposit * usePrice}
-    else {maxTradeVal = availableMargin + usdcDeposit}
-    const newQuoteSize = maxTradeVal * leveragePct/100;
-    debugger;
-    onSetQuoteSize(newQuoteSize > 0 ? newQuoteSize : 0);
-    if (newQuoteSize < 0 ) {
-      setLeverageNotification('You are already over 5x leverage')
+    if (side == 'sell') {
+      maxTradeVal = availableMargin + thisAssetDeposit * usePrice
+    } else {
+      maxTradeVal = availableMargin + usdcDeposit
+    }
+    const newQuoteSize = (maxTradeVal * leveragePct) / 100
+    if (newQuoteSize < 0) {
+      setLeverageNotification(
+        `You have exceeded 5x leverage. Please reduce account leverage before ${side}ing`
+      )
     } else {
       setLeverageNotification('')
     }
+    return newQuoteSize > 0 ? newQuoteSize : 0
   }
-
-  const onChangeSlider = (leveragePct) => {
-    setLeveragePct(leveragePct);
-    leverageQuoteCalc(leveragePct)
-  }
-  // const onChangeSlider = async (leveragePct) => {
-  //   let newQuoteSize
-  //   let currentLongVal
-  //   let currentShortVal
-  //   let targetPosition
-  //   let difference
-  //   const sliderNumericLeverage = (leveragePct / 100) * 5
-  //   const targetLiabilities = accountEquity * sliderNumericLeverage
-
-  //   setLeveragePct(leveragePct)
-  //   setTargetNumericLeverage(sliderNumericLeverage)
-  //   setTargetLiabilities(targetLiabilities)
-  //   setImpliedCollateralRatio(
-  //     (1 / sliderNumericLeverage) * Math.sign(leveragePct) + 1
-  //   )
-
-  //   if (tradeType === 'Market') {
-  //     if (sliderNumericLeverage > numericLeverage * long) {
-  //       // side == 'buy'
-  //       setSide('buy')
-  //       if (long === 1) {
-  //         // already margin long & buying more
-  //         currentLongVal = usdcBorrow
-  //         targetPosition = maxLiabilitiesUSD * (leveragePct / 100)
-  //         difference = targetPosition - currentLongVal
-  //         // const difference = targetLiabilities - liabsVal + usdcDeposit
-  //         newQuoteSize = difference
-  //       } else {
-  //         // currently margin short
-  //         if (leveragePct === 0 || Math.sign(long) === Math.sign(leveragePct)) {
-  //           // reducing short position but not crossing 0x leverage
-  //           currentShortVal = thisAssetBorrow * markPrice
-  //           targetPosition = maxLiabilitiesUSD * (leveragePct / -100)
-  //           difference = currentShortVal - targetPosition
-  //           newQuoteSize = difference
-  //         } else {
-  //           // crossing 0x leverage, cover all borrows + buy leverage * equity value
-  //           currentShortVal = thisAssetBorrow * markPrice
-  //           targetPosition = maxLiabilitiesUSD * (leveragePct / 100)
-  //           difference = targetPosition + currentShortVal
-  //           newQuoteSize = difference
-  //           debugger
-  //         }
-  //       }
-
-  //       onSetQuoteSize(newQuoteSize)
-  //       debugger
-  //     } else {
-  //       // side == 'sell'
-  //       setSide('sell')
-  //       if (long === -1) {
-  //         // already short & selling more
-  //         currentShortVal = thisAssetBorrow * markPrice
-  //         targetPosition = maxLiabilitiesUSD * (leveragePct / -100)
-  //         difference = targetPosition - currentShortVal
-  //         // const difference = Math.abs(targetLiabilities) - liabsVal
-  //         newQuoteSize = difference
-  //       } else {
-  //         if (leveragePct === 0 || Math.sign(long) === Math.sign(leveragePct)) {
-  //           // reducing long position but not crossing 0x leverage
-  //           currentLongVal = usdcBorrow
-  //           targetPosition = maxLiabilitiesUSD * (leveragePct / 100)
-  //           difference = currentLongVal - targetPosition
-  //           newQuoteSize = difference
-  //           debugger
-  //         } else {
-  //           // crossing 0x leverage cover all borrows + buy leverage * equity value
-  //           currentLongVal = usdcBorrow
-  //           targetPosition = maxLiabilitiesUSD * (leveragePct / -100)
-  //           difference = targetPosition + currentLongVal
-  //           newQuoteSize = difference
-  //           debugger
-  //         }
-  //       }
-  //       onSetQuoteSize(newQuoteSize)
-  //       debugger
-  //     }
-  //   }
-  // }
 
   const markPriceRef = useRef(useMangoStore.getState().selectedMarket.markPrice)
   const markPrice = markPriceRef.current
@@ -312,7 +196,7 @@ export default function TradeForm() {
   const onSetPrice = (price: number | '') => {
     setPrice(price)
     if (!price) return
-    if (quoteSize) {//TODO this lags behind by 1
+    if (quoteSize) {
       onSetQuoteSize(quoteSize)
     }
   }
@@ -334,7 +218,6 @@ export default function TradeForm() {
     const rawQuoteSize = baseSize * usePrice
     const quoteSize = baseSize && floorToDecimal(rawQuoteSize, 2)
     setQuoteSize(quoteSize)
-    debugger
   }
 
   const onSetQuoteSize = (quoteSize: number | '') => {
@@ -354,7 +237,6 @@ export default function TradeForm() {
     const rawBaseSize = quoteSize / usePrice
     const baseSize = quoteSize && floorToDecimal(rawBaseSize, sizeDecimalCount)
     setBaseSize(baseSize)
-    debugger
   }
 
   const postOnChange = (checked) => {
@@ -368,6 +250,10 @@ export default function TradeForm() {
       setPostOnly(false)
     }
     setIoc(checked)
+  }
+
+  const onChangeSlider = (leveragePct) => {
+    setLeveragePct(leveragePct)
   }
 
   async function onSubmit() {
@@ -415,7 +301,6 @@ export default function TradeForm() {
         baseSize,
         ioc ? 'ioc' : postOnly ? 'postOnly' : 'limit'
       )
-      debugger
       console.log('Successfully placed trade!')
 
       setPrice('')
@@ -559,7 +444,7 @@ export default function TradeForm() {
           </div>
         ) : null}
       </div>
-      <div className={"py-2"}>
+      <div className={'pt-4'}>
         <LeverageSlider
           value={leveragePct}
           onChange={(v) => onChangeSlider(v)}
@@ -568,8 +453,8 @@ export default function TradeForm() {
         />
       </div>
       {leverageNotification ? (
-        <div className={`flex items-center py-2`}>
-          {`Warning: ${leverageNotification}`}
+        <div className={`flex items-left pt-2 pt-1.5 text-th-primary`}>
+          {leverageNotification}
         </div>
       ) : null}
       <div className={`flex pt-6`}>
@@ -623,63 +508,6 @@ export default function TradeForm() {
           </Button>
         )}
       </div>
-      {/* TODO remove debug info table*/}
-      {connected ? (
-        <table>
-          <th>Account</th>
-          <tr>
-            <td>accountEquity</td>
-            <td>{accountEquity?.toFixed(2) || 'none'}</td>
-            <td>long</td>
-            <td>{long.toFixed(0) || 'none'}</td>
-          </tr>
-          <tr>
-            <td>assetsVal</td>
-            <td>{assetsVal?.toFixed(2) || 'none'}</td>
-            <td>liabsVal</td>
-            <td>{liabsVal?.toFixed(2) || 'none'}</td>
-          </tr>
-          <tr>
-            <td>thisAssetBorrow</td>
-            <td>{thisAssetBorrow?.toFixed(4) || 'none'}</td>
-            <td>thisAssetDeposit</td>
-            <td>{thisAssetDeposit?.toFixed(4) || 'none'}</td>
-          </tr>
-          <tr>
-            <td>usdcBorrow</td>
-            <td>{usdcBorrow?.toFixed(2) || 'none'}</td>
-            <td>usdcDeposit</td>
-            <td>{usdcDeposit?.toFixed(2) || 'none'}</td>
-          </tr>
-          <tr>
-            <td>numericLeverage</td>
-            <td>{numericLeverage?.toFixed(2) || 'none'}</td>
-            <td>collateralRatio</td>
-            <td>{collateralRatio?.toFixed(2) || 'none'}</td>
-          </tr>
-          <tr>
-            <td>maxLiabilitiesUSD</td>
-            <td>{maxLiabilitiesUSD?.toFixed(2) || 'none'}</td>
-          </tr>
-          <th>Trade Form</th>
-          <tr>
-            <td>side</td>
-            <td>{side || 'none'}</td>
-          </tr>
-          <tr>
-            <td>leveragePct</td>
-            <td>{leveragePct.toFixed(2) || 'none'}</td>
-            <td>targetNumericLeverage</td>
-            <td>{targetNumericLeverage.toFixed(2) || 'none'}</td>
-          </tr>
-          <tr>
-            <td>targetLiabilities</td>
-            <td>{targetLiabilities.toFixed(2) || 'none'}</td>
-            <td>impliedCollateralRatio</td>
-            <td>{impliedCollateralRatio.toFixed(2) || 'none'}</td>
-          </tr>
-        </table>
-      ) : null}
     </FloatingElement>
   )
 }
