@@ -35,7 +35,11 @@ import {
   makeSettleFundsInstruction,
   makeWithdrawInstruction,
 } from '@blockworks-foundation/mango-client/lib/instruction'
-import { sendTransaction } from './send'
+import {
+  sendSignedTransaction,
+  sendTransaction,
+  signTransactions,
+} from './send'
 import { TOKEN_PROGRAM_ID } from './tokens'
 import BN from 'bn.js'
 import {
@@ -1304,8 +1308,9 @@ export async function settleAll(
   marginAccount: MarginAccount,
   markets: Market[],
   wallet: Wallet
-): Promise<TransactionSignature> {
-  const transaction = new Transaction()
+): Promise<Array<string>> {
+  const settleBorrowTransaction = new Transaction()
+  const settleFundsTransaction = new Transaction()
 
   const assetGains: number[] = new Array(NUM_TOKENS).fill(0)
 
@@ -1376,7 +1381,7 @@ export async function settleAll(
       programId,
     })
 
-    transaction.add(settleFundsInstruction)
+    settleFundsTransaction.add(settleFundsInstruction)
   }
 
   const deposits = marginAccount.getDeposits(mangoGroup)
@@ -1384,7 +1389,6 @@ export async function settleAll(
 
   for (let i = 0; i < NUM_TOKENS; i++) {
     // TODO test this. maybe it hits transaction size limit
-
     const deposit = deposits[i] + assetGains[i]
     if (deposit === 0 || liabs[i] === 0) {
       continue
@@ -1407,14 +1411,34 @@ export async function settleAll(
       data,
       programId,
     })
-    transaction.add(settleBorrowsInstruction)
+    settleBorrowTransaction.add(settleBorrowsInstruction)
   }
 
-  if (transaction.instructions.length === 0) {
-    throw new Error('No unsettled funds')
+  const transactionsAndSigners = []
+  if (settleBorrowTransaction.instructions.length > 0) {
+    transactionsAndSigners.push({
+      transaction: settleBorrowTransaction,
+      signers: [],
+    })
+  }
+  if (settleFundsTransaction.instructions.length > 0) {
+    transactionsAndSigners.push({
+      transaction: settleFundsTransaction,
+      signers: [],
+    })
   }
 
-  return await packageAndSend(transaction, connection, wallet, [], 'Settle All')
+  const signedTransactions = await signTransactions({
+    transactionsAndSigners,
+    wallet,
+    connection,
+  })
+
+  return await Promise.all(
+    signedTransactions.map((signedTransaction) => {
+      return sendSignedTransaction({ signedTransaction, connection })
+    })
+  )
 }
 
 async function packageAndSend(
