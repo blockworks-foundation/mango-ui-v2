@@ -175,7 +175,7 @@ export default function TradeForm() {
     } else {
       setLeverageNotification('')
     }
-    return newQuoteSize > 0 ? newQuoteSize : 0
+    return newQuoteSize > 0 ? floorToDecimal(newQuoteSize, 2) : 0
   }
 
   const markPriceRef = useRef(useMangoStore.getState().selectedMarket.markPrice)
