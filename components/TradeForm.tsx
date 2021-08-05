@@ -108,13 +108,27 @@ export default function TradeForm() {
   }, [baseSize])
 
   useEffect(() => {
+    const usePrice = tradeType === 'Limit' ? Number(price) : markPrice
+    if (baseSize) {
+      const rawQuoteSize = Number(baseSize) * usePrice
+      const quoteSize = floorToDecimal(rawQuoteSize, sizeDecimalCount)
+      setQuoteSize(quoteSize)
+    }
+    if (quoteSize && usePrice && !baseSize) {
+      const rawBaseSize = quoteSize / usePrice
+      const baseSize = floorToDecimal(rawBaseSize, sizeDecimalCount)
+      setBaseSize(baseSize)
+    }
+  }, [price, tradeType])
+
+  useEffect(() => {
     if (leveragePct) {
       const newQuoteSize = leverageQuoteCalc(leveragePct)
       onSetQuoteSize(newQuoteSize)
     } else {
       onSetPrice(price)
     }
-  }, [price, leveragePct, side])
+  }, [leveragePct, side])
 
   const setSide = (side) => {
     set((s) => {
@@ -196,8 +210,8 @@ export default function TradeForm() {
   const onSetPrice = (price: number | '') => {
     setPrice(price)
     if (!price) return
-    if (quoteSize) {
-      onSetQuoteSize(quoteSize)
+    if (baseSize) {
+      onSetBaseSize(baseSize)
     }
   }
 
@@ -214,7 +228,7 @@ export default function TradeForm() {
       return
     }
     const rawQuoteSize = baseSize * usePrice
-    const quoteSize = baseSize && floorToDecimal(rawQuoteSize, 2)
+    const quoteSize = baseSize && floorToDecimal(rawQuoteSize, sizeDecimalCount)
     setQuoteSize(quoteSize)
   }
 
@@ -346,7 +360,7 @@ export default function TradeForm() {
     <FloatingElement showConnect>
       <div>
         <div className={`flex mb-4 text-base text-th-fgd-4`}>
-        <button
+          <button
             onClick={() => setSide('buy')}
             className={`flex-1 outline-none focus:outline-none`}
           >
@@ -465,9 +479,7 @@ export default function TradeForm() {
                   'border-th-green hover:border-th-green-dark'
                 } text-th-green hover:text-th-fgd-1 hover:bg-th-green-dark flex-grow`}
               >
-                {`${
-                  baseSize > 0 ? 'Buy ' + baseSize : 'Buy'
-                } ${baseCurrency}`}
+                {`${baseSize > 0 ? 'Buy ' + baseSize : 'Buy'} ${baseCurrency}`}
               </Button>
             ) : (
               <Button
