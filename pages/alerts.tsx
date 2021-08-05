@@ -17,6 +17,7 @@ import Button, { LinkButton } from '../components/Button'
 import AlertsModal from '../components/AlertsModal'
 import AlertItem from '../components/AlertItem'
 import PageBodyContainer from '../components/PageBodyContainer'
+import EmptyState from '../components/EmptyState'
 import Select from '../components/Select'
 import { abbreviateAddress } from '../utils'
 
@@ -128,31 +129,6 @@ export default function Alerts() {
                   </RadioGroup.Option>
                 ))}
               </RadioGroup>
-            ) : null}
-            {marginAccounts.length > 2 ? (
-              <Select
-                className="w-full mt-2 sm:w-36 sm:mt-0"
-                value={
-                  acc === 'All'
-                    ? 'All'
-                    : `${acc.slice(0, 5)}...${acc.slice(-5)}`
-                }
-                onChange={(val) => handleAccountChange(val)}
-              >
-                <Select.Option value="All">All</Select.Option>
-                {marginAccounts
-                  .slice()
-                  .sort(
-                    (a, b) =>
-                      (a.publicKey.toBase58() > b.publicKey.toBase58() && 1) ||
-                      -1
-                  )
-                  .map((acc, i) => (
-                    <Select.Option key={i} value={acc.publicKey.toString()}>
-                      {abbreviateAddress(acc.publicKey)}
-                    </Select.Option>
-                  ))}
-              </Select>
             ) : null}
             {marginAccounts.length > 2 ? (
               <Select

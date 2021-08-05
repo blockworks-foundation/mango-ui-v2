@@ -1,5 +1,4 @@
 import create, { State } from 'zustand'
-import { devtools } from 'zustand/middleware'
 import produce from 'immer'
 import { Market } from '@project-serum/serum'
 import {
@@ -35,7 +34,7 @@ export const ENDPOINTS: EndpointInfo[] = [
   },
 ]
 
-type ClusterType = 'mainnet-beta' | 'devnet';
+type ClusterType = 'mainnet-beta' | 'devnet'
 
 const CLUSTER =
   (process.env.NEXT_PUBLIC_CLUSTER as ClusterType) || 'mainnet-beta'
@@ -141,7 +140,7 @@ interface MangoStore extends State {
   }
 }
 
-const useMangoStore = create<MangoStore>(devtools((set, get) => ({
+const useMangoStore = create<MangoStore>((set, get) => ({
   notifications: [],
   accountInfos: {},
   connection: {
@@ -524,6 +523,6 @@ const useMangoStore = create<MangoStore>(devtools((set, get) => ({
       })
     },
   },
-})))
+}))
 
 export default useMangoStore

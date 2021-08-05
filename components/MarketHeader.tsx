@@ -123,7 +123,7 @@ const MarketHeader = () => {
             <div className="mb-0.5 text-th-fgd-4 text-xs">24hr Vol</div>
             <div className={`font-semibold`}>
               {ohlcv && !loading ? (
-                volume && volume !== '--' ? (
+                volume !== '--' ? (
                   <>
                     {volume.toFixed(2)}
                     <span className="ml-1 text-th-fgd-3 text-xs">
