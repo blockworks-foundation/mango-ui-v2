@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { ExclamationCircleIcon } from '@heroicons/react/outline'
 import styled from '@emotion/styled'
 import useMarket from '../hooks/useMarket'
