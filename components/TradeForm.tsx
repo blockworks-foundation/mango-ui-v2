@@ -105,7 +105,7 @@ export default function TradeForm() {
     if (market && baseSize >= market.minOrderSize) {
       setInvalidInputMessage('')
     }
-  }, [baseSize, market])
+  }, [baseSize])
 
   useEffect(() => {
     if (leveragePct) {
@@ -203,9 +203,7 @@ export default function TradeForm() {
 
   const onSetBaseSize = (baseSize: number | '') => {
     const { price } = useMangoStore.getState().tradeForm
-    baseSize
-      ? setBaseSize(floorToDecimal(baseSize, sizeDecimalCount))
-      : setBaseSize(baseSize)
+    setBaseSize(baseSize)
     if (!baseSize) {
       setQuoteSize('')
       return
@@ -221,9 +219,7 @@ export default function TradeForm() {
   }
 
   const onSetQuoteSize = (quoteSize: number | '') => {
-    quoteSize
-      ? setQuoteSize(floorToDecimal(quoteSize, 2))
-      : setQuoteSize(quoteSize)
+    setQuoteSize(quoteSize)
     if (!quoteSize) {
       setBaseSize('')
       return
@@ -350,6 +346,20 @@ export default function TradeForm() {
     <FloatingElement showConnect>
       <div>
         <div className={`flex mb-4 text-base text-th-fgd-4`}>
+        <button
+            onClick={() => setSide('buy')}
+            className={`flex-1 outline-none focus:outline-none`}
+          >
+            <div
+              className={`border-b-2 border-th-bkg-3 hover:text-th-green pb-2 transition-colors duration-500
+                ${
+                  side === 'buy' &&
+                  `text-th-green hover:text-th-green border-b-2 border-th-green`
+                }`}
+            >
+              Buy
+            </div>
+          </button>
           <button
             onClick={() => setSide('sell')}
             className={`flex-1 outline-none focus:outline-none`}
@@ -363,20 +373,6 @@ export default function TradeForm() {
               `}
             >
               Sell
-            </div>
-          </button>
-          <button
-            onClick={() => setSide('buy')}
-            className={`flex-1 outline-none focus:outline-none`}
-          >
-            <div
-              className={`border-b-2 border-th-bkg-3 hover:text-th-green pb-2 transition-colors duration-500
-                ${
-                  side === 'buy' &&
-                  `text-th-green hover:text-th-green border-b-2 border-th-green`
-                }`}
-            >
-              Buy
             </div>
           </button>
         </div>
@@ -470,7 +466,7 @@ export default function TradeForm() {
                 } text-th-green hover:text-th-fgd-1 hover:bg-th-green-dark flex-grow`}
               >
                 {`${
-                  baseSize !== 0 ? 'Buy ' + baseSize : 'Buy'
+                  baseSize > 0 ? 'Buy ' + baseSize : 'Buy'
                 } ${baseCurrency}`}
               </Button>
             ) : (
@@ -483,7 +479,7 @@ export default function TradeForm() {
                 } text-th-red hover:text-th-fgd-1 hover:bg-th-red-dark flex-grow`}
               >
                 {`${
-                  baseSize !== 0 ? 'Sell ' + baseSize : 'Sell'
+                  baseSize > 0 ? 'Sell ' + baseSize : 'Sell'
                 } ${baseCurrency}`}
               </Button>
             )
