@@ -1,9 +1,8 @@
-import React, { FunctionComponent, useEffect, useState } from 'react'
+import { FunctionComponent, useEffect, useState } from 'react'
 import tw from 'twin.macro'
 import styled from '@emotion/styled'
 import Slider from 'rc-slider'
 import 'rc-slider/assets/index.css'
-import Tooltip from './Tooltip'
 
 type StyledSliderProps = {
   enableTransition?: boolean
