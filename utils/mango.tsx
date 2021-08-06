@@ -1415,15 +1415,15 @@ export async function settleAll(
   }
 
   const transactionsAndSigners = []
-  if (settleBorrowTransaction.instructions.length > 0) {
-    transactionsAndSigners.push({
-      transaction: settleBorrowTransaction,
-      signers: [],
-    })
-  }
   if (settleFundsTransaction.instructions.length > 0) {
     transactionsAndSigners.push({
       transaction: settleFundsTransaction,
+      signers: [],
+    })
+  }
+  if (settleBorrowTransaction.instructions.length > 0) {
+    transactionsAndSigners.push({
+      transaction: settleBorrowTransaction,
       signers: [],
     })
   }
