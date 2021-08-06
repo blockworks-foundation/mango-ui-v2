@@ -99,10 +99,6 @@ export default function TradeForm() {
   }, [baseCurrency])
 
   useEffect(() => {
-    onSetBaseSize(baseSize)
-  }, [baseSize])
-
-  useEffect(() => {
     if (market && baseSize >= market.minOrderSize) {
       setInvalidInputMessage('')
     }
@@ -231,6 +227,7 @@ export default function TradeForm() {
     const rawQuoteSize = baseSize * usePrice
     const quoteSize = baseSize && floorToDecimal(rawQuoteSize, sizeDecimalCount)
     setQuoteSize(quoteSize)
+    debugger
   }
 
   const onSetQuoteSize = (quoteSize: number | '') => {
@@ -248,6 +245,7 @@ export default function TradeForm() {
     const rawBaseSize = quoteSize / usePrice
     const baseSize = quoteSize && floorToDecimal(rawBaseSize, sizeDecimalCount)
     setBaseSize(baseSize)
+    debugger
   }
 
   const postOnChange = (checked) => {
