@@ -79,6 +79,7 @@ export default function TradeForm() {
       )
       setUsdcDeposit(USDCD)
     }
+    setLeveragePct(0)
   }, [selectedMarginAccount, selectedMangoGroup, connected, currentTokenIndex])
 
   useEffect(() => {
