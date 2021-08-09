@@ -127,7 +127,7 @@ export default function StatsAssets() {
           />
         </div>
       </div>
-      <div className="grid grid-flow-col grid-cols-4 grid-rows-1 gap-4">
+      <div className="grid md:grid-flow-col gap-4">
         <div className="border border-th-bkg-3 relative p-4 rounded-md">
           <AverageInterest
             periodLabel="24h Avg"
