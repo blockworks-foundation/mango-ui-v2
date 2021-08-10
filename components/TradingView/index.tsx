@@ -6,12 +6,10 @@ import {
   IChartingLibraryWidget,
   ResolutionString,
 } from '../charting_library' // Make sure to follow step 1 of the README
-// import { useMarket } from '../../utils/markets';
 import { CHART_DATA_FEED } from '../../utils/chartDataConnector'
 import useMangoStore from '../../stores/useMangoStore'
 import { useOpenOrders } from '../../hooks/useOpenOrders'
 import { useSortableData } from '../../hooks/useSortableData'
-import { useState } from 'react'
 import { PublicKey } from '@solana/web3.js'
 import useConnection from '../../hooks/useConnection'
 import { cancelOrderAndSettle, modifyOrderAndSettle } from '../../utils/mango'
@@ -49,7 +47,6 @@ const TVChartContainer = () => {
   const selectedMarginAccount =
     useMangoStore.getState().selectedMarginAccount.current
   const selectedMarketPrice = useMangoStore((s) => s.selectedMarket.markPrice)
-  const [ordersLength, setOrdersLength] = useState(0)
 
   // @ts-ignore
   const defaultProps: ChartContainerProps = {
@@ -88,7 +85,6 @@ const TVChartContainer = () => {
         'limit'
       )
       actions.fetchMarginAccounts()
-      setOrdersLength(ordersLength - 1)
       return true
     } catch (e) {
       notify({
@@ -118,7 +114,6 @@ const TVChartContainer = () => {
         order
       )
       actions.fetchMarginAccounts()
-      setOrdersLength(ordersLength - 1)
       return true
     } catch (e) {
       notify({
@@ -302,11 +297,6 @@ const TVChartContainer = () => {
 
   useInterval(() => {
     markPrice = selectedMarketPrice
-    if (openOrders) {
-      setOrdersLength(openOrders.length)
-    } else {
-      setOrdersLength(-1)
-    }
   }, 500)
 
   useEffect(() => {
@@ -324,7 +314,7 @@ const TVChartContainer = () => {
         }
       })
     })
-  }, [ordersLength, selectedMarginAccount, connected, selectedMarketName])
+  }, [selectedMarginAccount, connected, selectedMarketName])
 
   return <div id={defaultProps.containerId} className="tradingview-chart" />
 }
