@@ -171,7 +171,7 @@ export const TrophyIcon = ({ className }) => {
   )
 }
 
-export const CumulativeSizeIcon = ({ className}) => {
+export const CumulativeSizeIcon = ({ className }) => {
   return (
     <svg
       className={`${className}`}
@@ -197,7 +197,7 @@ export const CumulativeSizeIcon = ({ className}) => {
   )
 }
 
-export const StepSizeIcon = ({ className}) => {
+export const StepSizeIcon = ({ className }) => {
   return (
     <svg
       className={`${className}`}
