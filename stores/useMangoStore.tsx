@@ -405,7 +405,7 @@ const useMangoStore = create<MangoStore>((set, get) => ({
       if (!selectedMarginAccount) return
 
       const response = await fetch(
-        `https://mango-transaction-log.herokuapp.com/stats/activity_feed/FucJ8CAfqSVuPr2zGhDxjyxkYvb5Qd1Maqqbc5JrPbYb`
+        `https://mango-transaction-log.herokuapp.com/stats/activity_feed/${selectedMarginAccount.publicKey.toString()}`
       )
       const parsedResponse = await response.json()
       const results = parsedResponse ? parsedResponse : []

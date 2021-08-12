@@ -27,7 +27,7 @@ const TABS = [
   // 'Stats',
   // 'Positions',
   'Orders',
-  'History',
+  'Activity',
 ]
 
 export function getMarginInfoString(marginAccount: MarginAccount) {
@@ -229,7 +229,7 @@ const TabContent = ({ activeTab }) => {
       return <div>Positions</div>
     case 'Orders':
       return <AccountOrders />
-    case 'History':
+    case 'Activity':
       return <AccountHistory />
     default:
       return <AccountAssets />
