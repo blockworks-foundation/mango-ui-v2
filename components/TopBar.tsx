@@ -31,6 +31,7 @@ const TopBar = () => {
                 <MenuItem href="/account">Account</MenuItem>
                 <MenuItem href="/borrow">Borrow</MenuItem>
                 <MenuItem href="/alerts">Alerts</MenuItem>
+                <MenuItem href="/leaderboard">Leaderboard</MenuItem>
                 <MenuItem href="/stats">Stats</MenuItem>
                 <MenuItem href="https://docs.mango.markets/">Learn</MenuItem>
               </div>

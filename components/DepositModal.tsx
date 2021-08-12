@@ -202,6 +202,7 @@ const DepositModal: FunctionComponent<DepositModalProps> = ({
           notify({
             message:
               'Could not perform init margin account and deposit operation',
+            description: err.message,
             type: 'error',
           })
           onClose()

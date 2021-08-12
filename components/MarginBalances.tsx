@@ -142,7 +142,7 @@ export default function MarginBalances() {
                 >
                   <Tooltip
                     className="text-xs py-1"
-                    content="Deposit APR and Borrow APY"
+                    content="Deposits APY and Borrows APR"
                   >
                     <div>Deposits / Borrows</div>
                   </Tooltip>
