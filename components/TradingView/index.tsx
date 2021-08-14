@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTheme } from 'next-themes'
 import {
   widget,
@@ -14,7 +14,6 @@ import { PublicKey } from '@solana/web3.js'
 import useConnection from '../../hooks/useConnection'
 import { cancelOrderAndSettle, modifyOrderAndSettle } from '../../utils/mango'
 import { notify } from '../../utils/notifications'
-import useInterval from '../../hooks/useInterval'
 
 export interface ChartContainerProps {
   symbol: ChartingLibraryWidgetOptions['symbol']
@@ -32,9 +31,6 @@ export interface ChartContainerProps {
   theme: string
 }
 
-const lines = new Map()
-let markPrice = 0
-
 const TVChartContainer = () => {
   const selectedMarketName = useMangoStore((s) => s.selectedMarket.name)
   const { theme } = useTheme()
@@ -47,6 +43,8 @@ const TVChartContainer = () => {
   const selectedMarginAccount =
     useMangoStore.getState().selectedMarginAccount.current
   const selectedMarketPrice = useMangoStore((s) => s.selectedMarket.markPrice)
+  const [lines, setLines] = useState(new Map())
+  const [moveInProgress, toggleMoveInProgress] = useState(false)
 
   // @ts-ignore
   const defaultProps: ChartContainerProps = {
@@ -208,9 +206,12 @@ const TVChartContainer = () => {
         const updatedOrderPrice = this.getPrice()
 
         if (
-          (order.side === 'buy' && updatedOrderPrice > 1.05 * markPrice) ||
-          (order.side === 'sell' && updatedOrderPrice < 0.95 * markPrice)
+          (order.side === 'buy' &&
+            updatedOrderPrice > 1.05 * selectedMarketPrice) ||
+          (order.side === 'sell' &&
+            updatedOrderPrice < 0.95 * selectedMarketPrice)
         ) {
+          toggleMoveInProgress(true)
           tvWidgetRef.current.showNoticeDialog({
             title: 'Order Price Outside Range',
             body:
@@ -218,14 +219,17 @@ const TVChartContainer = () => {
                 2
               )}) is greater than 5% ${
                 order.side == 'buy' ? 'above' : 'below'
-              } the current market price ($${markPrice.toFixed(2)}). ` +
+              } the current market price ($${selectedMarketPrice.toFixed(
+                2
+              )}). ` +
               ' indicating you might incur significant slippage. <p><p>Please use the trade input form if you wish to accept the potential slippage.',
             callback: () => {
               this.setPrice(currentOrderPrice)
+              toggleMoveInProgress(false)
             },
           })
-          selectedMarketPrice
         } else {
+          toggleMoveInProgress(true)
           tvWidgetRef.current.showConfirmDialog({
             title: 'Change Order Price?',
             body: `Would you like to change your order from a 
@@ -235,26 +239,25 @@ const TVChartContainer = () => {
            to a 
           ${order.size} ${order.marketName.split('/')[0].toUpperCase()} ${
               order.side
-            } at $${updatedOrderPrice} 
+            } at $${updatedOrderPrice}? Current market price is ${selectedMarketPrice} 
           `,
             callback: (res) => {
               if (res) {
                 handleChangeOrder(order, updatedOrderPrice).then((result) => {
-                  if (result) {
-                    lines.delete(order.orderId.toString())
-                    this.remove()
-                  } else {
+                  if (!result) {
                     this.setPrice(currentOrderPrice)
                   }
                 })
               } else {
                 this.setPrice(currentOrderPrice)
               }
+              toggleMoveInProgress(false)
             },
           })
         }
       })
       .onCancel(function () {
+        toggleMoveInProgress(true)
         tvWidgetRef.current.showConfirmDialog({
           title: 'Cancel Your Order?',
           body: `Would you like to cancel your order for 
@@ -264,13 +267,9 @@ const TVChartContainer = () => {
       `,
           callback: (res) => {
             if (res) {
-              handleCancelOrder(order).then((res) => {
-                if (res) {
-                  lines.delete(order.orderId.toString())
-                  this.remove()
-                }
-              })
+              handleCancelOrder(order)
             }
+            toggleMoveInProgress(false)
           },
         })
       })
@@ -295,26 +294,30 @@ const TVChartContainer = () => {
       .setPrice(order.price)
   }
 
-  useInterval(() => {
-    markPrice = selectedMarketPrice
-  }, 500)
-
   useEffect(() => {
-    tvWidgetRef.current.onChartReady(() => {
-      if (lines.size > 0) {
-        lines.forEach((value, key) => {
-          lines.get(key).remove()
-          lines.delete(key)
-        })
-      }
-
-      items.map((order) => {
-        if (order.marketName == selectedMarketName) {
-          lines.set(order.orderId.toString(), getLine(order))
+    if (!moveInProgress) {
+      const tempLines = new Map()
+      tvWidgetRef.current.onChartReady(() => {
+        if (lines.size > 0) {
+          lines.forEach((value, key) => {
+            lines.get(key).remove()
+          })
         }
+
+        items.map((order) => {
+          if (order.marketName == selectedMarketName) {
+            tempLines.set(order.orderId.toString(), getLine(order))
+          }
+        })
       })
-    })
-  }, [selectedMarginAccount, connected, selectedMarketName])
+      setLines(tempLines)
+    }
+  }, [
+    selectedMarginAccount,
+    connected,
+    selectedMarketName,
+    selectedMarketPrice,
+  ])
 
   return <div id={defaultProps.containerId} className="tradingview-chart" />
 }
