@@ -39,7 +39,7 @@ const AlphaModal = ({
         </div>
       </Modal.Header>
       <div className={`text-th-fgd-2 text-center`}>
-        SOL and SRM now available with USDC!
+        This is V2 of the Mango Protocol
       </div>
       <div className="text-th-fgd-2 text-center my-4">
         Visit{' '}
@@ -48,9 +48,9 @@ const AlphaModal = ({
           target="_blank"
           rel="noopener noreferrer"
         >
-          https://usdt.mango.markets
+          https://v3.mango.markets
         </a>{' '}
-        to access the USDT mango group.
+        to access the latest version of Mango.
       </div>
       <div className={`text-th-fgd-2 text-center`}>
         Mango Markets is unaudited software. Use at your own risk.
