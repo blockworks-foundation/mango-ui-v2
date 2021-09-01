@@ -232,7 +232,7 @@ const DepositModal: FunctionComponent<DepositModalProps> = ({
             message: 'Could not perform deposit operation',
             description: err.message,
             type: 'error',
-            txid: err.txid,
+            txid: err?.txid,
           })
           onClose()
         })
