@@ -230,7 +230,9 @@ const DepositModal: FunctionComponent<DepositModalProps> = ({
           console.error(err)
           notify({
             message: 'Could not perform deposit operation',
+            description: err.message,
             type: 'error',
+            txid: err.txid,
           })
           onClose()
         })
