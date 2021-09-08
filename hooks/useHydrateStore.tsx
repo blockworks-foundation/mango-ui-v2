@@ -8,7 +8,7 @@ import useMarketList from './useMarketList'
 import useInterval from './useInterval'
 
 const SECONDS = 1000
-const _SLOW_REFRESH_INTERVAL = 60 * SECONDS
+const _SLOW_REFRESH_INTERVAL = 90 * SECONDS
 
 const mangoGroupMarketsSelector = (s) => s.selectedMangoGroup.markets
 const websocketConnectionSelector = (s) => s.connection.websocket
@@ -30,7 +30,7 @@ const useHydrateStore = () => {
 
   useInterval(() => {
     actions.fetchMangoGroup()
-  }, 60 * SECONDS)
+  }, 120 * SECONDS)
 
   // load the selected market and orderbook
   useEffect(() => {

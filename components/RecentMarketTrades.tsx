@@ -33,7 +33,7 @@ export default function PublicTrades() {
 
   useInterval(async () => {
     fetchTradesForChart()
-  }, 5000)
+  }, 10000)
 
   return (
     <FloatingElement>

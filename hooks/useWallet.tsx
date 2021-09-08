@@ -151,7 +151,6 @@ export default function useWallet() {
   useInterval(() => {
     if (connected && marginAccount) {
       actions.fetchMarginAccounts()
-      actions.fetchWalletBalances()
       actions.fetchTradeHistory()
     }
   }, 180 * SECONDS)
