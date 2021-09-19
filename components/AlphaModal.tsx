@@ -44,7 +44,7 @@ const AlphaModal = ({
       <div className="text-th-fgd-2 text-center my-4">
         Visit{' '}
         <a
-          href="https://usdt.mango.markets"
+          href="https://v3.mango.markets"
           target="_blank"
           rel="noopener noreferrer"
         >
