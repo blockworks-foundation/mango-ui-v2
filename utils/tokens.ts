@@ -1,6 +1,5 @@
 import { ACCOUNT_LAYOUT } from '@blockworks-foundation/mango-client'
 import { Connection, PublicKey } from '@solana/web3.js'
-import * as bs58 from 'bs58'
 import { TokenInstructions } from '@project-serum/serum'
 import { WRAPPED_SOL_MINT } from '@project-serum/serum/lib/token-instructions'
 
@@ -26,6 +25,17 @@ export function parseTokenAccountData(data: Buffer): {
   }
 }
 
+function parseTokenResponse(r): ProgramAccount<{
+  mint: PublicKey
+  owner: PublicKey
+  amount: number
+}>[] {
+  return r.value.map(({ pubkey, account }) => ({
+    publicKey: pubkey,
+    account: parseTokenAccountData(account.data),
+  }))
+}
+
 export async function getWalletTokenInfo(
   connection: Connection,
   ownerPublicKey: PublicKey
@@ -49,30 +59,10 @@ export async function getOwnedTokenAccounts(
   connection: Connection,
   publicKey: PublicKey
 ): Promise<any[]> {
-  const filters = getOwnedAccountsFilters(publicKey)
-  // @ts-ignore
-  const resp = await connection._rpcRequest('getProgramAccounts', [
-    TokenInstructions.TOKEN_PROGRAM_ID.toBase58(),
-    {
-      commitment: connection.commitment,
-      filters,
-    },
-  ])
-  if (resp.error) {
-    throw new Error(
-      'failed to get token accounts owned by ' +
-        publicKey.toBase58() +
-        ': ' +
-        resp.error.message
-    )
-  }
-  return resp.result.map(({ pubkey, account: { data } }) => {
-    data = bs58.decode(data)
-    return {
-      publicKey: new PublicKey(pubkey),
-      account: parseTokenAccountData(data),
-    }
+  const resp = await connection.getTokenAccountsByOwner(publicKey, {
+    programId: TokenInstructions.TOKEN_PROGRAM_ID,
   })
+  return parseTokenResponse(resp)
 }
 
 export function getOwnedAccountsFilters(publicKey: PublicKey) {
