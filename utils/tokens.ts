@@ -1,8 +1,7 @@
 import { ACCOUNT_LAYOUT } from '@blockworks-foundation/mango-client'
 import { Connection, PublicKey } from '@solana/web3.js'
-import * as bs58 from 'bs58'
-import { AccountInfo as TokenAccount } from '@solana/spl-token'
 import { TokenInstructions } from '@project-serum/serum'
+import { TokenAccount } from '../@types/types'
 
 export const TOKEN_PROGRAM_ID = new PublicKey(
   'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
@@ -13,9 +12,11 @@ export type ProgramAccount<T> = {
   account: T
 }
 
-export function parseTokenAccountData(
-  data: Buffer
-): { mint: PublicKey; owner: PublicKey; amount: number } {
+export function parseTokenAccountData(data: Buffer): {
+  mint: PublicKey
+  owner: PublicKey
+  amount: number
+} {
   const { mint, owner, amount } = ACCOUNT_LAYOUT.decode(data)
   return {
     mint: new PublicKey(mint),
@@ -24,46 +25,19 @@ export function parseTokenAccountData(
   }
 }
 
+function parseTokenResponse(r): ProgramAccount<TokenAccount>[] {
+  return r.value.map(({ pubkey, account }) => ({
+    publicKey: pubkey,
+    account: parseTokenAccountData(account.data),
+  }))
+}
+
 export async function getOwnedTokenAccounts(
   connection: Connection,
   publicKey: PublicKey
 ): Promise<ProgramAccount<TokenAccount>[]> {
-  const filters = getOwnedAccountsFilters(publicKey)
-  // @ts-ignore
-  const resp = await connection._rpcRequest('getProgramAccounts', [
-    TokenInstructions.TOKEN_PROGRAM_ID.toBase58(),
-    {
-      commitment: connection.commitment,
-      filters,
-    },
-  ])
-  if (resp.error) {
-    throw new Error(
-      'failed to get token accounts owned by ' +
-        publicKey.toBase58() +
-        ': ' +
-        resp.error.message
-    )
-  }
-  return resp.result.map(({ pubkey, account: { data } }) => {
-    data = bs58.decode(data)
-    return {
-      publicKey: new PublicKey(pubkey),
-      account: parseTokenAccountData(data),
-    }
+  const resp = await connection.getTokenAccountsByOwner(publicKey, {
+    programId: TokenInstructions.TOKEN_PROGRAM_ID,
   })
-}
-
-export function getOwnedAccountsFilters(publicKey: PublicKey) {
-  return [
-    {
-      memcmp: {
-        offset: ACCOUNT_LAYOUT.offsetOf('owner'),
-        bytes: publicKey.toBase58(),
-      },
-    },
-    {
-      dataSize: ACCOUNT_LAYOUT.span,
-    },
-  ]
+  return parseTokenResponse(resp)
 }
