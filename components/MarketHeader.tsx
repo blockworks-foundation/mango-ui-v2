@@ -19,7 +19,8 @@ const MarketHeader = () => {
     ohlcv && ohlcv.c && ohlcv.c.length
       ? ((ohlcv.c[0] - ohlcv.o[0]) / ohlcv.o[0]) * 100
       : '--'
-  const volume = ohlcv && ohlcv.v && ohlcv.v.length ? ohlcv.v[0] : '--'
+  const volume =
+    ohlcv && ohlcv.v && ohlcv.v.length ? parseFloat(ohlcv.v[0]) : '--'
 
   const fetchOhlcv = useCallback(async () => {
     if (!selectedMarketName) return
