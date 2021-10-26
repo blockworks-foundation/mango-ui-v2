@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { ExclamationCircleIcon } from '@heroicons/react/outline'
 import styled from '@emotion/styled'
 import useMarket from '../hooks/useMarket'
 import useIpAddress from '../hooks/useIpAddress'
 import useConnection from '../hooks/useConnection'
+import useMarketList from '../hooks/useMarketList'
 import { PublicKey } from '@solana/web3.js'
 import { IDS } from '@blockworks-foundation/mango-client'
 import { notify } from '../utils/notifications'
@@ -16,6 +17,7 @@ import Button from './Button'
 import TradeType from './TradeType'
 import Input from './Input'
 import Switch from './Switch'
+import LeverageSlider from './LeverageSlider'
 
 const StyledRightInput = styled(Input)`
   border-left: 1px solid transparent;
@@ -30,14 +32,31 @@ export default function TradeForm() {
   const { side, baseSize, quoteSize, price, tradeType } = useMangoStore(
     (s) => s.tradeForm
   )
+  const selectedMarginAccount = useMangoStore(
+    (s) => s.selectedMarginAccount.current
+  )
+  const selectedMangoGroup = useMangoStore((s) => s.selectedMangoGroup.current)
+  const prices = useMangoStore((s) => s.selectedMangoGroup.prices)
+  const { getTokenIndex, symbols } = useMarketList()
+  const currentTokenIndex = useMemo(
+    () => getTokenIndex(symbols[baseCurrency]),
+    [baseCurrency]
+  )
   const { ipAllowed } = useIpAddress()
   const [invalidInputMessage, setInvalidInputMessage] = useState('')
+  const [leverageNotification, setLeverageNotification] = useState('')
   const [postOnly, setPostOnly] = useState(false)
   const [ioc, setIoc] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-
+  const [maxButtonTransition, setMaxButtonTransition] = useState(false)
+  const [thisAssetDeposit, setThisAssetDeposit] = useState(0)
+  const [usdcDeposit, setUsdcDeposit] = useState(0)
+  const [liabsVal, setLiabsVal] = useState(0)
+  const [accountEquity, setAccountEquity] = useState(0)
+  const [leveragePct, setLeveragePct] = useState(0)
   const orderBookRef = useRef(useMangoStore.getState().selectedMarket.orderBook)
   const orderbook = orderBookRef.current[0]
+
   useEffect(
     () =>
       useMangoStore.subscribe(
@@ -46,6 +65,31 @@ export default function TradeForm() {
       ),
     []
   )
+
+  useEffect(() => {
+    if (connected) {
+      const TAD = selectedMarginAccount?.getUiDeposit(
+        selectedMangoGroup,
+        currentTokenIndex
+      )
+      setThisAssetDeposit(TAD)
+      const USDCD = selectedMarginAccount?.getUiDeposit(
+        selectedMangoGroup,
+        getTokenIndex(symbols['USDC'])
+      )
+      setUsdcDeposit(USDCD)
+    }
+    setLeveragePct(0)
+  }, [selectedMarginAccount, selectedMangoGroup, connected, currentTokenIndex])
+
+  useEffect(() => {
+    if (connected) {
+      const LV = selectedMarginAccount?.getLiabsVal(selectedMangoGroup, prices)
+      setLiabsVal(LV)
+      const AE = selectedMarginAccount?.computeValue(selectedMangoGroup, prices)
+      setAccountEquity(AE)
+    }
+  }, [selectedMarginAccount, selectedMangoGroup, prices, connected])
 
   useEffect(() => {
     setBaseSize('')
@@ -74,10 +118,20 @@ export default function TradeForm() {
     }
   }, [price, tradeType])
 
-  const setSide = (side) =>
+  useEffect(() => {
+    if (leveragePct) {
+      const newQuoteSize = leverageQuoteCalc(leveragePct)
+      onSetQuoteSize(newQuoteSize)
+    } else {
+      onSetPrice(price)
+    }
+  }, [leveragePct, side])
+
+  const setSide = (side) => {
     set((s) => {
       s.tradeForm.side = side
     })
+  }
 
   const setBaseSize = (baseSize) =>
     set((s) => {
@@ -110,6 +164,30 @@ export default function TradeForm() {
     set((s) => {
       s.tradeForm.tradeType = type
     })
+
+  const leverageQuoteCalc = (leveragePct) => {
+    //get limit price or use markprice
+    const usePrice = Number(price) || markPrice
+    //calc current & available margin
+    const maxMarginUSD = accountEquity * 5
+    const availableMargin = maxMarginUSD - liabsVal
+    // calc trade value as percent of available margin
+    let maxTradeVal
+    if (side == 'sell') {
+      maxTradeVal = availableMargin + thisAssetDeposit * usePrice
+    } else {
+      maxTradeVal = availableMargin + usdcDeposit
+    }
+    const newQuoteSize = (maxTradeVal * leveragePct) / 100
+    if (newQuoteSize < 0) {
+      setLeverageNotification(
+        `You have exceeded 5x leverage. Please reduce account leverage before ${side}ing`
+      )
+    } else {
+      setLeverageNotification('')
+    }
+    return newQuoteSize > 0 ? floorToDecimal(newQuoteSize, 2) : 0
+  }
 
   const markPriceRef = useRef(useMangoStore.getState().selectedMarket.markPrice)
   const markPrice = markPriceRef.current
@@ -149,6 +227,7 @@ export default function TradeForm() {
     const rawQuoteSize = baseSize * usePrice
     const quoteSize = baseSize && floorToDecimal(rawQuoteSize, sizeDecimalCount)
     setQuoteSize(quoteSize)
+    debugger
   }
 
   const onSetQuoteSize = (quoteSize: number | '') => {
@@ -166,6 +245,7 @@ export default function TradeForm() {
     const rawBaseSize = quoteSize / usePrice
     const baseSize = quoteSize && floorToDecimal(rawBaseSize, sizeDecimalCount)
     setBaseSize(baseSize)
+    debugger
   }
 
   const postOnChange = (checked) => {
@@ -179,6 +259,10 @@ export default function TradeForm() {
       setPostOnly(false)
     }
     setIoc(checked)
+  }
+
+  const onChangeSlider = (leveragePct) => {
+    setLeveragePct(leveragePct)
   }
 
   async function onSubmit() {
@@ -369,6 +453,19 @@ export default function TradeForm() {
           </div>
         ) : null}
       </div>
+      <div className={'pt-4'}>
+        <LeverageSlider
+          value={leveragePct}
+          onChange={(v) => onChangeSlider(v)}
+          step={1}
+          maxButtonTransition={maxButtonTransition}
+        />
+      </div>
+      {leverageNotification ? (
+        <div className={`flex items-left pt-2 pt-1.5 text-th-primary`}>
+          {leverageNotification}
+        </div>
+      ) : null}
       <div className={`flex pt-6`}>
         {ipAllowed ? (
           connected ? (
