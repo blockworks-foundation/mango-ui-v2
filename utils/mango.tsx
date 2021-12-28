@@ -693,10 +693,11 @@ export async function placeOrderAndSettle(
     ) {
       // open orders missing for this market; create a new one now
       const openOrdersSpace = OpenOrders.getLayout(mangoGroup.dexProgramId).span
-      const openOrdersLamports = await connection.getMinimumBalanceForRentExemption(
-        openOrdersSpace,
-        'singleGossip'
-      )
+      const openOrdersLamports =
+        await connection.getMinimumBalanceForRentExemption(
+          openOrdersSpace,
+          'singleGossip'
+        )
       const accInstr = await createAccountInstruction(
         connection,
         wallet.publicKey,
@@ -911,10 +912,11 @@ export async function placeAndSettle(
     ) {
       // open orders missing for this market; create a new one now
       const openOrdersSpace = OpenOrders.getLayout(mangoGroup.dexProgramId).span
-      const openOrdersLamports = await connection.getMinimumBalanceForRentExemption(
-        openOrdersSpace,
-        'singleGossip'
-      )
+      const openOrdersLamports =
+        await connection.getMinimumBalanceForRentExemption(
+          openOrdersSpace,
+          'singleGossip'
+        )
       const accInstr = await createAccountInstruction(
         connection,
         wallet.publicKey,

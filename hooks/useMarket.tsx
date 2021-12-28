@@ -23,9 +23,10 @@ const useMarket = () => {
     [market]
   )
 
-  const TOKEN_MINTS = useMemo(() => formatTokenMints(IDS[cluster].symbols), [
-    cluster,
-  ])
+  const TOKEN_MINTS = useMemo(
+    () => formatTokenMints(IDS[cluster].symbols),
+    [cluster]
+  )
 
   const baseCurrency = useMemo(
     () =>

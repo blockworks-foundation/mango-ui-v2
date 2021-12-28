@@ -22,10 +22,8 @@ const AlertsList = () => {
   const triggeredAlerts = useAlertsStore((s) => s.triggeredAlerts)
   const loading = useAlertsStore((s) => s.loading)
 
-  const [
-    triggeredAlertsLength,
-    setTriggeredAlertsLength,
-  ] = useLocalStorageState('triggeredAlertsLength', null)
+  const [triggeredAlertsLength, setTriggeredAlertsLength] =
+    useLocalStorageState('triggeredAlertsLength', null)
 
   const [alertsCount, setAlertsCount] = useLocalStorageState('alertsCount', 0)
 

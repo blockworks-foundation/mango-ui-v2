@@ -19,10 +19,10 @@ const OpenOrdersTable = () => {
 
   const handleCancelOrder = async (order) => {
     const wallet = useMangoStore.getState().wallet.current
-    const selectedMangoGroup = useMangoStore.getState().selectedMangoGroup
-      .current
-    const selectedMarginAccount = useMangoStore.getState().selectedMarginAccount
-      .current
+    const selectedMangoGroup =
+      useMangoStore.getState().selectedMangoGroup.current
+    const selectedMarginAccount =
+      useMangoStore.getState().selectedMarginAccount.current
     setCancelId(order?.orderId)
     try {
       if (!selectedMangoGroup || !selectedMarginAccount) return
