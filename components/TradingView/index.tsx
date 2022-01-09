@@ -9,6 +9,10 @@ import {
 // import { useMarket } from '../../utils/markets';
 import { CHART_DATA_FEED } from '../../utils/chartDataConnector'
 import useMangoStore from '../../stores/useMangoStore'
+import resolveConfig from 'tailwindcss/resolveConfig'
+import tailwindConfig from '../../tailwind.config.js'
+
+const fullConfig = resolveConfig(tailwindConfig)
 
 // This is a basic example of how to create a TV widget
 // You can add more feature such as storing charts in localStorage
@@ -46,8 +50,18 @@ const TVChartContainer = () => {
     fullscreen: false,
     autosize: true,
     studiesOverrides: {
-      'volume.volume.color.0': theme === 'Mango' ? '#E54033' : '#CC2929',
-      'volume.volume.color.1': theme === 'Mango' ? '#AFD803' : '#5EBF4D',
+      'volume.volume.color.0':
+        theme === 'Mango'
+          ? fullConfig.theme.colors['mango-theme'].red.DEFAULT
+          : theme === 'Dark'
+          ? fullConfig.theme.colors['dark-theme'].red.DEFAULT
+          : fullConfig.theme.colors['light-theme'].red.DEFAULT,
+      'volume.volume.color.1':
+        theme === 'Mango'
+          ? fullConfig.theme.colors['mango-theme'].green.DEFAULT
+          : theme === 'Dark'
+          ? fullConfig.theme.colors['dark-theme'].green.DEFAULT
+          : fullConfig.theme.colors['light-theme'].green.DEFAULT,
     },
   }
 
@@ -101,23 +115,49 @@ const TVChartContainer = () => {
       loading_screen: { backgroundColor: 'rgba(0,0,0,0.1)' },
       overrides: {
         'paneProperties.background':
-          theme === 'Dark' ? '#2B2B2B' : theme === 'Light' ? '#fff' : '#1D1832',
+          theme === 'Mango'
+            ? fullConfig.theme.colors['mango-theme']['bkg-2']
+            : theme === 'Dark'
+            ? fullConfig.theme.colors['dark-theme']['bkg-2']
+            : fullConfig.theme.colors['light-theme']['bkg-2'],
         'mainSeriesProperties.candleStyle.upColor':
-          theme === 'Mango' ? '#AFD803' : '#5EBF4D',
+          theme === 'Mango'
+            ? fullConfig.theme.colors['mango-theme'].green.DEFAULT
+            : theme === 'Dark'
+            ? fullConfig.theme.colors['dark-theme'].green.DEFAULT
+            : fullConfig.theme.colors['light-theme'].green.DEFAULT,
         'mainSeriesProperties.candleStyle.downColor':
-          theme === 'Mango' ? '#E54033' : '#CC2929',
+          theme === 'Mango'
+            ? fullConfig.theme.colors['mango-theme'].red.DEFAULT
+            : theme === 'Dark'
+            ? fullConfig.theme.colors['dark-theme'].red.DEFAULT
+            : fullConfig.theme.colors['light-theme'].red.DEFAULT,
         'mainSeriesProperties.candleStyle.drawWick': true,
         'mainSeriesProperties.candleStyle.drawBorder': true,
-        'mainSeriesProperties.candleStyle.borderColor':
-          theme === 'Mango' ? '#AFD803' : '#5EBF4D',
         'mainSeriesProperties.candleStyle.borderUpColor':
-          theme === 'Mango' ? '#AFD803' : '#5EBF4D',
+          theme === 'Mango'
+            ? fullConfig.theme.colors['mango-theme'].green.DEFAULT
+            : theme === 'Dark'
+            ? fullConfig.theme.colors['dark-theme'].green.DEFAULT
+            : fullConfig.theme.colors['light-theme'].green.DEFAULT,
         'mainSeriesProperties.candleStyle.borderDownColor':
-          theme === 'Mango' ? '#E54033' : '#CC2929',
+          theme === 'Mango'
+            ? fullConfig.theme.colors['mango-theme'].red.DEFAULT
+            : theme === 'Dark'
+            ? fullConfig.theme.colors['dark-theme'].red.DEFAULT
+            : fullConfig.theme.colors['light-theme'].red.DEFAULT,
         'mainSeriesProperties.candleStyle.wickUpColor':
-          theme === 'Mango' ? '#AFD803' : '#5EBF4D',
+          theme === 'Mango'
+            ? fullConfig.theme.colors['mango-theme'].green.DEFAULT
+            : theme === 'Dark'
+            ? fullConfig.theme.colors['dark-theme'].green.DEFAULT
+            : fullConfig.theme.colors['light-theme'].green.DEFAULT,
         'mainSeriesProperties.candleStyle.wickDownColor':
-          theme === 'Mango' ? '#E54033' : '#CC2929',
+          theme === 'Mango'
+            ? fullConfig.theme.colors['mango-theme'].red.DEFAULT
+            : theme === 'Dark'
+            ? fullConfig.theme.colors['dark-theme'].red.DEFAULT
+            : fullConfig.theme.colors['light-theme'].red.DEFAULT,
       },
     }
 
