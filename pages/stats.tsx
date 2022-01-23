@@ -8,6 +8,7 @@ import useConnection from '../hooks/useConnection'
 import TopBar from '../components/TopBar'
 import { formatBalanceDisplay, tokenPrecision } from '../utils/index'
 import { Table, Thead, Tbody, Tr, Th, Td } from 'react-super-responsive-table'
+import useMangoStore from '../stores/useMangoStore'
 
 const icons = {
   BTC: '/assets/icons/btc.svg',
@@ -30,6 +31,7 @@ const useMangoStats = () => {
   ])
   const [latestStats, setLatestStats] = useState<any[]>([])
   const { cluster } = useConnection()
+  const { endpoint } = useMangoStore((s) => s.connection)
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -46,10 +48,7 @@ const useMangoStats = () => {
   useEffect(() => {
     const getLatestStats = async () => {
       const client = new MangoClient()
-      const connection = new Connection(
-        IDS.cluster_urls[cluster],
-        'singleGossip'
-      )
+      const connection = new Connection(endpoint, 'singleGossip')
       const assets = IDS[cluster].mango_groups?.[DEFAULT_MANGO_GROUP]?.symbols
       const mangoGroupId =
         IDS[cluster].mango_groups?.[DEFAULT_MANGO_GROUP]?.mango_group_pk
