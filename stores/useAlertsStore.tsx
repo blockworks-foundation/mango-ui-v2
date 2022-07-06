@@ -112,6 +112,8 @@ const useAlertsStore = create<AlertsStore>((set, get) => ({
         })
     },
     async loadAlerts(marginAccounts: PublicKey[]) {
+      return
+
       const set = get().set
 
       set((state) => {
