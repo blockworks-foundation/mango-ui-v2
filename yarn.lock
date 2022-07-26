@@ -986,14 +986,15 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@blockworks-foundation/mango-client@2.1.5":
-  version "2.1.5"
-  resolved "https://registry.yarnpkg.com/@blockworks-foundation/mango-client/-/mango-client-2.1.5.tgz#ccc6b0f51f909e21f334b522319334e680723cdc"
-  integrity sha512-1hx7NY1Cohs8Qit4+KBiHEOPhylE1utWWCbrMCgjtCIAlJ5C4TBdr25e1DvNComFd22kzmr/WTlk18xGJHSTTg==
+"@blockworks-foundation/mango-client@2.2.0":
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/@blockworks-foundation/mango-client/-/mango-client-2.2.0.tgz#368075d7542499d524cb1306e50ef8e9bb81b519"
+  integrity sha512-bB1yNU7C8vBmaFOIbt7fRnjxZg9pP79OifHXPkMvVrwaiMX8VKj6hoc/eH3tciPFBMS1b1+e8sNQx6V/kW87ag==
   dependencies:
     "@project-serum/common" "^0.0.1-beta.3"
     "@project-serum/serum" "^0.13.20"
     "@project-serum/sol-wallet-adapter" "^0.1.4"
+    "@pythnetwork/client" "^2.7.2"
     "@solana/spl-token" "0.0.13"
     "@solana/web3.js" "^0.95.0"
     bn.js "^5.1.2"
@@ -1493,6 +1494,13 @@
   dependencies:
     bs58 "^4.0.1"
     eventemitter3 "^4.0.4"
+
+"@pythnetwork/client@^2.7.2":
+  version "2.7.2"
+  resolved "https://registry.yarnpkg.com/@pythnetwork/client/-/client-2.7.2.tgz#eca3a59e8f222aa1b67c8e4653e2484079f5fb9a"
+  integrity sha512-Hx/GLaZH0evm0tT0gsO1S7r3liiDzUeqDfMaV1HH7a5yuQGH9zgUrmdEMEtkgRceLa2nGhEGnRtISqY/X96XtA==
+  dependencies:
+    buffer "^6.0.1"
 
 "@sinonjs/commons@^1.7.0":
   version "1.8.3"
