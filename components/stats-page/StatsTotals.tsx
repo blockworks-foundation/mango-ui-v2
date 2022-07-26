@@ -13,7 +13,7 @@ const icons = {
 }
 
 export default function StatsTotals() {
-  const { latestStats, stats } = useMangoStats()
+  const { latestStats } = useMangoStats()
 
   return (
     <>
