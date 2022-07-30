@@ -176,7 +176,7 @@ const DepositModal: FunctionComponent<DepositModalProps> = ({
     setSubmitting(true)
     const marginAccount = useMangoStore.getState().selectedMarginAccount.current
     const mangoGroup = useMangoStore.getState().selectedMangoGroup.current
-    const wallet = useMangoStore.getState().wallet.current
+    const wallet = useMangoStore.getState().wallet.current as any
 
     if (!marginAccount && mangoGroup) {
       initMarginAccountAndDeposit(

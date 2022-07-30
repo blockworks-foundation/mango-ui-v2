@@ -23,7 +23,7 @@ const OpenOrdersTable = () => {
   const actions = useMangoStore((s) => s.actions)
 
   const handleCancelOrder = async (order) => {
-    const wallet = useMangoStore.getState().wallet.current
+    const wallet = useMangoStore.getState().wallet.current as any
     const selectedMangoGroup =
       useMangoStore.getState().selectedMangoGroup.current
     const selectedMarginAccount =

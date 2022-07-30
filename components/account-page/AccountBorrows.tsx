@@ -35,9 +35,8 @@ export default function AccountBorrows() {
   const [showDepositModal, setShowDepositModal] = useState(false)
 
   async function handleSettleBorrow(token, borrowQuantity, depositBalance) {
-    const marginAccount = useMangoStore.getState().selectedMarginAccount.current
-    const mangoGroup = useMangoStore.getState().selectedMangoGroup.current
-    const wallet = useMangoStore.getState().wallet.current
+    const { selectedMarginAccount, selectedMangoGroup, wallet } =
+      useMangoStore.getState() as any
 
     if (borrowQuantity > depositBalance) {
       const deficit = borrowQuantity - depositBalance
@@ -49,9 +48,9 @@ export default function AccountBorrows() {
       await settleBorrow(
         connection,
         new PublicKey(programId),
-        mangoGroup,
-        marginAccount,
-        wallet,
+        selectedMangoGroup.current,
+        selectedMarginAccount.current,
+        wallet.current,
         new PublicKey(symbols[token]),
         Number(borrowQuantity)
       )

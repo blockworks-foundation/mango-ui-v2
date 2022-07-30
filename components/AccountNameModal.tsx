@@ -27,7 +27,7 @@ const AccountNameModal: FunctionComponent<AccountNameModalProps> = ({
 }) => {
   const [name, setName] = useState(accountName || '')
   const [invalidNameMessage, setInvalidNameMessage] = useState('')
-  const wallet = useMangoStore.getState().wallet.current
+  const wallet = useMangoStore.getState().wallet.current as any
   const selectedMangoGroup = useMangoStore((s) => s.selectedMangoGroup.current)
   const selectedMarginAccount = useMangoStore(
     (s) => s.selectedMarginAccount.current

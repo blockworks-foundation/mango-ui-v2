@@ -88,7 +88,7 @@ const NewAccount: FunctionComponent<NewAccountProps> = ({
   const handleNewAccountDeposit = () => {
     setSubmitting(true)
     const mangoGroup = useMangoStore.getState().selectedMangoGroup.current
-    const wallet = useMangoStore.getState().wallet.current
+    const wallet = useMangoStore.getState().wallet.current as any
 
     initMarginAccountAndDeposit(
       connection,

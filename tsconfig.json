@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "es6",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": false,
@@ -19,12 +15,7 @@
     "jsx": "preserve",
     "incremental": true
   },
-  "exclude": [
-    "node_modules",
-    ".next",
-    "out",
-    "public/datafeeds"
-  ],
+  "exclude": ["node_modules", ".next", "out", "public/datafeeds"],
   "include": [
     "next-env.d.ts",
     "**/*.ts",

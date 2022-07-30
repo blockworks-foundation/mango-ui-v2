@@ -13,6 +13,7 @@ import DepositModal from '../DepositModal'
 import WithdrawModal from '../WithdrawModal'
 import Button from '../Button'
 import Tooltip from '../Tooltip'
+import { Market } from '@project-serum/serum'
 
 export default function AccountAssets() {
   const balances = useBalances()
@@ -53,12 +54,11 @@ export default function AccountAssets() {
   }
 
   async function handleSettleAllTrades() {
-    const markets = Object.values(
-      useMangoStore.getState().selectedMangoGroup.markets
-    )
-    const marginAccount = useMangoStore.getState().selectedMarginAccount.current
-    const mangoGroup = useMangoStore.getState().selectedMangoGroup.current
-    const wallet = useMangoStore.getState().wallet.current
+    const { selectedMangoGroup, selectedMarginAccount, wallet } =
+      useMangoStore.getState() as any
+    const markets = Object.values(selectedMangoGroup.markets) as Market[]
+    const marginAccount = selectedMarginAccount.current
+    const mangoGroup = selectedMangoGroup.current
 
     try {
       await settleAllTrades(
@@ -67,7 +67,7 @@ export default function AccountAssets() {
         mangoGroup,
         marginAccount,
         markets,
-        wallet
+        wallet.current
       )
       await sleep(250)
       actions.fetchMarginAccounts()
