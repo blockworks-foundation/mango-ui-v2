@@ -233,7 +233,7 @@ const useMangoStore = create<MangoStore>((set, get) => ({
             connection,
             new PublicKey(IDS[cluster].mango_program_id),
             selectedMangoGroup,
-            wallet
+            wallet as any
           )
         if (usersMangoSrmAccounts.length) {
           set((state) => {
@@ -270,7 +270,7 @@ const useMangoStore = create<MangoStore>((set, get) => ({
           connection,
           new PublicKey(programId),
           mangoGroup,
-          wallet
+          wallet as any
         )
         .then((marginAccounts) => {
           if (marginAccounts.length > 0) {
