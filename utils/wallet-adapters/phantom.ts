@@ -40,6 +40,8 @@ export class PhantomWalletAdapter
   }
 
   private _handleConnect = (...args) => {
+    console.log('handle connect')
+
     this.emit('connect', ...args)
   }
 
@@ -86,12 +88,17 @@ export class PhantomWalletAdapter
       })
       return
     }
-    if (!this._provider.listeners('connect').length) {
-      this._provider?.on('connect', this._handleConnect)
-    }
+
+    this._provider?.on('connect', this._handleConnect)
+
     if (!this._provider.listeners('disconnect').length) {
       this._provider?.on('disconnect', this._handleDisconnect)
     }
+    // @ts-ignore
+    // const wallet = window.phantom?.solana || window.solana!
+    // await wallet.connect()
+    // this.emit('connect', this.publicKey)
+    // return window.phantom.solana.connect()
     return this._provider?.connect()
   }
 
