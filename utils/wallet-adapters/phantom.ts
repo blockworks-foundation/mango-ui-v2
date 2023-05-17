@@ -19,6 +19,7 @@ interface PhantomProvider {
   connect: () => Promise<void>
   disconnect: () => Promise<void>
   on: (event: PhantomEvent, handler: (args: any) => void) => void
+  off: (event: PhantomEvent, handler: (args: any) => void) => void
   request: (method: PhantomRequestMethod, params: any) => Promise<any>
   listeners: (event: PhantomEvent) => (() => void)[]
 }
@@ -45,6 +46,9 @@ export class PhantomWalletAdapter
 
   private _handleDisconnect = (...args) => {
     this.emit('disconnect', ...args)
+
+    this._provider?.off('connect', this._handleConnect)
+    this._provider?.off('disconnect', this._handleDisconnect)
   }
 
   get connected() {
@@ -86,12 +90,8 @@ export class PhantomWalletAdapter
       })
       return
     }
-    if (!this._provider.listeners('connect').length) {
-      this._provider?.on('connect', this._handleConnect)
-    }
-    if (!this._provider.listeners('disconnect').length) {
-      this._provider?.on('disconnect', this._handleDisconnect)
-    }
+    this._provider?.on('connect', this._handleConnect)
+    this._provider?.on('disconnect', this._handleDisconnect)
     return this._provider?.connect()
   }
 
